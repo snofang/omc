@@ -1,4 +1,4 @@
-# Omc
+# OMC
 
 To start your Phoenix server:
 
