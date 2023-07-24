@@ -1,7 +1,7 @@
 defmodule Omc.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
-
+Phoenix.Param
   schema "users" do
     field :email, :string
     field :password, :string, virtual: true, redact: true

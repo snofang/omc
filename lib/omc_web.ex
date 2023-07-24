@@ -49,10 +49,17 @@ defmodule OmcWeb do
     end
   end
 
-  def live_view do
+  def live_view(opts \\ []) do
     quote do
-      use Phoenix.LiveView,
-        layout: {OmcWeb.Layouts, :app}
+      @opts Keyword.merge(
+              [
+                layout: {OmcWeb.Layouts, :live},
+                container: {:div, class: "relative h-screen flex overflow-hidden bg-white"}
+              ],
+              unquote(opts)
+            )
+      use Phoenix.LiveView, @opts
+      # layout: {OmcWeb.Layouts, :live}
 
       unquote(html_helpers())
     end

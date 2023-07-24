@@ -20,7 +20,10 @@ defmodule OmcWeb.Router do
   scope "/", OmcWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    import Phoenix.Controller
+
+    get "/", ConsoleRedirector, nil
+    # get "/", PageController, :home
   end
 
   # Other scopes may use custom stacks.
@@ -61,13 +64,14 @@ defmodule OmcWeb.Router do
     post "/users/log_in", UserSessionController, :create
   end
 
-  scope "/", OmcWeb.User, as: :user do
+  scope "/", OmcWeb, as: :user do
     pipe_through [:browser, :require_authenticated_user]
 
     live_session :require_authenticated_user,
-      on_mount: [{OmcWeb.User.UserAuth, :ensure_authenticated}] do
-      live "/users/settings", UserSettingsLive, :edit
-      live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
+      on_mount: [{OmcWeb.User.UserAuth, :ensure_authenticated}, OmcWeb.Nav] do
+      live "/users/console", Console.ConsoleLive
+      live "/users/settings", User.UserSettingsLive, :edit
+      live "/users/settings/confirm_email/:token", User.UserSettingsLive, :confirm_email
     end
   end
 
@@ -77,7 +81,7 @@ defmodule OmcWeb.Router do
     delete "/users/log_out", UserSessionController, :delete
 
     live_session :current_user,
-      on_mount: [{OmcWeb.User.UserAuth, :mount_current_user}] do
+      on_mount: [{OmcWeb.User.UserAuth, :mount_current_user}, OmcWeb.Nav] do
       live "/users/confirm/:token", UserConfirmationLive, :edit
       live "/users/confirm", UserConfirmationInstructionsLive, :new
     end
