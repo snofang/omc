@@ -69,6 +69,11 @@ defmodule OmcWeb.Router do
 
     live_session :require_authenticated_user,
       on_mount: [{OmcWeb.User.UserAuth, :ensure_authenticated}, OmcWeb.Nav] do
+      live "/servers", ServerLive.Index, :index
+      live "/servers/new", ServerLive.Index, :new
+      live "/servers/:id/edit", ServerLive.Index, :edit
+      live "/servers/:id", ServerLive.Show, :show
+      live "/servers/:id/show/edit", ServerLive.Show, :edit
       live "/users/console", Console.ConsoleLive
       live "/users/settings", User.UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", User.UserSettingsLive, :confirm_email
