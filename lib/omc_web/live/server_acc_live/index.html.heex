@@ -1,0 +1,50 @@
+<div class="mx-5">
+  <.header>
+    Listing Server accs
+    <:actions>
+      <.link patch={~p"/server_accs/new"}>
+        <.button>New Server acc</.button>
+      </.link>
+    </:actions>
+  </.header>
+
+  <.table
+    id="server_accs"
+    rows={@streams.server_accs}
+    row_click={fn {_id, server_acc} -> JS.navigate(~p"/server_accs/#{server_acc}") end}
+  >
+    <:col :let={{_id, server_acc}} label="Name"><%= server_acc.name %></:col>
+    <:col :let={{_id, server_acc}} label="Status"><%= server_acc.status %></:col>
+    <:col :let={{_id, server_acc}} label="Description"><%= server_acc.description %></:col>
+    <:action :let={{_id, server_acc}}>
+      <div class="sr-only">
+        <.link navigate={~p"/server_accs/#{server_acc}"}>Show</.link>
+      </div>
+      <.link patch={~p"/server_accs/#{server_acc}/edit"}>Edit</.link>
+    </:action>
+    <:action :let={{id, server_acc}}>
+      <.link
+        phx-click={JS.push("delete", value: %{id: server_acc.id}) |> hide("##{id}")}
+        data-confirm="Are you sure?"
+      >
+        Delete
+      </.link>
+    </:action>
+  </.table>
+
+  <.modal
+    :if={@live_action in [:new, :edit]}
+    id="server_acc-modal"
+    show
+    on_cancel={JS.patch(~p"/server_accs")}
+  >
+    <.live_component
+      module={OmcWeb.ServerAccLive.FormComponent}
+      id={@server_acc.id || :new}
+      title={@page_title}
+      action={@live_action}
+      server_acc={@server_acc}
+      patch={~p"/server_accs"}
+    />
+  </.modal>
+</div>

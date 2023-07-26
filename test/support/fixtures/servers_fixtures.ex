@@ -26,4 +26,20 @@ defmodule Omc.ServersFixtures do
 
     server
   end
+
+  @doc """
+  Generate a server_acc.
+  """
+  def server_acc_fixture(attrs \\ %{}) do
+    {:ok, server_acc} =
+      attrs
+      |> Enum.into(%{
+        description: "some description",
+        name: "some name",
+        status: :active
+      })
+      |> Omc.Servers.create_server_acc()
+
+    server_acc
+  end
 end

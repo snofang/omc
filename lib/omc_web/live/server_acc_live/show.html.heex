@@ -1,0 +1,35 @@
+<div class="mx-5">
+  <.header>
+    Server acc <%= @server_acc.id %>
+    <:subtitle>This is a server_acc record from your database.</:subtitle>
+    <:actions>
+      <.link patch={~p"/server_accs/#{@server_acc}/show/edit"} phx-click={JS.push_focus()}>
+        <.button>Edit server_acc</.button>
+      </.link>
+    </:actions>
+  </.header>
+
+  <.list>
+    <:item title="Name"><%= @server_acc.name %></:item>
+    <:item title="Status"><%= @server_acc.status %></:item>
+    <:item title="Description"><%= @server_acc.description %></:item>
+  </.list>
+
+  <.back navigate={~p"/server_accs"}>Back to server_accs</.back>
+
+  <.modal
+    :if={@live_action == :edit}
+    id="server_acc-modal"
+    show
+    on_cancel={JS.patch(~p"/server_accs/#{@server_acc}")}
+  >
+    <.live_component
+      module={OmcWeb.ServerAccLive.FormComponent}
+      id={@server_acc.id}
+      title={@page_title}
+      action={@live_action}
+      server_acc={@server_acc}
+      patch={~p"/server_accs/#{@server_acc}"}
+    />
+  </.modal>
+</div>

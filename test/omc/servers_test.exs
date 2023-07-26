@@ -77,4 +77,69 @@ defmodule Omc.ServersTest do
       assert %Ecto.Changeset{} = Servers.change_server(server)
     end
   end
+
+  describe "server_accs" do
+    alias Omc.Servers.ServerAcc
+
+    import Omc.ServersFixtures
+
+    @invalid_attrs %{description: nil, name: nil, status: nil}
+
+    test "list_server_accs/0 returns all server_accs" do
+      server_acc = server_acc_fixture()
+      assert Servers.list_server_accs() == [server_acc]
+    end
+
+    test "get_server_acc!/1 returns the server_acc with given id" do
+      server_acc = server_acc_fixture()
+      assert Servers.get_server_acc!(server_acc.id) == server_acc
+    end
+
+    test "create_server_acc/1 with valid data creates a server_acc" do
+      valid_attrs = %{description: "some description", name: "some name", status: :active}
+
+      assert {:ok, %ServerAcc{} = server_acc} = Servers.create_server_acc(valid_attrs)
+      assert server_acc.description == "some description"
+      assert server_acc.name == "some name"
+      assert server_acc.status == :active
+    end
+
+    test "create_server_acc/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Servers.create_server_acc(@invalid_attrs)
+    end
+
+    test "update_server_acc/2 with valid data updates the server_acc" do
+      server_acc = server_acc_fixture()
+
+      update_attrs = %{
+        description: "some updated description",
+        name: "some updated name",
+        status: :deactive
+      }
+
+      assert {:ok, %ServerAcc{} = server_acc} =
+               Servers.update_server_acc(server_acc, update_attrs)
+
+      assert server_acc.description == "some updated description"
+      assert server_acc.name == "some updated name"
+      assert server_acc.status == :deactive
+    end
+
+    test "update_server_acc/2 with invalid data returns error changeset" do
+      server_acc = server_acc_fixture()
+      assert {:error, %Ecto.Changeset{}} = Servers.update_server_acc(server_acc, @invalid_attrs)
+      assert server_acc == Servers.get_server_acc!(server_acc.id)
+    end
+
+    test "delete_server_acc/1 deletes the server_acc" do
+      server_acc = server_acc_fixture()
+      assert {:ok, %ServerAcc{}} = Servers.delete_server_acc(server_acc)
+      assert_raise Ecto.NoResultsError, fn -> Servers.get_server_acc!(server_acc.id) end
+    end
+
+    test "change_server_acc/1 returns a server_acc changeset" do
+      server_acc = server_acc_fixture()
+      assert %Ecto.Changeset{} = Servers.change_server_acc(server_acc)
+    end
+  end
 end

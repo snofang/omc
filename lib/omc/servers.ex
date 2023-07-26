@@ -101,4 +101,100 @@ defmodule Omc.Servers do
   def change_server(%Server{} = server, attrs \\ %{}) do
     Server.changeset(server, attrs)
   end
+
+  alias Omc.Servers.ServerAcc
+
+  @doc """
+  Returns the list of server_accs.
+
+  ## Examples
+
+      iex> list_server_accs()
+      [%ServerAcc{}, ...]
+
+  """
+  def list_server_accs do
+    Repo.all(ServerAcc)
+  end
+
+  @doc """
+  Gets a single server_acc.
+
+  Raises `Ecto.NoResultsError` if the Server acc does not exist.
+
+  ## Examples
+
+      iex> get_server_acc!(123)
+      %ServerAcc{}
+
+      iex> get_server_acc!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_server_acc!(id), do: Repo.get!(ServerAcc, id)
+
+  @doc """
+  Creates a server_acc.
+
+  ## Examples
+
+      iex> create_server_acc(%{field: value})
+      {:ok, %ServerAcc{}}
+
+      iex> create_server_acc(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_server_acc(attrs \\ %{}) do
+    %ServerAcc{}
+    |> ServerAcc.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a server_acc.
+
+  ## Examples
+
+      iex> update_server_acc(server_acc, %{field: new_value})
+      {:ok, %ServerAcc{}}
+
+      iex> update_server_acc(server_acc, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_server_acc(%ServerAcc{} = server_acc, attrs) do
+    server_acc
+    |> ServerAcc.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a server_acc.
+
+  ## Examples
+
+      iex> delete_server_acc(server_acc)
+      {:ok, %ServerAcc{}}
+
+      iex> delete_server_acc(server_acc)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_server_acc(%ServerAcc{} = server_acc) do
+    Repo.delete(server_acc)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking server_acc changes.
+
+  ## Examples
+
+      iex> change_server_acc(server_acc)
+      %Ecto.Changeset{data: %ServerAcc{}}
+
+  """
+  def change_server_acc(%ServerAcc{} = server_acc, attrs \\ %{}) do
+    ServerAcc.changeset(server_acc, attrs)
+  end
 end
