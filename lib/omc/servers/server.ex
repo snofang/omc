@@ -16,8 +16,9 @@ defmodule Omc.Servers.Server do
   @doc false
   def changeset(server, attrs) do
     server
-    |> cast(attrs, [:name, :status, :price, :max_accs, :description])
-    |> validate_required([:name, :status, :price, :max_accs])
+    |> cast(attrs, [:name, :status, :price, :max_accs, :description, :user_id])
+    |> validate_required([:name, :status, :user_id, :price, :max_accs])
     |> unique_constraint(:name)
   end
+  
 end

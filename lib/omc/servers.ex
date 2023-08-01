@@ -51,7 +51,10 @@ defmodule Omc.Servers do
   """
   def create_server(attrs \\ %{}) do
     %Server{}
-    |> Server.changeset(attrs)
+    |> Server.changeset(
+      attrs
+      |> Omc.Utils.put_attr_safe!(:status, :active)
+    )
     |> Repo.insert()
   end
 
@@ -115,6 +118,17 @@ defmodule Omc.Servers do
   """
   def list_server_accs do
     Repo.all(ServerAcc)
+  end
+
+  def list_server_accs(server_id) when server_id == "" or server_id == nil do
+    from(sc in ServerAcc, where: is_nil(sc.server_id))
+    |> Repo.all()
+  end
+
+  def list_server_accs(server_id) do
+    ServerAcc
+    |> where(server_id: ^server_id)
+    |> Repo.all()
   end
 
   @doc """

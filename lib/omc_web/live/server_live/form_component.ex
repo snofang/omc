@@ -1,5 +1,6 @@
 defmodule OmcWeb.ServerLive.FormComponent do
   use OmcWeb, :live_component
+  Phoenix.LiveComponent
 
   alias Omc.Servers
 
@@ -21,6 +22,7 @@ defmodule OmcWeb.ServerLive.FormComponent do
       >
         <.input field={@form[:name]} type="text" label="Name" />
         <.input
+          :if={@action == :edit}
           field={@form[:status]}
           type="select"
           label="Status"
@@ -78,7 +80,10 @@ defmodule OmcWeb.ServerLive.FormComponent do
   end
 
   defp save_server(socket, :new, server_params) do
-    case Servers.create_server(server_params) do
+    case Servers.create_server(
+           server_params
+           |> Map.put("user_id", to_string(socket.assigns.current_user.id))
+         ) do
       {:ok, server} ->
         notify_parent({:saved, server})
 

@@ -53,6 +53,7 @@
     <.live_component
       module={OmcWeb.ServerLive.FormComponent}
       id={@server.id || :new}
+      current_user={@current_user}
       title={@page_title}
       action={@live_action}
       server={@server}

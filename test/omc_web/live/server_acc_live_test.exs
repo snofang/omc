@@ -22,17 +22,18 @@ defmodule OmcWeb.ServerAccLiveTest do
     setup [:create_server_acc]
 
     test "lists all server_accs", %{conn: conn, server_acc: server_acc} do
-      {:ok, _index_live, html} = conn
+      {:ok, _index_live, html} =
+        conn
         |> log_in_user(user_fixture())
         |> live(~p"/server_accs")
-
 
       assert html =~ "Listing Server accs"
       assert html =~ server_acc.description
     end
 
     test "saves new server_acc", %{conn: conn} do
-      {:ok, index_live, _html} = conn
+      {:ok, index_live, _html} =
+        conn
         |> log_in_user(user_fixture())
         |> live(~p"/server_accs")
 
@@ -57,7 +58,8 @@ defmodule OmcWeb.ServerAccLiveTest do
     end
 
     test "updates server_acc in listing", %{conn: conn, server_acc: server_acc} do
-      {:ok, index_live, _html} = conn
+      {:ok, index_live, _html} =
+        conn
         |> log_in_user(user_fixture())
         |> live(~p"/server_accs")
 
@@ -82,7 +84,8 @@ defmodule OmcWeb.ServerAccLiveTest do
     end
 
     test "deletes server_acc in listing", %{conn: conn, server_acc: server_acc} do
-      {:ok, index_live, _html} = conn
+      {:ok, index_live, _html} =
+        conn
         |> log_in_user(user_fixture())
         |> live(~p"/server_accs")
 
@@ -95,7 +98,8 @@ defmodule OmcWeb.ServerAccLiveTest do
     setup [:create_server_acc]
 
     test "displays server_acc", %{conn: conn, server_acc: server_acc} do
-      {:ok, _show_live, html} = conn 
+      {:ok, _show_live, html} =
+        conn
         |> log_in_user(user_fixture())
         |> live(~p"/server_accs/#{server_acc}")
 
@@ -104,10 +108,10 @@ defmodule OmcWeb.ServerAccLiveTest do
     end
 
     test "updates server_acc within modal", %{conn: conn, server_acc: server_acc} do
-      {:ok, show_live, _html} = conn
+      {:ok, show_live, _html} =
+        conn
         |> log_in_user(user_fixture())
         |> live(~p"/server_accs/#{server_acc}")
-      
 
       assert show_live |> element("a", "Edit") |> render_click() =~
                "Edit Server acc"

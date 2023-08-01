@@ -9,8 +9,7 @@ defmodule OmcWeb.ServerLiveTest do
     description: "some description",
     max_accs: 42,
     name: "some name",
-    price: "120.5",
-    status: :active
+    price: "120.5"
   }
   @update_attrs %{
     description: "some updated description",
@@ -19,10 +18,11 @@ defmodule OmcWeb.ServerLiveTest do
     price: "456.7",
     status: :deactive
   }
-  @invalid_attrs %{description: nil, max_accs: nil, name: nil, price: nil, status: nil}
+  @invalid_attrs %{description: nil, max_accs: nil, name: nil, price: nil}
 
   defp create_server(_) do
-    server = server_fixture()
+    user = user_fixture()
+    server = server_fixture(%{user_id: user.id})
     %{server: server}
   end
 

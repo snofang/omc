@@ -16,3 +16,9 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
   * Docs: https://hexdocs.pm/phoenix
   * Forum: https://elixirforum.com/c/phoenix-forum
   * Source: https://github.com/phoenixframework/phoenix
+
+
+
+mix phx.gen.live Servers Server servers name:string:unique status:enum:active:deactive price:decimal max_accs:integer user_id:references:users description:string
+mix phx.gen.live Servers ServerAcc server_accs  name:string status:enum:active:deactive server_id:references:servers description:string
+

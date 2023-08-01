@@ -3,12 +3,12 @@ defmodule Omc.Repo.Migrations.CreateServers do
 
   def change do
     create table(:servers) do
-      add :name, :string
-      add :status, :string
-      add :price, :decimal
-      add :max_accs, :integer
+      add :name, :string, null: false
+      add :status, :string, null: false
+      add :price, :decimal, null: false
+      add :max_accs, :integer, null: false
       add :description, :string
-      add :user_id, references(:users, on_delete: :nothing)
+      add :user_id, references(:users, on_delete: :nothing), null: false
 
       timestamps()
     end

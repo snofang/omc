@@ -7,27 +7,32 @@ defmodule Omc.ServersTest do
     alias Omc.Servers.Server
 
     import Omc.ServersFixtures
+    import Omc.AccountsFixtures
 
     @invalid_attrs %{description: nil, max_accs: nil, name: nil, price: nil, status: nil}
 
     test "list_servers/0 returns all servers" do
-      server = server_fixture()
+      user = user_fixture()
+      server = server_fixture(%{user_id: user.id})
       assert Servers.list_servers() == [server]
     end
 
     test "get_server!/1 returns the server with given id" do
-      server = server_fixture()
+      user = user_fixture()
+      server = server_fixture(%{user_id: user.id})
       assert Servers.get_server!(server.id) == server
     end
 
     test "create_server/1 with valid data creates a server" do
+      user = user_fixture()
       valid_attrs = %{
         description: "some description",
         max_accs: 42,
         name: "some name",
         price: "120.5",
-        status: :active
+        user_id: user.id
       }
+      
 
       assert {:ok, %Server{} = server} = Servers.create_server(valid_attrs)
       assert server.description == "some description"
@@ -42,7 +47,8 @@ defmodule Omc.ServersTest do
     end
 
     test "update_server/2 with valid data updates the server" do
-      server = server_fixture()
+      user = user_fixture()
+      server = server_fixture(%{user_id: user.id})
 
       update_attrs = %{
         description: "some updated description",
@@ -61,19 +67,22 @@ defmodule Omc.ServersTest do
     end
 
     test "update_server/2 with invalid data returns error changeset" do
-      server = server_fixture()
+      user = user_fixture()
+      server = server_fixture(%{user_id: user.id})
       assert {:error, %Ecto.Changeset{}} = Servers.update_server(server, @invalid_attrs)
       assert server == Servers.get_server!(server.id)
     end
 
     test "delete_server/1 deletes the server" do
-      server = server_fixture()
+      user = user_fixture()
+      server = server_fixture(%{user_id: user.id})
       assert {:ok, %Server{}} = Servers.delete_server(server)
       assert_raise Ecto.NoResultsError, fn -> Servers.get_server!(server.id) end
     end
 
     test "change_server/1 returns a server changeset" do
-      server = server_fixture()
+      user = user_fixture()
+      server = server_fixture(%{user_id: user.id})
       assert %Ecto.Changeset{} = Servers.change_server(server)
     end
   end

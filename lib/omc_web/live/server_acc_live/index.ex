@@ -6,7 +6,13 @@ defmodule OmcWeb.ServerAccLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :server_accs, Servers.list_server_accs())}
+    socket =
+      socket
+      |> assign(:servers, Servers.list_servers())
+      |> assign(:form, Phoenix.Component.to_form(%{"selected_server_id" => nil}))
+      |> stream(:server_accs, Servers.list_server_accs(nil))
+
+    {:ok, socket}
   end
 
   @impl true
@@ -43,5 +49,12 @@ defmodule OmcWeb.ServerAccLive.Index do
     {:ok, _} = Servers.delete_server_acc(server_acc)
 
     {:noreply, stream_delete(socket, :server_accs, server_acc)}
+  end
+
+  def handle_event("change-filter", %{"selected_server_id" => selected_server_id}, socket) do
+    socket
+    |> stream(:server_accs, Servers.list_server_accs(selected_server_id), reset: true)
+
+    {:noreply, socket}
   end
 end

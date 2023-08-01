@@ -1,4 +1,4 @@
-<div class="mx-5">
+<div class="mx-6 pt-5 pb-4">
   <.header>
     Listing Server accs
     <:actions>
@@ -7,6 +7,16 @@
       </.link>
     </:actions>
   </.header>
+
+  <.simple_form for={@form} id="server-acc-filter" phx-change="change-filter">
+    <.input
+      field={@form[:selected_server_id]}
+      type="select"
+      label="Server Select"
+      prompt="Choose a server"
+      options={Enum.map(@servers, fn server -> {server.name, server.id} end)}
+    />
+  </.simple_form>
 
   <.table
     id="server_accs"
