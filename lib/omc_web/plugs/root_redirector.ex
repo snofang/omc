@@ -1,4 +1,4 @@
-defmodule OmcWeb.ConsoleRedirector do
+defmodule OmcWeb.RootRedirector do
   use OmcWeb, :verified_routes
   import Plug.Conn
   import Phoenix.Controller, only: [redirect: 2, put_flash: 3]
@@ -10,7 +10,7 @@ defmodule OmcWeb.ConsoleRedirector do
   def call(conn, _opts) do
     if conn.assigns[:current_user] do
       conn
-      |> redirect(to: ~p"/users/console")
+      |> redirect(to: ~p"/servers")
       |> halt()
     else
       conn
@@ -22,6 +22,6 @@ defmodule OmcWeb.ConsoleRedirector do
   end
 
   defp maybe_store_return_to(%{method: "GET"} = conn) do
-    put_session(conn, :user_return_to, ~p"/users/console")
+    put_session(conn, :user_return_to, ~p"/servers")
   end
 end

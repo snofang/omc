@@ -2,8 +2,7 @@ defmodule OmcWeb.Nav do
   import Phoenix.LiveView
   use Phoenix.Component
 
-  alias OmcWeb.Console
-  alias OmcWeb.{Console, UserSettingsLive}
+  alias OmcWeb.{Console, UserSettingsLive, ServerLive, ServerAccLive}
 
   def on_mount(:default, _params, _session, socket) do
     {:cont,
@@ -20,6 +19,12 @@ defmodule OmcWeb.Nav do
 
         {UserSettingsLive, _} ->
           :settings
+
+        {ServerLive.Index, _} ->
+          :servers
+
+        {ServerAccLive.Index, _} ->
+          :server_accs
 
         {_, _} ->
           nil

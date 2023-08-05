@@ -21,6 +21,12 @@ defmodule Omc.Servers do
     Repo.all(Server)
   end
 
+  def list_servers(user_id) do
+    Server
+    |> where(user_id: ^user_id)
+    |> Repo.all()
+  end
+  
   @doc """
   Gets a single server.
 
@@ -161,7 +167,10 @@ defmodule Omc.Servers do
   """
   def create_server_acc(attrs \\ %{}) do
     %ServerAcc{}
-    |> ServerAcc.changeset(attrs)
+    |> ServerAcc.changeset(
+      attrs
+      |> Omc.Utils.put_attr_safe!(:status, :active)
+    )
     |> Repo.insert()
   end
 

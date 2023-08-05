@@ -15,7 +15,7 @@ defmodule Omc.Servers.ServerAcc do
   @doc false
   def changeset(server_acc, attrs) do
     server_acc
-    |> cast(attrs, [:name, :status, :description])
-    |> validate_required([:name, :status, :description])
+    |> cast(attrs, [:name, :status, :description, :server_id])
+    |> validate_required([:name, :status, :server_id])
   end
 end

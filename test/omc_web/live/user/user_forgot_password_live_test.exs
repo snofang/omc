@@ -21,7 +21,7 @@ defmodule OmcWeb.User.UserForgotPasswordLiveTest do
         conn
         |> log_in_user(user_fixture())
         |> live(~p"/users/reset_password")
-        |> follow_redirect(conn, ~p"/users/console")
+        |> follow_redirect(conn, ~p"/")
 
       assert {:ok, _conn} = result
     end

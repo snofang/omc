@@ -2,21 +2,22 @@
   <.header>
     Listing Server accs
     <:actions>
-      <.link patch={~p"/server_accs/new"}>
+      <.link patch={~p"/server_accs/new"} :if={@selected_server_id}>
         <.button>New Server acc</.button>
       </.link>
     </:actions>
   </.header>
 
-  <.simple_form for={@form} id="server-acc-filter" phx-change="change-filter">
+  <form id="server-acc-filter" phx-change="change-filter">
     <.input
-      field={@form[:selected_server_id]}
+      name="selected_server_id"
       type="select"
       label="Server Select"
       prompt="Choose a server"
-      options={Enum.map(@servers, fn server -> {server.name, server.id} end)}
+      options={@servers}
+      value={@selected_server_id}
     />
-  </.simple_form>
+  </form>
 
   <.table
     id="server_accs"
@@ -54,6 +55,7 @@
       title={@page_title}
       action={@live_action}
       server_acc={@server_acc}
+      selected_server_id={@selected_server_id}
       patch={~p"/server_accs"}
     />
   </.modal>

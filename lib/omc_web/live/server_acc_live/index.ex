@@ -8,8 +8,8 @@ defmodule OmcWeb.ServerAccLive.Index do
   def mount(_params, _session, socket) do
     socket =
       socket
-      |> assign(:servers, Servers.list_servers())
-      |> assign(:form, Phoenix.Component.to_form(%{"selected_server_id" => nil}))
+      |> assign(:servers, Servers.list_servers() |> Enum.map(&{&1.name, &1.id}))
+      |> assign(:selected_server_id, nil)
       |> stream(:server_accs, Servers.list_server_accs(nil))
 
     {:ok, socket}
@@ -29,7 +29,7 @@ defmodule OmcWeb.ServerAccLive.Index do
   defp apply_action(socket, :new, _params) do
     socket
     |> assign(:page_title, "New Server acc")
-    |> assign(:server_acc, %ServerAcc{})
+    |> assign(:server_acc, %ServerAcc{server_id: socket.assigns.selected_server_id})
   end
 
   defp apply_action(socket, :index, _params) do
@@ -52,9 +52,9 @@ defmodule OmcWeb.ServerAccLive.Index do
   end
 
   def handle_event("change-filter", %{"selected_server_id" => selected_server_id}, socket) do
-    socket
-    |> stream(:server_accs, Servers.list_server_accs(selected_server_id), reset: true)
-
-    {:noreply, socket}
+    {:noreply,
+     socket
+     |> assign(:selected_server_id, selected_server_id)
+     |> stream(:server_accs, Servers.list_server_accs(selected_server_id), reset: true)}
   end
 end

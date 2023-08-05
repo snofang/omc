@@ -8,7 +8,7 @@ defmodule Omc.Utils do
   Ecto.Changeset.convert_params/1 expect uniform ones 
   (all keys of the same type).
   """
-  @spec put_attr_safe!(Map, atom | binary, term) :: Map
+  @spec put_attr_safe!(map, atom | binary, term) :: map
   def put_attr_safe!(%{}=attrs, key, value) do
     case(:maps.next(:maps.iterator(attrs))) do
       {k, _, _} when is_atom(k) -> attrs |> Map.put(key, value)

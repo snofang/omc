@@ -17,7 +17,7 @@ defmodule OmcWeb.User.UserRegistrationLiveTest do
         conn
         |> log_in_user(user_fixture())
         |> live(~p"/users/register")
-        |> follow_redirect(conn, "/users/console")
+        |> follow_redirect(conn, ~p"/")
 
       assert {:ok, _conn} = result
     end
@@ -45,10 +45,10 @@ defmodule OmcWeb.User.UserRegistrationLiveTest do
       render_submit(form)
       conn = follow_trigger_action(form, conn)
 
-      assert redirected_to(conn) == ~p"/users/console"
+      assert redirected_to(conn) == ~p"/"
 
       # Now do a logged in request and assert on the menu
-      conn = get(conn, "/users/console")
+      conn = get(conn,~p"/servers")
       response = html_response(conn, 200)
       assert response =~ email
       assert response =~ "Settings"

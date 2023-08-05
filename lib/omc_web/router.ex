@@ -22,7 +22,7 @@ defmodule OmcWeb.Router do
 
     import Phoenix.Controller
 
-    get("/", ConsoleRedirector, nil)
+    get("/", RootRedirector, nil)
     # get "/", PageController, :home
   end
 
@@ -81,7 +81,6 @@ defmodule OmcWeb.Router do
       live("/server_accs/:id", ServerAccLive.Show, :show)
       live("/server_accs/:id/show/edit", ServerAccLive.Show, :edit)
 
-      live("/users/console", Console.ConsoleLive)
       live("/users/settings", User.UserSettingsLive, :edit)
       live("/users/settings/confirm_email/:token", User.UserSettingsLive, :confirm_email)
     end

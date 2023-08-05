@@ -40,9 +40,9 @@ defmodule OmcWeb.Layouts do
         <.link
           navigate={~p"/servers"}
           class={
-            "text-gray-700 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md #{if @active_tab == :profile, do: "bg-gray-200", else: "hover:bg-gray-50"}"
+            "text-gray-700 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md #{if @active_tab == :servers, do: "bg-gray-200", else: "hover:bg-gray-50"}"
           }
-          aria-current={if @active_tab == :profile, do: "true", else: "false"}
+          aria-current={if @active_tab == :servers, do: "true", else: "false"}
         >
           <.icon
             name="hero-x-mark-solid"
@@ -52,9 +52,9 @@ defmodule OmcWeb.Layouts do
         <.link
           navigate={~p"/server_accs"}
           class={
-            "text-gray-700 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md #{if @active_tab == :settings, do: "bg-gray-200", else: "hover:bg-gray-50"}"
+            "text-gray-700 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md #{if @active_tab == :server_accs, do: "bg-gray-200", else: "hover:bg-gray-50"}"
           }
-          aria-current={if @active_tab == :settings, do: "true", else: "false"}
+          aria-current={if @active_tab == :server_accs, do: "true", else: "false"}
         >
           <.icon
             name="hero-x-mark-solid"

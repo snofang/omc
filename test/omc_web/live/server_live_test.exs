@@ -23,26 +23,27 @@ defmodule OmcWeb.ServerLiveTest do
   defp create_server(_) do
     user = user_fixture()
     server = server_fixture(%{user_id: user.id})
-    %{server: server}
+    %{user: user, server: server}
   end
 
   describe "Index" do
     setup [:create_server]
 
-    test "lists all servers", %{conn: conn, server: server} do
+    test "lists all servers",
+         %{conn: conn, user: user, server: server} do
       {:ok, _index_live, html} =
         conn
-        |> log_in_user(user_fixture())
+        |> log_in_user(user)
         |> live(~p"/servers")
 
       assert html =~ "Listing Servers"
       assert html =~ server.description
     end
 
-    test "saves new server", %{conn: conn} do
+    test "saves new server", %{conn: conn, user: user} do
       {:ok, index_live, _html} =
         conn
-        |> log_in_user(user_fixture())
+        |> log_in_user(user)
         |> live(~p"/servers")
 
       assert index_live |> element("a", "New Server") |> render_click() =~
@@ -65,10 +66,11 @@ defmodule OmcWeb.ServerLiveTest do
       assert html =~ "some description"
     end
 
-    test "updates server in listing", %{conn: conn, server: server} do
+    test "updates server in listing",
+         %{conn: conn, user: user, server: server} do
       {:ok, index_live, _html} =
         conn
-        |> log_in_user(user_fixture())
+        |> log_in_user(user)
         |> live(~p"/servers")
 
       assert index_live |> element("#servers-#{server.id} a", "Edit") |> render_click() =~
@@ -91,10 +93,11 @@ defmodule OmcWeb.ServerLiveTest do
       assert html =~ "some updated description"
     end
 
-    test "deletes server in listing", %{conn: conn, server: server} do
+    test "deletes server in listing",
+         %{conn: conn, user: user, server: server} do
       {:ok, index_live, _html} =
         conn
-        |> log_in_user(user_fixture())
+        |> log_in_user(user)
         |> live(~p"/servers")
 
       assert index_live |> element("#servers-#{server.id} a", "Delete") |> render_click()
@@ -105,20 +108,22 @@ defmodule OmcWeb.ServerLiveTest do
   describe "Show" do
     setup [:create_server]
 
-    test "displays server", %{conn: conn, server: server} do
+    test "displays server",
+         %{conn: conn, user: user, server: server} do
       {:ok, _show_live, html} =
         conn
-        |> log_in_user(user_fixture())
+        |> log_in_user(user)
         |> live(~p"/servers/#{server}")
 
       assert html =~ "Show Server"
       assert html =~ server.description
     end
 
-    test "updates server within modal", %{conn: conn, server: server} do
+    test "updates server within modal",
+         %{conn: conn, user: user, server: server} do
       {:ok, show_live, _html} =
         conn
-        |> log_in_user(user_fixture())
+        |> log_in_user(user)
         |> live(~p"/servers/#{server}")
 
       assert show_live |> element("a", "Edit") |> render_click() =~

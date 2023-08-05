@@ -21,6 +21,7 @@ defmodule OmcWeb.ServerAccLive.FormComponent do
       >
         <.input field={@form[:name]} type="text" label="Name" />
         <.input
+          :if={@action == :edit}
           field={@form[:status]}
           type="select"
           label="Status"
@@ -76,7 +77,10 @@ defmodule OmcWeb.ServerAccLive.FormComponent do
   end
 
   defp save_server_acc(socket, :new, server_acc_params) do
-    case Servers.create_server_acc(server_acc_params) do
+    case Servers.create_server_acc(
+           server_acc_params
+           |> Map.put("server_id", to_string(socket.assigns.selected_server_id))
+         ) do
       {:ok, server_acc} ->
         notify_parent({:saved, server_acc})
 

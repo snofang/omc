@@ -6,7 +6,12 @@ defmodule OmcWeb.ServerLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :servers, Servers.list_servers())}
+    {:ok,
+     stream(
+       socket,
+       :servers,
+       Servers.list_servers(socket.assigns.current_user.id)
+     )}
   end
 
   @impl true
