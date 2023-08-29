@@ -17,7 +17,11 @@ defmodule Omc.Application do
       # Start Finch
       {Finch, name: Omc.Finch},
       # Start the Endpoint (http/https)
-      OmcWeb.Endpoint
+      OmcWeb.Endpoint,
+      # Start the TaskSupervisor
+      {Task.Supervisor, name: Omc.TaskSupervisor},
+      # Start ServerTaskManager
+      Omc.Servers.ServerTaskManager
       # Start a worker by calling: Omc.Worker.start_link(arg)
       # {Omc.Worker, arg}
     ]

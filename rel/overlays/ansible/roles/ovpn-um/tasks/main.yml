@@ -1,0 +1,13 @@
+---
+
+- name: revoke clients
+  include_tasks: revoke.yml
+  vars:
+    client_name: "{{item}}"
+  loop: "{{ clients_revoke | list }}"
+
+- name: create clients
+  include_tasks: create.yml
+  vars:
+    client_name: "{{item}}"
+  loop: "{{ clients_create | list }}"

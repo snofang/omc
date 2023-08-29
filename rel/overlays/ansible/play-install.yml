@@ -1,0 +1,7 @@
+---
+
+- hosts: ovpn_server
+  tasks:
+    - include_role:
+        name: ovpn-install
+

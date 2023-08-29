@@ -1,0 +1,7 @@
+
+- name: install expect
+  ansible.builtin.apt:
+    name: expect
+    state: present
+    update_cache: false
+  become: true

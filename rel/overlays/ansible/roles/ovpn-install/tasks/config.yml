@@ -1,0 +1,93 @@
+
+- name: config exist?
+  stat:
+    path: "{{ ovpn_data_config }}/openvpn.conf"
+  register: result
+  
+- name: config generate
+  shell: |
+    /usr/local/bin/ovpn_genconfig -u tcp://{{ansible_host}}
+  args:
+    executable: /bin/bash
+  when: not result.stat.exists
+    
+- name: pki exist?
+  stat:
+    path: "{{ ovpn_data_config }}/pki"
+  register: result
+  
+- name: copy init-pki script
+  template:
+    src: "init-pki.exp.j2"
+    dest: "/home/{{ ansible_user }}/init-pki.exp"
+    mode: 0755
+  when: not result.stat.exists
+
+- name: init-pki
+  shell: "/home/{{ ansible_user }}/init-pki.exp"
+  args:
+    executable: /bin/bash
+  notify: 
+    - restart
+  when: not result.stat.exists
+  
+- name: dev{{ ovpn_dev_number }} config
+  lineinfile:
+    path: "{{ ovpn_data_config }}/openvpn.conf"
+    state: present
+    regexp: '^dev tun'
+    line: 'dev tun{{ ovpn_dev_number }}'
+  notify: 
+    - restart
+   
+- name: verb {{ ovpn_verb }} config
+  lineinfile:
+    path: "{{ ovpn_data_config }}/openvpn.conf"
+    state: present
+    regexp: '^verb'
+    line: 'verb {{ ovpn_verb }}'
+  notify: 
+    - restart
+
+- name: tcp4 config
+  lineinfile:
+    path: "{{ ovpn_data_config }}/openvpn.conf"
+    state: present
+    regexp: '^proto tcp'
+    line: 'proto tcp4'
+  notify: 
+    - restart
+
+- name: topology subnet
+  lineinfile:
+    path: "{{ ovpn_data_config }}/openvpn.conf"
+    state: present
+    regexp: '^topology'
+    line: 'topology subnet'
+  notify: 
+    - restart
+    
+- name: UFW - Allow {{ ovpn_port }} connections
+  community.general.ufw:
+    rule: allow
+    port: "{{ ovpn_port }}"
+  become: true
+
+- name: copy build-client script
+  template:
+    src: "build-client.exp.j2"
+    dest: "/home/{{ ansible_user }}/build-client.exp"
+    mode: 0755
+
+- name: copy revoke-client script 
+  template:
+    src: "revoke-client.exp.j2"
+    dest: "/home/{{ ansible_user }}/revoke-client.exp"
+    mode: 0755
+  
+- name: accs directory create
+  ansible.builtin.file:
+    path: "{{ ovpn_data_accs }}"
+    state: directory
+    mode: '0755'
+

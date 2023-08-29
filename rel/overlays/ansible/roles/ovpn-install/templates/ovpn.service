@@ -1,0 +1,27 @@
+# This service is actually a systemd target,
+# but we are using a service since targets cannot be reloaded.
+
+[Unit]
+Description=OpenVPN service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=/etc/environment
+Type=notify
+PrivateTmp=true
+#WorkingDirectory={{ovpn_data_config}}
+ExecStart=ovpn_run
+CapabilityBoundingSet=CAP_IPC_LOCK CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_NET_RAW CAP_SETGID CAP_SETUID CAP_SYS_CHROOT CAP_DAC_OVERRIDE CAP_AUDIT_WRITE
+LimitNPROC=10
+DeviceAllow=/dev/null rw
+DeviceAllow=/dev/net/tun rw
+ProtectSystem=full
+# ProtectHome=read-only
+KillMode=process
+RestartSec=5s
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+

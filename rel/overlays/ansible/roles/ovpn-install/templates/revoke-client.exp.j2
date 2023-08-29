@@ -1,0 +1,23 @@
+#!/bin/expect -f
+set client_name [lindex $argv 0];
+
+set force_conservative 0  ;# set to 1 to force conservative mode even if
+			  ;# script wasn't run conservatively originally
+if {$force_conservative} {
+	set send_slow {1 .1}
+	proc send {ignore arg} {
+		sleep .1
+		exp_send -s -- $arg
+	}
+}
+
+set timeout -1
+spawn ovpn_revokeclient $client_name
+match_max 100000
+expect -exact " Continue with revocation: "
+send -- "yes\r"
+expect -exact "Enter pass phrase for {{ ovpn_data_config }}/pki/private/ca.key:"
+send -- "{{ ovpn_ca_pass }}\r"
+expect -exact "Enter pass phrase for {{ ovpn_data_config }}/pki/private/ca.key:"
+send -- "{{ ovpn_ca_pass }}\r"
+expect eof

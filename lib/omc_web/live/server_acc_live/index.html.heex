@@ -2,7 +2,7 @@
   <.header>
     Listing Server accs
     <:actions>
-      <.link patch={~p"/server_accs/new"} :if={@selected_server_id}>
+      <.link :if={@selected_server_id} patch={~p"/server_accs/new"}>
         <.button>New Server acc</.button>
       </.link>
     </:actions>

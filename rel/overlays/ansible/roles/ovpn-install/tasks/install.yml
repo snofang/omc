@@ -1,0 +1,75 @@
+---
+
+- name: install openvpn pre-packages
+  ansible.builtin.apt:
+    name: 
+      - openvpn
+      - easy-rsa
+    state: present
+    update_cache: false
+  become: true
+  
+- name: Create a symbolic link to easyrsa
+  ansible.builtin.file:
+    src: /usr/share/easy-rsa/easyrsa
+    dest: /usr/local/bin/easyrsa
+    owner: root
+    group: root
+    state: link
+  become: true
+
+- name: customize /etc/environment
+  ansible.builtin.lineinfile:
+    dest: "/etc/environment"
+    state: present
+    regexp: "^{{ item.key }}="
+    line: "{{ item.key }}={{ item.value }}"
+  with_items: 
+    - key: OPENVPN
+      value: "{{ ovpn_data_config }}"
+    - key: EASYRSA
+      value: /usr/share/easy-rsa
+    - key: EASYRSA_CRL_DAYS
+      value: 3650
+    - key: EASYRSA_PKI
+      value: "{{ ovpn_data_config }}/pki"
+  register: result
+  become: true
+
+- name: source environment
+  ansible.builtin.shell: |
+    source /etc/environment
+  args:
+    executable: /bin/bash
+  when: result.changed
+
+- name: copy custom scripts
+  copy:
+    src: "files/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    force: false
+    mode: 0755
+  become: true
+  with_items:
+    - ovpn_genconfig
+    - ovpn_getclient
+    - ovpn_initpki
+    - ovpn_revokeclient
+    - ovpn_run
+
+- name: ensure ovpn.service
+  template:
+    src: "ovpn.service"
+    dest: /etc/systemd/system/ovpn.service
+    owner: root
+    mode: 0664
+  become: true
+  notify: restart
+  register: result
+     
+- name: daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: true
+  become: true
+  when: result.changed
+  

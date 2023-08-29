@@ -1,5 +1,8 @@
 import Config
 
+config :omc, data: Path.expand("../.data", Path.dirname(__ENV__.file))
+config :omc, ansible: Path.expand("../rel/overlays/ansible", Path.dirname(__ENV__.file))
+
 # Configure your database
 config :omc, Omc.Repo,
   database: Path.expand("../omc_dev.db", Path.dirname(__ENV__.file)),

@@ -1,0 +1,18 @@
+---
+
+all:
+  hosts:
+    ovpn_server:
+      ovpn_data: "/home/{{ ansible_user }}/.ovpn_data"
+      ovpn_data_config: "{{ovpn_data}}/conf"
+      ovpn_data_accs: "{{ovpn_data}}/accs"
+      ovpn_ca_pass: "<%= :crypto.strong_rand_bytes(16) |> Base.encode64 |> binary_part(0, 16) %>"
+  vars:
+    ansible_host: <%= server.name %>
+    ansible_user: omc
+    ansible_timeout: 30
+    ansible_port: 22
+    ansible_connection: ssh 
+    ansible_host_key_checking: False
+    ansible_private_key_file: ~/.ssh/id_rsa
+    ansible_command_warnings: False

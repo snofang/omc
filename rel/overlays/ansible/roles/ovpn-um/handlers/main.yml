@@ -1,0 +1,8 @@
+---
+
+- name: restart
+  ansible.builtin.service:
+    name: ovpn
+    state: restarted
+    enabled: true
+  become: true

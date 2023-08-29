@@ -20,5 +20,4 @@ defmodule Omc.Servers.Server do
     |> validate_required([:name, :status, :user_id, :price, :max_accs])
     |> unique_constraint(:name)
   end
-  
 end

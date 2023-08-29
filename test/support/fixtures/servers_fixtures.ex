@@ -19,7 +19,7 @@ defmodule Omc.ServersFixtures do
         description: "some description",
         max_accs: 42,
         name: unique_server_name(),
-        price: "120.5",
+        price: "120.5"
         # status: :active
       })
       |> Omc.Servers.create_server()

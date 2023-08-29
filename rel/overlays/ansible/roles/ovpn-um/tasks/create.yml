@@ -1,0 +1,27 @@
+---
+
+- name: client request for {{ client_name }} exist?
+  stat:
+    path: "{{ ovpn_data_config }}/pki/reqs/{{ client_name }}.req"
+  become: true
+  register: result
+  
+- name: build client - {{ client_name }}
+  shell: "/home/{{ ansible_user }}/build-client.exp {{ client_name }}"
+  args:
+    executable: /bin/bash
+  when: not result.stat.exists
+  
+- name: client config for {{ client_name }} exist?
+  stat:
+    path: "{{ ovpn_data_accs }}/{{ client_name }}.ovpn"
+  register: result
+    
+- name: get client - {{ client_name }}
+  shell: |
+    ovpn_getclient {{ client_name }} > {{ ovpn_data_accs }}/{{ client_name }}.ovpn 
+  args:
+    executable: /bin/bash
+  when: not result.stat.exists
+  
+

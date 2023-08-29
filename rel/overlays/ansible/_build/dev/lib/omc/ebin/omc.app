@@ -1,0 +1,12 @@
+{application,omc,
+             [{applications,[kernel,stdlib,elixir,logger,runtime_tools,
+                             bcrypt_elixir,phoenix,phoenix_ecto,ecto_sql,
+                             ecto_sqlite3,phoenix_html,phoenix_live_reload,
+                             phoenix_live_view,phoenix_live_dashboard,esbuild,
+                             tailwind,swoosh,finch,telemetry_metrics,
+                             telemetry_poller,gettext,jason,plug_cowboy]},
+              {description,"omc"},
+              {modules,[]},
+              {registered,[]},
+              {vsn,"0.1.0"},
+              {mod,{'Elixir.Omc.Application',[]}}]}.

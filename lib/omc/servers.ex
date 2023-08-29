@@ -26,7 +26,7 @@ defmodule Omc.Servers do
     |> where(user_id: ^user_id)
     |> Repo.all()
   end
-  
+
   @doc """
   Gets a single server.
 
@@ -59,7 +59,7 @@ defmodule Omc.Servers do
     %Server{}
     |> Server.changeset(
       attrs
-      |> Omc.Utils.put_attr_safe!(:status, :active)
+      |> Omc.Common.Utils.put_attr_safe!(:status, :active)
     )
     |> Repo.insert()
   end
@@ -169,7 +169,7 @@ defmodule Omc.Servers do
     %ServerAcc{}
     |> ServerAcc.changeset(
       attrs
-      |> Omc.Utils.put_attr_safe!(:status, :active)
+      |> Omc.Common.Utils.put_attr_safe!(:status, :active)
     )
     |> Repo.insert()
   end
@@ -219,5 +219,18 @@ defmodule Omc.Servers do
   """
   def change_server_acc(%ServerAcc{} = server_acc, attrs \\ %{}) do
     ServerAcc.changeset(server_acc, attrs)
+  end
+
+  @doc """
+  Gets server's data directory and create it if does not exist
+  """
+  def server_dir(server) do
+    dir =
+      Omc.Common.Utils.data_dir() <>
+        "/" <>
+        (to_string(server.id) |> String.pad_leading(3, "0"))
+
+    File.mkdir_p!(dir)
+    dir
   end
 end

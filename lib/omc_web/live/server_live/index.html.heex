@@ -30,7 +30,8 @@
     </:col>
     <:action :let={{_id, server}}>
       <div class="sr-only">
-        <.link navigate={~p"/servers/#{server}"}>Show</.link> </div>
+        <.link navigate={~p"/servers/#{server}"}>Show</.link>
+      </div>
       <.link patch={~p"/servers/#{server}/edit"}>Edit</.link>
     </:action>
     <:action :let={{id, server}}>
