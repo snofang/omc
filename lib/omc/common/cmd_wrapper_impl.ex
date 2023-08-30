@@ -5,8 +5,8 @@ defmodule Omc.Common.CmdWrapperImpl do
   @behaviour CmdWrapper
 
   def run(cmd, timeout, topic, ref) do
+    Logger.info(cmd)
     timeout = timeout || Application.get_env(:omc, :cmd_wrapper)[:timeout]
-    IO.inspect(File.cwd!(), label: "current working directory in CmdRunnere")
 
     task =
       Task.async(fn ->

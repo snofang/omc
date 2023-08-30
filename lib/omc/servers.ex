@@ -220,17 +220,4 @@ defmodule Omc.Servers do
   def change_server_acc(%ServerAcc{} = server_acc, attrs \\ %{}) do
     ServerAcc.changeset(server_acc, attrs)
   end
-
-  @doc """
-  Gets server's data directory and create it if does not exist
-  """
-  def server_dir(server) do
-    dir =
-      Omc.Common.Utils.data_dir() <>
-        "/" <>
-        (to_string(server.id) |> String.pad_leading(3, "0"))
-
-    File.mkdir_p!(dir)
-    dir
-  end
 end

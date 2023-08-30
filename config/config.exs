@@ -7,6 +7,9 @@
 # General application configuration
 import Config
 
+config :omc, data: Path.expand("../.data", Path.dirname(__ENV__.file))
+config :omc, ansible: Path.expand("../rel/overlays/ansible", Path.dirname(__ENV__.file))
+
 config :omc,
   ecto_repos: [Omc.Repo]
 
