@@ -16,12 +16,16 @@ defmodule Omc.Servers.ServerTaskManager do
 
   def init(_args) do
     PubSub.subscribe(Omc.PubSub, @topic)
-    {:ok, %{}}
+
+    timeout = Application.get_env(:omc, :server_call_timeout)
+
+    {:ok, %{timeout: timeout}}
   end
 
-  def handle_cast({:run, server_id, cmd}, state) do
+  def handle_cast({:run, server_id, cmd}, state = %{timeout: timeout}) do
     Task.Supervisor.start_child(Omc.TaskSupervisor, CmdWrapper, :run, [
       cmd,
+      timeout,
       @topic,
       server_id
     ])

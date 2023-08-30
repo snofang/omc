@@ -7,6 +7,6 @@ defmodule Omc.Common.CmdWrapper do
   """
   @callback run(binary(), non_neg_integer, binary(), term()) :: binary()
 
-  def run(cmd, timeout \\ nil, topic, ref), do: impl().run(cmd, timeout, topic, ref)
-  defp impl, do: Application.get_env(:omc, :cmd_wrapper)[:impl]
+  def run(cmd, timeout, topic, ref), do: impl().run(cmd, timeout, topic, ref)
+  defp impl, do: Application.get_env(:omc, :cmd_wrapper_impl)
 end

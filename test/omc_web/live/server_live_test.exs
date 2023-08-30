@@ -8,13 +8,13 @@ defmodule OmcWeb.ServerLiveTest do
   @create_attrs %{
     description: "some description",
     max_accs: 42,
-    name: "some name",
+    name: "some.name",
     price: "120.5"
   }
   @update_attrs %{
     description: "some updated description",
     max_accs: 43,
-    name: "some updated name",
+    name: "some.updated.name",
     price: "456.7",
     status: :deactive
   }

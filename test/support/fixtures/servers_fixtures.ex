@@ -7,7 +7,7 @@ defmodule Omc.ServersFixtures do
   @doc """
   Generate a unique server name.
   """
-  def unique_server_name, do: "some name#{System.unique_integer([:positive])}"
+  def unique_server_name, do: "somename#{System.unique_integer([:positive])}"
 
   @doc """
   Generate a server.

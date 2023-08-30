@@ -1,17 +1,22 @@
 defmodule Omc.ServerOpsTest do
   alias Omc.Servers.ServerOps
   alias Omc.Servers.Server
-  use ExUnit.Case, async: false
+  use Omc.DataCase, async: false
+  import Mox
+  setup :set_mox_from_context
+  setup :verify_on_exit!
 
   test "ansible hosts file should be created/modified on operation(s)" do
+    Mox.defmock(Omc.CmdWrapperMock, for: Omc.Common.CmdWrapper)
+
     Application.put_env(
       :omc,
       :cmd_wrapper,
-      Application.get_env(:omc, :cmd_wrapper) |> Keyword.put(:impl, Omc.CmdWrapperMock)
+      Application.put_env(:omc, :cmd_wrapper_impl, Omc.CmdWrapperMock)
     )
 
     Omc.CmdWrapperMock
-    |> Mox.expect(:run, fn _cmd, _timeout, _topic, _ref -> nil end)
+    |> expect(:run, 2, fn _cmd, _timeout, _topic, _ref -> {:ok, "command executed"} end)
 
     #
     # on first install operation it should be created

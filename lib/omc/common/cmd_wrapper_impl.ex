@@ -6,7 +6,6 @@ defmodule Omc.Common.CmdWrapperImpl do
 
   def run(cmd, timeout, topic, ref) do
     Logger.info(cmd)
-    timeout = timeout || Application.get_env(:omc, :cmd_wrapper)[:timeout]
 
     task =
       Task.async(fn ->

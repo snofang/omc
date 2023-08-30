@@ -29,7 +29,7 @@ defmodule Omc.ServersTest do
       valid_attrs = %{
         description: "some description",
         max_accs: 42,
-        name: "some name",
+        name: "some.name",
         price: "120.5",
         user_id: user.id
       }
@@ -37,7 +37,7 @@ defmodule Omc.ServersTest do
       assert {:ok, %Server{} = server} = Servers.create_server(valid_attrs)
       assert server.description == "some description"
       assert server.max_accs == 42
-      assert server.name == "some name"
+      assert server.name == "some.name"
       assert server.price == Decimal.new("120.5")
       assert server.status == :active
     end
@@ -53,7 +53,7 @@ defmodule Omc.ServersTest do
       update_attrs = %{
         description: "some updated description",
         max_accs: 43,
-        name: "some updated name",
+        name: "some.updated.name",
         price: "456.7",
         status: :deactive
       }
@@ -61,7 +61,7 @@ defmodule Omc.ServersTest do
       assert {:ok, %Server{} = server} = Servers.update_server(server, update_attrs)
       assert server.description == "some updated description"
       assert server.max_accs == 43
-      assert server.name == "some updated name"
+      assert server.name == "some.updated.name"
       assert server.price == Decimal.new("456.7")
       assert server.status == :deactive
     end
@@ -110,11 +110,11 @@ defmodule Omc.ServersTest do
 
     test "create_server_acc/1 with valid data creates a server_acc",
          %{server: server} do
-      valid_attrs = %{description: "some description", name: "some name", server_id: server.id}
+      valid_attrs = %{description: "some description", name: "some.name", server_id: server.id}
 
       assert {:ok, %ServerAcc{} = server_acc} = Servers.create_server_acc(valid_attrs)
       assert server_acc.description == "some description"
-      assert server_acc.name == "some name"
+      assert server_acc.name == "some.name"
       assert server_acc.status == :active
       assert server_acc.server_id == server.id
     end
@@ -127,7 +127,7 @@ defmodule Omc.ServersTest do
          %{server_acc: server_acc} do
       update_attrs = %{
         description: "some updated description",
-        name: "some updated name",
+        name: "some.updated.name",
         status: :deactive
       }
 
@@ -135,7 +135,7 @@ defmodule Omc.ServersTest do
                Servers.update_server_acc(server_acc, update_attrs)
 
       assert server_acc.description == "some updated description"
-      assert server_acc.name == "some updated name"
+      assert server_acc.name == "some.updated.name"
       assert server_acc.status == :deactive
     end
 

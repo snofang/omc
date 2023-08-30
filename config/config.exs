@@ -13,9 +13,8 @@ config :omc, ansible: Path.expand("../rel/overlays/ansible", Path.dirname(__ENV_
 config :omc,
   ecto_repos: [Omc.Repo]
 
-config :omc, :cmd_wrapper,
-  impl: Omc.Common.CmdWrapperImpl,
-  timeout: 1 * 60 * 1_000
+config :omc, cmd_wrapper_impl: Omc.Common.CmdWrapperImpl
+config :omc, server_call_timeout: 1 * 60 * 1_000
 
 # Configures the endpoint
 config :omc, OmcWeb.Endpoint,
