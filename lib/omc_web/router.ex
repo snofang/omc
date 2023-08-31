@@ -74,6 +74,7 @@ defmodule OmcWeb.Router do
       live("/servers/:id/edit", ServerLive.Index, :edit)
       live("/servers/:id", ServerLive.Show, :show)
       live("/servers/:id/show/edit", ServerLive.Show, :edit)
+      live("/servers/:id/task", ServerLive.Task, :task)
 
       live("/server_accs", ServerAccLive.Index, :index)
       live("/server_accs/new", ServerAccLive.Index, :new)

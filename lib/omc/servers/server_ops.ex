@@ -65,6 +65,7 @@ defmodule Omc.Servers.ServerOps do
 
   def ansible_ovpn_install(server) do
     ansible_create_host_file(server)
+
     server
     |> ServerTaskManager.run_task(
       "ansible-playbook -i #{ansible_host_file_path(server)} #{Path.join(ansible_path(), "play-install.yml")}"

@@ -42,6 +42,9 @@
         Delete
       </.link>
     </:action>
+    <:action :let={{_id, server}}>
+      <.link patch={~p"/servers/#{server}/task"}>Task</.link>
+    </:action>
   </.table>
 
   <.modal

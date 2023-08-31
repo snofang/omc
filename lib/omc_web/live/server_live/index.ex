@@ -1,4 +1,5 @@
 defmodule OmcWeb.ServerLive.Index do
+  require Logger
   use OmcWeb, :live_view
 
   alias Omc.Servers
