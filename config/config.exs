@@ -14,7 +14,7 @@ config :omc,
   ecto_repos: [Omc.Repo]
 
 config :omc, cmd_wrapper_impl: Omc.Common.CmdWrapperImpl
-config :omc, server_call_timeout: 1 * 60 * 1_000
+config :omc, server_call_timeout: 15 * 60 * 1_000
 
 # Configures the endpoint
 config :omc, OmcWeb.Endpoint,

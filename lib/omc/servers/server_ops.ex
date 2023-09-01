@@ -12,6 +12,16 @@ defmodule Omc.Servers.ServerOps do
     path
   end
 
+  def server_ovpn_data_dir(server) do
+    (path =
+       server
+       |> server_dir()
+       |> Path.join("ovpn_data"))
+    |> File.mkdir_p!()
+
+    path
+  end
+
   # def server_ansible_host(server) do
   #   # EEx.eval_file()
   # end
@@ -35,7 +45,7 @@ defmodule Omc.Servers.ServerOps do
         true ->
           ansible_path()
           |> Path.join("hosts.yml.eex")
-          |> EEx.eval_file(server: server)
+          |> EEx.eval_file(server: server |> Map.put(:ovpn_data, server_ovpn_data_dir(server)))
 
         _ ->
           existing_content =
@@ -63,12 +73,13 @@ defmodule Omc.Servers.ServerOps do
   #   |> File.write(content)
   # end
 
-  def ansible_ovpn_install(server) do
+  def ansible_ovpn_install(server, config_push \\ false) do
     ansible_create_host_file(server)
 
     server
     |> ServerTaskManager.run_task(
-      "ansible-playbook -i #{ansible_host_file_path(server)} #{Path.join(ansible_path(), "play-install.yml")}"
+      "ansible-playbook -i #{ansible_host_file_path(server)} #{Path.join(ansible_path(), "play-install.yml")} -e '{\"ovpn_config_push\": #{config_push}}'"
     )
   end
+
 end

@@ -29,12 +29,18 @@ defmodule OmcWeb.ServerLive.Task do
      assign(socket, :task_log, ServerTaskManager.get_task_log(socket.assigns.server.id))}
   end
 
-  def handle_event("task-ovpn-install", _unsigned_params, socket) do
+  def handle_event("ovpn", _unsigned_params, socket) do
     Logger.info("ovpn-install task called for #{inspect(socket.assigns.server)}")
     ServerOps.ansible_ovpn_install(socket.assigns.server)
     {:noreply, socket}
   end
 
+  def handle_event("ovpn-config-push", _unsigned_params, socket) do
+    Logger.info("ovpn-install task called for #{inspect(socket.assigns.server)}")
+    ServerOps.ansible_ovpn_install(socket.assigns.server, true)
+    {:noreply, socket}
+  end
+  
   def render(assigns) do
     ~H"""
     <div class="mx-5">
@@ -42,11 +48,12 @@ defmodule OmcWeb.ServerLive.Task do
         <%= @page_title %>
         <:subtitle>Server tasks - <%= @server.name %></:subtitle>
         <:actions>
-          <.button phx-click="task-ovpn-install">ovpn install</.button>
+          <.button phx-click="ovpn">ovpn</.button>
+          <.button phx-click="ovpn-config-push" data-confirm="Are you sure? all config data in the server will be overwritten">ovpn as source</.button>
         </:actions>
         <div></div>
       </.header>
-      <div class="whitespace-pre-line font-mono text-xs border-2 p-2"><%= @task_log %></div>
+      <div id="task-{@server.id}" class="whitespace-pre-line font-mono text-xs border-2 p-2"><%= @task_log %></div>
       <.back navigate={~p"/servers"}>Back to servers</.back>
     </div>
     """

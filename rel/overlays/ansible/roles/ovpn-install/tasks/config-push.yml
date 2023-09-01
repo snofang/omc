@@ -1,0 +1,29 @@
+---
+
+- name: ovpn data exist?
+  stat:
+    path: "{{ ovpn_data }}"
+  register: st
+  
+- name: Check if ovpn data is empty?
+  find:
+    paths: "{{ ovpn_data }}"
+    file_type: "any"
+  register: find
+  when: st.stat.exists
+  
+- name: archive already existing ovpn data
+  community.general.archive:
+    path: "{{ ovpn_data }}"
+    dest: "{{ ovpn_data }}-{{ '%Y%m%dT%H%M%S' | strftime(ansible_date_time.epoch, true) }}.tgz"
+    remove: true
+  when: st.stat.exists and find.matched > 0
+  
+- name: synch existing ovpn data on local to remote machine
+  ansible.posix.synchronize:
+    src: "{{ ovpn_data_local }}/"
+    dest: "{{ ovpn_data }}/"
+    mode: "push" 
+    archive: true
+    delete: true
+
