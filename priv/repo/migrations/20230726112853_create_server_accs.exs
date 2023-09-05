@@ -7,6 +7,7 @@ defmodule Omc.Repo.Migrations.CreateServerAccs do
       add :status, :string, null: false
       add :description, :string
       add :server_id, references(:servers, on_delete: :nothing), null: false
+      add :lock_version, :integer, default: 1
 
       timestamps()
     end

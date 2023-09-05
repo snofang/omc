@@ -35,7 +35,7 @@ defmodule Omc.ServersFixtures do
       attrs
       |> Enum.into(%{
         description: "some description",
-        name: "some name",
+        name: "some-name",
         status: :active
       })
       |> Omc.Servers.create_server_acc()

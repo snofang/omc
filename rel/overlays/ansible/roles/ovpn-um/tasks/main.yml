@@ -11,3 +11,12 @@
   vars:
     client_name: "{{item}}"
   loop: "{{ clients_create | list }}"
+
+- name: sync ovpn data from remote machine 
+  ansible.posix.synchronize:
+    src: "{{ ovpn_data }}/"
+    dest: "{{ ovpn_data_local }}/"
+    mode: "pull" 
+    archive: true
+    delete: true
+

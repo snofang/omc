@@ -40,7 +40,7 @@ defmodule OmcWeb.ServerLive.Task do
     ServerOps.ansible_ovpn_install(socket.assigns.server, true)
     {:noreply, socket}
   end
-  
+
   def render(assigns) do
     ~H"""
     <div class="mx-5">
@@ -49,11 +49,18 @@ defmodule OmcWeb.ServerLive.Task do
         <:subtitle>Server tasks - <%= @server.name %></:subtitle>
         <:actions>
           <.button phx-click="ovpn">ovpn</.button>
-          <.button phx-click="ovpn-config-push" data-confirm="Are you sure? all config data in the server will be overwritten">ovpn as source</.button>
+          <.button
+            phx-click="ovpn-config-push"
+            data-confirm="Are you sure? all config data in the server will be overwritten"
+          >
+            ovpn push
+          </.button>
         </:actions>
         <div></div>
       </.header>
-      <div id="task-{@server.id}" class="whitespace-pre-line font-mono text-xs border-2 p-2"><%= @task_log %></div>
+      <div id="task-{@server.id}" class="whitespace-pre-line font-mono text-xs border-2 p-2">
+        <%= @task_log %>
+      </div>
       <.back navigate={~p"/servers"}>Back to servers</.back>
     </div>
     """

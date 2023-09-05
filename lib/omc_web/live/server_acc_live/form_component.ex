@@ -21,12 +21,12 @@ defmodule OmcWeb.ServerAccLive.FormComponent do
       >
         <.input field={@form[:name]} type="text" label="Name" />
         <.input
-          :if={@action == :edit}
           field={@form[:status]}
           type="select"
           label="Status"
           prompt="Choose a value"
           options={Ecto.Enum.values(Omc.Servers.ServerAcc, :status)}
+          disabled
         />
         <.input field={@form[:description]} type="text" label="Description" />
         <:actions>

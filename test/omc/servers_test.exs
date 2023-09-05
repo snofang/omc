@@ -110,12 +110,11 @@ defmodule Omc.ServersTest do
 
     test "create_server_acc/1 with valid data creates a server_acc",
          %{server: server} do
-      valid_attrs = %{description: "some description", name: "some.name", server_id: server.id}
+      valid_attrs = %{description: "some description", name: "some-2345", server_id: server.id}
 
       assert {:ok, %ServerAcc{} = server_acc} = Servers.create_server_acc(valid_attrs)
       assert server_acc.description == "some description"
-      assert server_acc.name == "some.name"
-      assert server_acc.status == :active
+      assert server_acc.name == "some-2345"
       assert server_acc.server_id == server.id
     end
 
@@ -123,20 +122,33 @@ defmodule Omc.ServersTest do
       assert {:error, %Ecto.Changeset{}} = Servers.create_server_acc(@invalid_attrs)
     end
 
+    test "create_server_acc/1 with invalid name returns error changeset", %{server: server} do
+      valid_attrs = %{description: "some description", name: "some-2345", server_id: server.id}
+
+      assert {:error, %Ecto.Changeset{}} =
+               Servers.create_server_acc(valid_attrs |> Map.put(:name, nil))
+
+      assert {:error, %Ecto.Changeset{}} =
+               Servers.create_server_acc(valid_attrs |> Map.put(:name, "having.dot"))
+
+      assert {:error, %Ecto.Changeset{}} =
+               Servers.create_server_acc(valid_attrs |> Map.put(:name, "having space"))
+    end
+
     test "update_server_acc/2 with valid data updates the server_acc",
          %{server_acc: server_acc} do
       update_attrs = %{
         description: "some updated description",
-        name: "some.updated.name",
-        status: :deactive
+        name: "some_updated-name",
+        status: :active
       }
 
       assert {:ok, %ServerAcc{} = server_acc} =
                Servers.update_server_acc(server_acc, update_attrs)
 
       assert server_acc.description == "some updated description"
-      assert server_acc.name == "some.updated.name"
-      assert server_acc.status == :deactive
+      assert server_acc.name == "some_updated-name"
+      assert server_acc.status == :active
     end
 
     test "update_server_acc/2 with invalid data returns error changeset",

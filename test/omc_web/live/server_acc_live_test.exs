@@ -5,11 +5,10 @@ defmodule OmcWeb.ServerAccLiveTest do
   import Omc.ServersFixtures
   import Omc.AccountsFixtures
 
-  @create_attrs %{description: "some description", name: "some name"}
+  @create_attrs %{description: "some description", name: "some-name"}
   @update_attrs %{
     description: "some updated description",
-    name: "some updated name",
-    status: :deactive
+    name: "some-updated-name"
   }
   @invalid_attrs %{description: nil, name: nil}
 

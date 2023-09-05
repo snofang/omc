@@ -7,14 +7,6 @@ defmodule Omc.ServerOpsTest do
   setup :verify_on_exit!
 
   test "ansible hosts file should be created/modified on operation(s)" do
-    Mox.defmock(Omc.CmdWrapperMock, for: Omc.Common.CmdWrapper)
-
-    Application.put_env(
-      :omc,
-      :cmd_wrapper,
-      Application.put_env(:omc, :cmd_wrapper_impl, Omc.CmdWrapperMock)
-    )
-
     Omc.CmdWrapperMock
     |> expect(:run, 2, fn _cmd, _timeout, _topic, _ref -> {:ok, "command executed"} end)
 
@@ -64,14 +56,14 @@ defmodule Omc.ServerOpsTest do
     unchanged_password =
       Regex.run(~r/^\s*ovpn_ca_pass:\s+\"(.+)\"$/m, host_file_content, capture: :all_but_first)
       |> hd()
+
     assert unchanged_password == password
 
     # ovpn_data_local 
     unchanged_ovpn_data_local_dir =
       Regex.run(~r/^\s*ovpn_data_local:\s+\"(.+)\"$/m, host_file_content, capture: :all_but_first)
       |> hd()
-    assert  unchanged_ovpn_data_local_dir == ovpn_data_local_dir
-    
-  end
 
+    assert unchanged_ovpn_data_local_dir == ovpn_data_local_dir
+  end
 end

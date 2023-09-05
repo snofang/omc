@@ -19,9 +19,10 @@ defmodule Omc.Servers.Server do
     |> cast(attrs, [:name, :status, :price, :max_accs, :description, :user_id])
     |> validate_required([:name, :status, :user_id, :price, :max_accs])
     |> unique_constraint(:name)
-    |> validate_format(
-      :name,
-      ~r/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/
-    )
+    |> validate_format(:name, name_format())
+  end
+
+  def name_format() do
+    ~r/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/
   end
 end

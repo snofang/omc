@@ -3,6 +3,9 @@ defmodule Omc.Servers.ServerTaskManager do
   To track each server's task progress(actually keep prompt messages)
   TODO: to persist progress messages for each server and intepret the outcomes
   so that it would be possible to change the state of the server accordingly
+  TODO: to prevent concurrent tasks on a single machine 
+  TODO: to parse the last line of ansible call and detect success/failure of 
+  the tasks. it is required in spacially in user management
   """
   require Logger
   alias Omc.Common.CmdWrapper

@@ -4,6 +4,10 @@ defmodule Omc.Servers do
   """
 
   import Ecto.Query, warn: false
+  alias Omc.Servers.ServerOps
+  alias Ecto.Repo
+  alias Ecto.Changeset
+  alias Ecto.Repo
   alias Omc.Repo
 
   alias Omc.Servers.Server
@@ -169,7 +173,7 @@ defmodule Omc.Servers do
     %ServerAcc{}
     |> ServerAcc.changeset(
       attrs
-      |> Omc.Common.Utils.put_attr_safe!(:status, :active)
+      |> Omc.Common.Utils.put_attr_safe!(:status, :active_pending)
     )
     |> Repo.insert()
   end
@@ -202,10 +206,23 @@ defmodule Omc.Servers do
 
       iex> delete_server_acc(server_acc)
       {:error, %Ecto.Changeset{}}
-
   """
+  # TODO: to delete using visrual boolean field and having specific changeset function for
   def delete_server_acc(%ServerAcc{} = server_acc) do
-    Repo.delete(server_acc)
+    case get_server_acc!(server_acc.id).status do
+      :active_pending ->
+        Repo.delete(server_acc)
+
+      # TODO: what is proper way of doing this? 
+      _ ->
+        {:error,
+         server_acc
+         |> Changeset.change()
+         |> Map.put(
+           :errors,
+           [{:status, {"only acc's with initial status active_pending can be deleted", []}}]
+         )}
+    end
   end
 
   @doc """
@@ -219,5 +236,41 @@ defmodule Omc.Servers do
   """
   def change_server_acc(%ServerAcc{} = server_acc, attrs \\ %{}) do
     ServerAcc.changeset(server_acc, attrs)
+  end
+
+  @doc """
+  marks acc for deactivation
+  it will be done/effective by some preodic user management ops 
+  """
+  def deactivate_acc(acc) do
+    acc
+    |> ServerAcc.changeset(%{status: :deactive_pending})
+    |> Repo.update()
+  end
+
+  @doc """
+  Lists server's acc having specific `status`
+  """
+  @spec list_server_accs(pos_integer(), atom()) :: [ServerAcc.t()]
+  def list_server_accs(server_id, status) do
+    from(acc in ServerAcc, where: acc.status == ^status and acc.server_id == ^server_id)
+    |> Repo.all()
+  end
+
+  @doc """
+  Updates waiting for changes accs(those having :active_pending or :deactive_pending status)
+  based on current acc file existance
+  """
+  @spec sync_server_accs_status(Server.t()) :: :ok
+  def sync_server_accs_status(server) do
+    list_server_accs(server.id, :active_pending)
+    |> Enum.each(fn acc ->
+      update_server_acc(acc, ServerOps.acc_file_based_status_change(acc))
+    end)
+
+    list_server_accs(server.id, :deactive_pending)
+    |> Enum.each(fn acc ->
+      update_server_acc(acc, ServerOps.acc_file_based_status_change(acc))
+    end)
   end
 end
