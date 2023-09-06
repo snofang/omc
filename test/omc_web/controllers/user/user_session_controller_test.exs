@@ -1,5 +1,5 @@
 defmodule OmcWeb.User.UserSessionControllerTest do
-  use OmcWeb.ConnCase
+  use OmcWeb.ConnCase, async: true
 
   import Omc.AccountsFixtures
 

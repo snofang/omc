@@ -1,5 +1,5 @@
 defmodule OmcWeb.User.UserAuthTest do
-  use OmcWeb.ConnCase
+  use OmcWeb.ConnCase, async: true
 
   alias Phoenix.LiveView
   alias Omc.Accounts

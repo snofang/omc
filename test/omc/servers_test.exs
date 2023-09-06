@@ -1,5 +1,5 @@
 defmodule Omc.ServersTest do
-  use Omc.DataCase
+  use Omc.DataCase, async: true
 
   alias Omc.Servers
   alias Omc.Servers.Server

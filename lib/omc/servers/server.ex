@@ -1,6 +1,7 @@
 defmodule Omc.Servers.Server do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Schema
 
   schema "servers" do
     field :description, :string
@@ -9,8 +10,17 @@ defmodule Omc.Servers.Server do
     field :price, :decimal
     field :status, Ecto.Enum, values: [:active, :deactive]
     field :user_id, :id
+    field :delete, :boolean, virtual: true
+    has_many :server_accs, Omc.Servers.ServerAcc, foreign_key: :server_id, references: :id
 
     timestamps()
+  end
+
+  def changeset(server, %{delete: true}) do
+    change(server, %{delete: true})
+    |> no_assoc_constraint(:server_accs,
+      message: "server having accs can not be deleted"
+    )
   end
 
   @doc false

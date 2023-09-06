@@ -1,6 +1,6 @@
 defmodule Omc.ServersAccsTest do
+  use Omc.DataCase, async: false
   alias Omc.Servers.ServerOps
-  use Omc.DataCase
   alias Omc.Servers
   import Omc.ServersFixtures
   import Omc.AccountsFixtures

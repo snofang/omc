@@ -1,5 +1,5 @@
 defmodule OmcWeb.ServerAccLiveTest do
-  use OmcWeb.ConnCase
+  use OmcWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
   import Omc.ServersFixtures

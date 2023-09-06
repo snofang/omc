@@ -1,5 +1,5 @@
 defmodule Omc.AccountsTest do
-  use Omc.DataCase
+  use Omc.DataCase, async: true
 
   alias Omc.Accounts
 

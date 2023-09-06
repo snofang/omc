@@ -99,7 +99,9 @@ defmodule Omc.Servers do
 
   """
   def delete_server(%Server{} = server) do
-    Repo.delete(server)
+    server
+    |> Server.changeset(%{delete: true})
+    |> Repo.delete()
   end
 
   @doc """

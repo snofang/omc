@@ -46,8 +46,19 @@ defmodule OmcWeb.ServerLive.Index do
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     server = Servers.get_server!(id)
-    {:ok, _} = Servers.delete_server(server)
 
-    {:noreply, stream_delete(socket, :servers, server)}
+    case Servers.delete_server(server) do
+      {:ok, _} ->
+        {:noreply, stream_delete(socket, :servers, server)}
+
+      {:error, %{errors: [{_, {msg, _}} | _]}} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, msg)
+          # |> stream_delete(:servers, server)
+          # |> stream_insert(:servers, server)
+         # |> push_patch(to: socket.assigns.patch)
+        }
+    end
   end
 end
