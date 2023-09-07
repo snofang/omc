@@ -6,7 +6,6 @@ defmodule Omc.Servers do
   import Ecto.Query, warn: false
   alias Omc.Servers.ServerOps
   alias Ecto.Repo
-  alias Ecto.Changeset
   alias Ecto.Repo
   alias Omc.Repo
 
@@ -209,22 +208,10 @@ defmodule Omc.Servers do
       iex> delete_server_acc(server_acc)
       {:error, %Ecto.Changeset{}}
   """
-  # TODO: to delete using visrual boolean field and having specific changeset function for
   def delete_server_acc(%ServerAcc{} = server_acc) do
-    case get_server_acc!(server_acc.id).status do
-      :active_pending ->
-        Repo.delete(server_acc)
-
-      # TODO: what is proper way of doing this? 
-      _ ->
-        {:error,
-         server_acc
-         |> Changeset.change()
-         |> Map.put(
-           :errors,
-           [{:status, {"only acc's with initial status active_pending can be deleted", []}}]
-         )}
-    end
+    server_acc
+    |> ServerAcc.changeset(%{delete: true})
+    |> Repo.delete()
   end
 
   @doc """

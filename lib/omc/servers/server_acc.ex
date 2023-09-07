@@ -13,8 +13,16 @@ defmodule Omc.Servers.ServerAcc do
 
     field :server_id, :id
     field :lock_version, :integer, default: 1
+    field :delete, :boolean, virtual: true, default: false
 
     timestamps()
+  end
+
+  @doc false
+  def changeset(server_acc, %{delete: true}) do
+    server_acc
+    |> change(%{status: :dummy_status})
+    |> validate_delete()
   end
 
   @doc false
@@ -27,7 +35,7 @@ defmodule Omc.Servers.ServerAcc do
     |> optimistic_lock(:lock_version)
   end
 
-  def validate_status(changeset) do
+  defp validate_status(changeset) do
     validate_change(changeset, :status, fn :status, new_status ->
       case {changeset.data.status, new_status} do
         {nil, :active_pending} ->
@@ -47,6 +55,17 @@ defmodule Omc.Servers.ServerAcc do
             status:
               {"It's not possible to change status from %{old} to %{new}", [old: old, new: new]}
           ]
+      end
+    end)
+  end
+
+  defp validate_delete(changeset) do
+    changeset
+    |> validate_change(:status, fn :status, _new_status ->
+      if changeset.data.status == :active_pending do
+        []
+      else
+        [{:status, "only acc's with initial status active_pending can be deleted"}]
       end
     end)
   end

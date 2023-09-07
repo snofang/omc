@@ -171,6 +171,12 @@ defmodule Omc.ServersTest do
       assert_raise Ecto.NoResultsError, fn -> Servers.get_server_acc!(server_acc.id) end
     end
 
+    test "delete_server_acc/1 fails when server_acc.status != :active_pending",
+         %{server_acc: server_acc} do
+      {:ok, server_acc} = Servers.update_server_acc(server_acc, %{status: :active})
+      assert {:error, _} = Servers.delete_server_acc(server_acc)
+    end
+    
     test "change_server_acc/1 returns a server_acc changeset",
          %{server_acc: server_acc} do
       assert %Ecto.Changeset{} = Servers.change_server_acc(server_acc)
