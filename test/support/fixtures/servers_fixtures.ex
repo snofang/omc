@@ -8,6 +8,7 @@ defmodule Omc.ServersFixtures do
   Generate a unique server name.
   """
   def unique_server_name, do: "somename#{System.unique_integer([:positive])}"
+  def unique_server_acc_name, do: "somename#{System.unique_integer([:positive])}"
 
   @doc """
   Generate a server.
@@ -35,7 +36,7 @@ defmodule Omc.ServersFixtures do
       attrs
       |> Enum.into(%{
         description: "some description",
-        name: "some-name",
+        name: unique_server_acc_name(),
         status: :active
       })
       |> Omc.Servers.create_server_acc()

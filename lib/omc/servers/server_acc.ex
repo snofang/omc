@@ -33,6 +33,7 @@ defmodule Omc.Servers.ServerAcc do
     |> validate_format(:name, ~r/^[\w]+[\w\-]*[\w]+$/)
     |> validate_status()
     |> optimistic_lock(:lock_version)
+    |> unique_constraint([:server_id, :name], error_key: :name)
   end
 
   defp validate_status(changeset) do

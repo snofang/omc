@@ -87,7 +87,7 @@ defmodule Omc.ServersTest do
       assert {:error, changeset} = Servers.delete_server(server)
       assert changeset.errors |> length() > 0
     end
-    
+
     test "change_server/1 returns a server changeset" do
       user = user_fixture()
       server = server_fixture(%{user_id: user.id})
@@ -176,10 +176,35 @@ defmodule Omc.ServersTest do
       {:ok, server_acc} = Servers.update_server_acc(server_acc, %{status: :active})
       assert {:error, _} = Servers.delete_server_acc(server_acc)
     end
-    
+
     test "change_server_acc/1 returns a server_acc changeset",
          %{server_acc: server_acc} do
       assert %Ecto.Changeset{} = Servers.change_server_acc(server_acc)
+    end
+
+    test "server_acc name should be unique within a server", %{user: user} do
+      server_common_attrs = %{user_id: user.id, max_accs: 110, price: 50}
+
+      {:ok, server1} =
+        server_common_attrs
+        |> Map.merge(%{name: unique_server_name()})
+        |> Omc.Servers.create_server()
+
+      {:ok, server1_acc1} =
+        Omc.Servers.create_server_acc(%{server_id: server1.id, name: unique_server_acc_name()})
+
+      # not possible to add same named acc to the same server
+      assert {:error, _} =
+               Omc.Servers.create_server_acc(%{server_id: server1.id, name: server1_acc1.name})
+
+      {:ok, server2} =
+        server_common_attrs
+        |> Map.merge(%{server_id: server1.id, name: unique_server_name()})
+        |> Omc.Servers.create_server()
+
+      # while it is possible to add same named acc to the different server
+      assert {:ok, _} =
+               Omc.Servers.create_server_acc(%{server_id: server2.id, name: server1_acc1.name})
     end
   end
 end

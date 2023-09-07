@@ -13,5 +13,6 @@ defmodule Omc.Repo.Migrations.CreateServerAccs do
     end
 
     create index(:server_accs, [:server_id])
+    create unique_index(:server_accs, [:server_id, :name])
   end
 end
