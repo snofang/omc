@@ -10,17 +10,9 @@ defmodule Omc.Servers.Server do
     field :price, :decimal
     field :status, Ecto.Enum, values: [:active, :deactive]
     field :user_id, :id
-    field :delete, :boolean, virtual: true
-    has_many :server_accs, Omc.Servers.ServerAcc, foreign_key: :server_id, references: :id
+    has_many :server_accs, Omc.Servers.ServerAcc
 
     timestamps()
-  end
-
-  def changeset(server, %{delete: true}) do
-    change(server, %{delete: true})
-    |> no_assoc_constraint(:server_accs,
-      message: "server having accs can not be deleted"
-    )
   end
 
   @doc false
@@ -30,6 +22,7 @@ defmodule Omc.Servers.Server do
     |> validate_required([:name, :status, :user_id, :price, :max_accs])
     |> unique_constraint(:name)
     |> validate_format(:name, name_format())
+    |> no_assoc_constraint(:server_accs, message: "A server having acc(s) can not be deleted")
   end
 
   def name_format() do

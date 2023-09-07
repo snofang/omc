@@ -54,11 +54,7 @@ defmodule OmcWeb.ServerLive.Index do
       {:error, %{errors: [{_, {msg, _}} | _]}} ->
         {:noreply,
          socket
-         |> put_flash(:error, msg)
-          # |> stream_delete(:servers, server)
-          # |> stream_insert(:servers, server)
-         # |> push_patch(to: socket.assigns.patch)
-        }
+         |> put_flash(:error, msg)}
     end
   end
 end

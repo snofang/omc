@@ -73,13 +73,21 @@ defmodule Omc.ServersTest do
       assert server == Servers.get_server!(server.id)
     end
 
-    test "delete_server/1 deletes the server" do
+    test "delete_server/1 deletes the server having no acc" do
       user = user_fixture()
       server = server_fixture(%{user_id: user.id})
       assert {:ok, %Server{}} = Servers.delete_server(server)
       assert_raise Ecto.NoResultsError, fn -> Servers.get_server!(server.id) end
     end
 
+    test "delete_server/1 fails to deletes the server having acc(s)" do
+      user = user_fixture()
+      server = server_fixture(%{user_id: user.id})
+      server_acc_fixture(%{server_id: server.id})
+      assert {:error, changeset} = Servers.delete_server(server)
+      assert changeset.errors |> length() > 0
+    end
+    
     test "change_server/1 returns a server changeset" do
       user = user_fixture()
       server = server_fixture(%{user_id: user.id})

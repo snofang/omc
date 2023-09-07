@@ -100,7 +100,7 @@ defmodule Omc.Servers do
   """
   def delete_server(%Server{} = server) do
     server
-    |> Server.changeset(%{delete: true})
+    |> Server.changeset(%{})
     |> Repo.delete()
   end
 
