@@ -1,23 +1,39 @@
-<div class="mx-6 pt-5 pb-4">
+<div class="mx-6 pt-5 pb-4" phx-page-loading>
   <.header>
     Listing Server accs
     <:actions>
-      <.link :if={@selected_server_id} patch={~p"/server_accs/new"}>
-        <.button>New Server acc</.button>
+      <.link patch={~p"/server_accs/new"}>
+        <.button>New Account</.button>
+      </.link>
+      <.link patch={~p"/server_accs/new_batch"}>
+        <.button>New Accounts</.button>
       </.link>
     </:actions>
   </.header>
 
-  <form id="server-acc-filter" phx-change="change-filter">
+  <.simple_form
+    :let={f}
+    for={@filter_form}
+    as={:filter}
+    id="filter_form"
+    phx-change="change-filter"
+  >
     <.input
-      name="selected_server_id"
+      field={f[:server_id]}
       type="select"
-      label="Server Select"
+      label="Server"
       prompt="Choose a server"
       options={@servers}
-      value={@selected_server_id}
     />
-  </form>
+    <.input field={f[:name]} type="text" label="Name" />
+    <.input
+      field={f[:status]}
+      type="select"
+      label="Status"
+      prompt="Choose a value"
+      options={Ecto.Enum.values(Omc.Servers.ServerAcc, :status)}
+    />
+  </.simple_form>
 
   <.table
     id="server_accs"
@@ -47,7 +63,7 @@
     :if={@live_action in [:new, :edit]}
     id="server_acc-modal"
     show
-    on_cancel={JS.patch(~p"/server_accs")}
+    on_cancel={JS.patch(~p"/server_accs?#{@bindings}")}
   >
     <.live_component
       module={OmcWeb.ServerAccLive.FormComponent}
@@ -55,8 +71,23 @@
       title={@page_title}
       action={@live_action}
       server_acc={@server_acc}
-      selected_server_id={@selected_server_id}
-      patch={~p"/server_accs"}
+      servers={@servers}
+      patch={~p"/server_accs?#{@bindings}"}
+    />
+  </.modal>
+  <.modal
+    :if={@live_action == :new_batch}
+    id="acc_batch_form_modal"
+    show
+    on_cancel={JS.patch(~p"/server_accs?#{@bindings}")}
+  >
+    <.live_component
+      module={OmcWeb.ServerAccLive.AccBatchForm}
+      id={:new_batch}
+      title={@page_title}
+      action={@live_action}
+      servers={@servers}
+      patch={~p"/server_accs?#{@bindings}"}
     />
   </.modal>
 </div>

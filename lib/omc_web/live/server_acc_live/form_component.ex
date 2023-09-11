@@ -19,7 +19,20 @@ defmodule OmcWeb.ServerAccLive.FormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={@form[:name]} type="text" label="Name" />
+        <.input
+          field={@form[:server_id]}
+          type="select"
+          label="Server"
+          prompt="Choose a server"
+          options={@servers}
+          disabled={@action == :edit}
+        />
+        <.input
+          field={@form[:name]}
+          type="text"
+          label="Name"
+          disabled={@action == :edit and @server_acc.status != :active_pending}
+        />
         <.input
           field={@form[:status]}
           type="select"
@@ -39,12 +52,10 @@ defmodule OmcWeb.ServerAccLive.FormComponent do
 
   @impl true
   def update(%{server_acc: server_acc} = assigns, socket) do
-    changeset = Servers.change_server_acc(server_acc)
-
     {:ok,
      socket
      |> assign(assigns)
-     |> assign_form(changeset)}
+     |> assign_form(Servers.change_server_acc(server_acc))}
   end
 
   @impl true
@@ -77,10 +88,7 @@ defmodule OmcWeb.ServerAccLive.FormComponent do
   end
 
   defp save_server_acc(socket, :new, server_acc_params) do
-    case Servers.create_server_acc(
-           server_acc_params
-           |> Map.put("server_id", to_string(socket.assigns.selected_server_id))
-         ) do
+    case Servers.create_server_acc(server_acc_params) do
       {:ok, server_acc} ->
         notify_parent({:saved, server_acc})
 

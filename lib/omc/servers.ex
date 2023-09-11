@@ -4,6 +4,7 @@ defmodule Omc.Servers do
   """
 
   import Ecto.Query, warn: false
+  import Ecto.Query.API, only: [like: 2], warn: false
   alias Omc.Servers.ServerOps
   alias Ecto.Repo
   alias Ecto.Repo
@@ -127,20 +128,27 @@ defmodule Omc.Servers do
       [%ServerAcc{}, ...]
 
   """
-  def list_server_accs do
-    Repo.all(ServerAcc)
-  end
-
-  def list_server_accs(server_id) when server_id == "" or server_id == nil do
-    from(sc in ServerAcc, where: is_nil(sc.server_id))
-    |> Repo.all()
-  end
-
-  def list_server_accs(server_id) do
+  @spec list_server_accs(map()) :: [%ServerAcc{}]
+  def list_server_accs(bindings \\ %{}) do
     ServerAcc
-    |> where(server_id: ^server_id)
+    |> server_accs_server_id(bindings |> Map.get(:server_id))
+    |> server_accs_status(bindings |> Map.get(:status))
+    |> server_accs_name(bindings |> Map.get(:name))
     |> Repo.all()
   end
+
+  defp server_accs_server_id(server_accs, server_id) when server_id == "" or server_id == nil,
+    do: server_accs
+
+  defp server_accs_server_id(server_accs, server_id),
+    do: server_accs |> where(server_id: ^server_id)
+
+  defp server_accs_status(server_acc, status) when status == "" or status == nil, do: server_acc
+  defp server_accs_status(server_acc, status), do: server_acc |> where(status: ^status)
+  defp server_accs_name(server_acc, name) when name == "" or name == nil, do: server_acc
+
+  defp server_accs_name(server_acc, name),
+    do: server_acc |> where([acc], like(acc.name, ^"#{name}%"))
 
   @doc """
   Gets a single server_acc.
@@ -177,6 +185,50 @@ defmodule Omc.Servers do
       |> Omc.Common.Utils.put_attr_safe!(:status, :active_pending)
     )
     |> Repo.insert()
+  end
+
+  @doc """
+  Creates multiple accs based on harcoded naming, the format is 
+  `SXXXXAXXXXXX` in which the first four X reperents server id and following 
+  six Xs represent account counter. e.g. S0003A00000029
+  TODO: It is somehow naive implementatin and  should take into account
+    - concurrency.
+    - reusing staled counter number.
+  """
+  def create_server_acc_batch(server_id, count) when server_id > 0 and count > 0 do
+    name_prefix =
+      server_id
+      |> Integer.to_string()
+      |> String.pad_leading(4, "0")
+      |> then(&"S#{&1}A")
+
+    last_count =
+      from(acc in ServerAcc,
+        where: acc.server_id == ^server_id and like(acc.name, ^"#{name_prefix}______"),
+        order_by: [desc: acc.name],
+        limit: 1,
+        select: acc.name
+      )
+      |> Repo.one()
+      |> then(fn n -> if n, do: n, else: name_prefix <> "000000" end)
+      |> String.split_at(name_prefix |> String.length())
+      |> elem(1)
+      |> String.to_integer()
+
+    1..count
+    |> Enum.map(fn i ->
+      %{
+        server_id: server_id,
+        name:
+          name_prefix <> ((i + last_count) |> Integer.to_string() |> String.pad_leading(6, "0"))
+      }
+    end)
+    |> Enum.reduce([], fn acc, result ->
+      case create_server_acc(acc) do
+        {:ok, created_acc} -> [created_acc | result]
+        _ -> result
+      end
+    end)
   end
 
   @doc """
@@ -238,26 +290,17 @@ defmodule Omc.Servers do
   end
 
   @doc """
-  Lists server's acc having specific `status`
-  """
-  @spec list_server_accs(pos_integer(), atom()) :: [ServerAcc.t()]
-  def list_server_accs(server_id, status) do
-    from(acc in ServerAcc, where: acc.status == ^status and acc.server_id == ^server_id)
-    |> Repo.all()
-  end
-
-  @doc """
   Updates waiting for changes accs(those having :active_pending or :deactive_pending status)
   based on current acc file existance
   """
   @spec sync_server_accs_status(Server.t()) :: :ok
   def sync_server_accs_status(server) do
-    list_server_accs(server.id, :active_pending)
+    list_server_accs(%{server_id: server.id, status: :active_pending})
     |> Enum.each(fn acc ->
       update_server_acc(acc, ServerOps.acc_file_based_status_change(acc))
     end)
 
-    list_server_accs(server.id, :deactive_pending)
+    list_server_accs(%{server_id: server.id, status: :deactive_pending})
     |> Enum.each(fn acc ->
       update_server_acc(acc, ServerOps.acc_file_based_status_change(acc))
     end)

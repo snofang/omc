@@ -9,15 +9,18 @@ defmodule OmcWeb.ServerAccLive.Index do
     socket =
       socket
       |> assign(:servers, Servers.list_servers() |> Enum.map(&{&1.name, &1.id}))
-      |> assign(:selected_server_id, nil)
-      |> stream(:server_accs, Servers.list_server_accs(nil))
+      |> assign(:bindings, [])
+      |> assign(:filter_form, to_form(params_to_changeset(%{})))
+      |> stream(:server_accs, [], reset: true)
 
     {:ok, socket}
   end
 
   @impl true
   def handle_params(params, _url, socket) do
-    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+    {:noreply,
+     socket
+     |> apply_action(socket.assigns.live_action, params)}
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
@@ -29,13 +32,22 @@ defmodule OmcWeb.ServerAccLive.Index do
   defp apply_action(socket, :new, _params) do
     socket
     |> assign(:page_title, "New Server acc")
-    |> assign(:server_acc, %ServerAcc{server_id: socket.assigns.selected_server_id})
+    |> assign(:server_acc, %ServerAcc{})
   end
 
-  defp apply_action(socket, :index, _params) do
+  defp apply_action(socket, :new_batch, _params) do
     socket
-    |> assign(:page_title, "Listing Server accs")
-    |> assign(:server_acc, nil)
+    |> assign(:page_title, "New Server accs")
+  end
+
+  defp apply_action(socket, :index, params) do
+    bindings = params_to_bindings(params)
+
+    socket
+    |> assign(:filter_form, to_form(params_to_changeset(params)))
+    |> assign(:bindings, bindings)
+    |> assign(:page_title, "Listing Server Accounts")
+    |> stream(:server_accs, Servers.list_server_accs(bindings), reset: true)
   end
 
   @impl true
@@ -51,10 +63,18 @@ defmodule OmcWeb.ServerAccLive.Index do
     {:noreply, stream_delete(socket, :server_accs, server_acc)}
   end
 
-  def handle_event("change-filter", %{"selected_server_id" => selected_server_id}, socket) do
-    {:noreply,
-     socket
-     |> assign(:selected_server_id, selected_server_id)
-     |> stream(:server_accs, Servers.list_server_accs(selected_server_id), reset: true)}
+  def handle_event("change-filter", %{"filter" => params}, socket) do
+    {:noreply, socket |> push_patch(to: ~p"/server_accs?#{params_to_bindings(params)}")}
+  end
+
+  defp params_to_changeset(params) do
+    %ServerAcc{server_id: nil, name: nil, status: nil}
+    |> Ecto.Changeset.cast(params, [:server_id, :name, :status])
+  end
+
+  defp params_to_bindings(params) do
+    params
+    |> params_to_changeset()
+    |> Map.get(:changes)
   end
 end

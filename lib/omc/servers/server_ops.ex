@@ -110,11 +110,11 @@ defmodule Omc.Servers.ServerOps do
     ansible_upsert_host_file(server)
 
     accs_create =
-      Servers.list_server_accs(server.id, :active_pending)
+      Servers.list_server_accs(%{server_id: server.id, status: :active_pending})
       |> Enum.map(fn acc -> acc.name end)
 
     accs_revoke =
-      Servers.list_server_accs(server.id, :deactive_pending)
+      Servers.list_server_accs(%{server_id: server.id, status: :deactive_pending})
       |> Enum.map(fn acc -> acc.name end)
 
     server
