@@ -32,6 +32,7 @@ defmodule Omc.Servers.ServerAcc do
     |> validate_required([:name, :status, :server_id])
     |> validate_format(:name, ~r/^[\w]+[\w\-]*[\w]+$/)
     |> validate_status()
+    |> validate_update_name()
     |> optimistic_lock(:lock_version)
     |> unique_constraint([:server_id, :name], error_key: :name)
   end
@@ -67,6 +68,26 @@ defmodule Omc.Servers.ServerAcc do
         []
       else
         [{:status, "only acc's with initial status active_pending can be deleted"}]
+      end
+    end)
+  end
+
+  defp validate_update_name(changeset) do
+    changeset
+    |> validate_change(:name, fn :name, _new_name ->
+      case changeset.data.status do
+        :active_pending ->
+          if(new_status = (changeset.changes |> Map.get(:status))) do
+            [
+              {:name,
+               {"name field can not be changed while status is changing to %{new_status}",
+                [new_status: new_status]}}
+            ]
+          else
+            [] 
+          end
+        _ ->
+          [{:name, {"name can not be changed while status is not :active_pending", []}}]
       end
     end)
   end

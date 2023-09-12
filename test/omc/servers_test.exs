@@ -148,7 +148,7 @@ defmodule Omc.ServersTest do
       update_attrs = %{
         description: "some updated description",
         name: "some_updated-name",
-        status: :active
+        status: :active_pending
       }
 
       assert {:ok, %ServerAcc{} = server_acc} =
@@ -156,7 +156,7 @@ defmodule Omc.ServersTest do
 
       assert server_acc.description == "some updated description"
       assert server_acc.name == "some_updated-name"
-      assert server_acc.status == :active
+      assert server_acc.status == :active_pending
     end
 
     test "update_server_acc/2 with invalid data returns error changeset",
@@ -205,6 +205,13 @@ defmodule Omc.ServersTest do
       # while it is possible to add same named acc to the different server
       assert {:ok, _} =
                Omc.Servers.create_server_acc(%{server_id: server2.id, name: server1_acc1.name})
+    end
+
+    test "server_acc name should not be editable if status != :active_pending", %{
+      server_acc: server_acc
+    } do
+      {:ok, server_acc} = Servers.update_server_acc(server_acc, %{status: :active})
+      assert {:error, _} = Servers.update_server_acc(server_acc, %{name: "edited-#{server_acc.name}"})
     end
   end
 end
