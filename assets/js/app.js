@@ -21,12 +21,14 @@ import "phoenix_html"
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
+import InfiniteScroll from "./infiniteScroll"
 
 let execJS = (selector, attr) => {
   document.querySelectorAll(selector).forEach(el => liveSocket.execJS(el, el.getAttribute(attr)))
 }
 
 let Hooks = {}
+Hooks.InfiniteScroll = InfiniteScroll
 
 Hooks.Flash = {
   mounted(){

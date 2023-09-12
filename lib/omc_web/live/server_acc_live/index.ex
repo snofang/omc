@@ -11,6 +11,7 @@ defmodule OmcWeb.ServerAccLive.Index do
       |> assign(:servers, Servers.list_servers() |> Enum.map(&{&1.name, &1.id}))
       |> assign(:bindings, [])
       |> assign(:filter_form, to_form(params_to_changeset(%{})))
+      |> assign(:page, 1)
       |> stream(:server_accs, [], reset: true)
 
     {:ok, socket}
@@ -48,11 +49,19 @@ defmodule OmcWeb.ServerAccLive.Index do
     |> assign(:bindings, bindings)
     |> assign(:page_title, "Listing Server Accounts")
     |> stream(:server_accs, Servers.list_server_accs(bindings), reset: true)
+    |> assign(:page, 1)
   end
 
   @impl true
   def handle_info({OmcWeb.ServerAccLive.FormComponent, {:saved, server_acc}}, socket) do
     {:noreply, stream_insert(socket, :server_accs, server_acc)}
+  end
+
+  def handle_event("load_more", _params, %{assigns: %{page: page, bindings: bindings}} = socket) do
+    {:noreply,
+     Servers.list_server_accs(bindings, page + 1)
+     |> Enum.reduce(socket, fn a, s -> stream_insert(s, :server_accs, a, at: -1) end)
+     |> assign(:page, page + 1)}
   end
 
   @impl true

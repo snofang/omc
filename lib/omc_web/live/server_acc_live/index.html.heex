@@ -1,4 +1,4 @@
-<div class="mx-6 pt-5 pb-4" phx-page-loading>
+<div class="mx-6 pt-5 pb-4">
   <.header>
     Listing Server accs
     <:actions>
@@ -90,4 +90,5 @@
       patch={~p"/server_accs?#{@bindings}"}
     />
   </.modal>
+  <div id="infinite-scroll-marker" phx-hook="InfiniteScroll"></div>
 </div>
