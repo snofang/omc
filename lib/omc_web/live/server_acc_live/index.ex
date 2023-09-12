@@ -26,13 +26,13 @@ defmodule OmcWeb.ServerAccLive.Index do
 
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
-    |> assign(:page_title, "Edit Server acc")
+    |> assign(:page_title, "Edit Server Account")
     |> assign(:server_acc, Servers.get_server_acc!(id))
   end
 
   defp apply_action(socket, :new, _params) do
     socket
-    |> assign(:page_title, "New Server acc")
+    |> assign(:page_title, "New Server Account")
     |> assign(:server_acc, %ServerAcc{})
   end
 
@@ -77,13 +77,15 @@ defmodule OmcWeb.ServerAccLive.Index do
   end
 
   defp params_to_changeset(params) do
-    %ServerAcc{server_id: nil, name: nil, status: nil}
+    # manually drop empty value change for status to prevent auto falling back to default status
+    params = params |> Map.reject(fn {key, value} -> key == "status" and value == "" end)
+    %ServerAcc{server_id: nil, name: nil, status: ""}
     |> Ecto.Changeset.cast(params, [:server_id, :name, :status])
   end
 
   defp params_to_bindings(params) do
-    params
-    |> params_to_changeset()
-    |> Map.get(:changes)
+    params 
+    |> params_to_changeset() 
+    |> Map.get(:changes) 
   end
 end

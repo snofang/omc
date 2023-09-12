@@ -108,7 +108,7 @@ defmodule Omc.ServersTest do
 
     test "list_server_accs/0 returns all server_accs",
          %{server: server, server_acc: server_acc} do
-      assert Servers.list_server_accs(server.id) == [server_acc]
+      assert Servers.list_server_accs(%{server_id: server.id}) == [server_acc]
     end
 
     test "get_server_acc!/1 returns the server_acc with given id",
