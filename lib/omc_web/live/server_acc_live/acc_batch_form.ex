@@ -1,4 +1,5 @@
 defmodule OmcWeb.ServerAccLive.AccBatchForm do
+  alias Omc.Servers
   use OmcWeb, :live_component
 
   @impl true
@@ -63,12 +64,19 @@ defmodule OmcWeb.ServerAccLive.AccBatchForm do
   end
 
   def handle_event("ok", %{"acc_batch_data" => data}, socket) do
+    %{count: count, server_id: server_id} = data |> changeset() |> Map.get(:changes)
+
+    created_count =
+      Servers.create_server_acc_batch(server_id, count)
+      |> length()
+
     {:noreply,
      socket
      |> put_flash(
        :info,
-       "#{data |> changeset() |> Map.get(:changes) |> Map.get(:count)} accounts is created"
-     )}
+       "#{created_count} accounts is created"
+     )
+     |> push_patch(to: socket.assigns.patch)}
   end
 
   # defp notify_parent(msg), do: send(self(), {__MODULE__, msg})

@@ -129,13 +129,14 @@ defmodule Omc.Servers do
 
   """
   @spec list_server_accs(map()) :: [%ServerAcc{}]
-  def list_server_accs(bindings \\ %{}, page \\ 1) when page > 0 do
+  def list_server_accs(bindings \\ %{}, page \\ 1, limit \\ 10) when page > 0 and limit > 0 do
     ServerAcc
     |> server_accs_server_id(bindings |> Map.get(:server_id))
     |> server_accs_status(bindings |> Map.get(:status))
     |> server_accs_name(bindings |> Map.get(:name))
-    |> limit(10)
-    |> offset((^page - 1) * 10)
+    |> limit(^limit)
+    |> offset((^page - 1) * ^limit)
+    |> order_by([acc], desc: acc.id)
     |> Repo.all()
   end
 

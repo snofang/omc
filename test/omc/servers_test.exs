@@ -211,7 +211,9 @@ defmodule Omc.ServersTest do
       server_acc: server_acc
     } do
       {:ok, server_acc} = Servers.update_server_acc(server_acc, %{status: :active})
-      assert {:error, _} = Servers.update_server_acc(server_acc, %{name: "edited-#{server_acc.name}"})
+
+      assert {:error, _} =
+               Servers.update_server_acc(server_acc, %{name: "edited-#{server_acc.name}"})
     end
   end
 end

@@ -89,8 +89,8 @@ defmodule OmcWeb.ServerAccLive.FormComponent do
 
   defp save_server_acc(socket, :new, server_acc_params) do
     case Servers.create_server_acc(server_acc_params) do
-      {:ok, server_acc} ->
-        notify_parent({:saved, server_acc})
+      {:ok, _server_acc} ->
+        # notify_parent({:saved, server_acc})
 
         {:noreply,
          socket

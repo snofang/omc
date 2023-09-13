@@ -77,15 +77,16 @@ defmodule Omc.Servers.ServerAcc do
     |> validate_change(:name, fn :name, _new_name ->
       case changeset.data.status do
         :active_pending ->
-          if(new_status = (changeset.changes |> Map.get(:status))) do
+          if(new_status = changeset.changes |> Map.get(:status)) do
             [
               {:name,
                {"name field can not be changed while status is changing to %{new_status}",
                 [new_status: new_status]}}
             ]
           else
-            [] 
+            []
           end
+
         _ ->
           [{:name, {"name can not be changed while status is not :active_pending", []}}]
       end

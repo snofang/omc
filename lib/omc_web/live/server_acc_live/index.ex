@@ -79,13 +79,14 @@ defmodule OmcWeb.ServerAccLive.Index do
   defp params_to_changeset(params) do
     # manually drop empty value change for status to prevent auto falling back to default status
     params = params |> Map.reject(fn {key, value} -> key == "status" and value == "" end)
+
     %ServerAcc{server_id: nil, name: nil, status: ""}
     |> Ecto.Changeset.cast(params, [:server_id, :name, :status])
   end
 
   defp params_to_bindings(params) do
-    params 
-    |> params_to_changeset() 
-    |> Map.get(:changes) 
+    params
+    |> params_to_changeset()
+    |> Map.get(:changes)
   end
 end
