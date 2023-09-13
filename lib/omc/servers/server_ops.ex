@@ -122,9 +122,11 @@ defmodule Omc.Servers.ServerOps do
       "ansible-playbook" <>
         " -i #{ansible_host_file_path(server)}" <>
         " #{Path.join(ansible_path(), "play-um.yml")}" <>
-        " -e clients_revoke=" <>
+        " -e '{\"clients_revoke\": " <>
         inspect(accs_revoke) <>
-        " -e clients_create=" <> inspect(accs_create)
+        ", \"clients_create\": " <>
+        inspect(accs_create) <>
+        "}'"
     )
   end
 

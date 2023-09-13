@@ -5,6 +5,7 @@ defmodule Omc.Servers do
 
   import Ecto.Query, warn: false
   import Ecto.Query.API, only: [like: 2], warn: false
+  alias Phoenix.PubSub
   alias Omc.Servers.ServerOps
   alias Ecto.Repo
   alias Ecto.Repo
@@ -301,11 +302,31 @@ defmodule Omc.Servers do
     list_server_accs(%{server_id: server.id, status: :active_pending})
     |> Enum.each(fn acc ->
       update_server_acc(acc, ServerOps.acc_file_based_status_change(acc))
+      |> broadcast_server_update()
     end)
 
     list_server_accs(%{server_id: server.id, status: :deactive_pending})
     |> Enum.each(fn acc ->
       update_server_acc(acc, ServerOps.acc_file_based_status_change(acc))
+      |> broadcast_server_update()
     end)
+  end
+
+  defp broadcast_server_update({result, acc}) do
+    case result do
+      :ok ->
+        PubSub.broadcast(
+          Omc.PubSub,
+          "server_task_progress",
+          {:progress, acc.server_id, "SUCCESS -> #{acc.name} -> #{acc.status}\n"}
+        )
+
+      :error ->
+        PubSub.broadcast(
+          Omc.PubSub,
+          "server_task_progress",
+          {:progress, acc.server_id, "FAILED -> #{acc.name} -> #{acc.data.status}\n"}
+        )
+    end
   end
 end

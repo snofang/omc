@@ -11,14 +11,13 @@ defmodule Omc.Servers.ServerTaskManager do
   alias Omc.Common.CmdWrapper
   alias Phoenix.PubSub
   use GenServer
-  @topic "server_task_manager"
 
   def start_link(args) do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
   def init(_args) do
-    PubSub.subscribe(Omc.PubSub, @topic)
+    PubSub.subscribe(Omc.PubSub, "server_task_progress")
 
     timeout = Application.get_env(:omc, :server_call_timeout)
 
@@ -29,15 +28,19 @@ defmodule Omc.Servers.ServerTaskManager do
     Task.Supervisor.start_child(Omc.TaskSupervisor, CmdWrapper, :run, [
       cmd,
       timeout,
-      @topic,
+      "server_task_progress",
       server_id
     ])
 
     {:noreply, state |> add_log(server_id, cmd)}
   end
 
+  def handle_cast({:clear, server_id}, state) do
+    {:noreply, state |> Map.put(server_id, "")}
+  end
+
   def handle_info({:progress, server_id, message}, state) do
-    Logger.info(inspect(message))
+    Logger.info("server_task_progress, server_id: #{server_id}, message: #{message}")
     {:noreply, state |> add_log(server_id, message)}
   end
 
@@ -55,5 +58,9 @@ defmodule Omc.Servers.ServerTaskManager do
 
   defp add_log(state, server_id, prompt) do
     state |> Map.update(server_id, prompt, fn value -> value <> prompt end)
+  end
+
+  def clear_task_log(server_id) do
+    GenServer.cast(__MODULE__, {:clear, server_id})
   end
 end
