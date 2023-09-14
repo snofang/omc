@@ -49,12 +49,20 @@
       </div>
       <.link patch={~p"/server_accs/#{server_acc}/edit"}>Edit</.link>
     </:action>
-    <:action :let={{id, server_acc}}>
-      <.link
+    <:action :let={{id, server_acc}} >
+      <.link :if={server_acc.status == :active_pending}
         phx-click={JS.push("delete", value: %{id: server_acc.id}) |> hide("##{id}")}
         data-confirm="Are you sure?"
       >
         Delete
+      </.link>
+    </:action>
+    <:action :let={{_id, server_acc}} >
+      <.link :if={server_acc.status == :active}
+        phx-click={JS.push("deactivate", value: %{id: server_acc.id})}
+        data-confirm="It will be marked as :deactive_pending and will be affected by server account syncing process. Are you sure?"
+      >
+        Deactivate
       </.link>
     </:action>
   </.table>

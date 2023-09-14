@@ -72,6 +72,14 @@ defmodule OmcWeb.ServerAccLive.Index do
     {:noreply, stream_delete(socket, :server_accs, server_acc)}
   end
 
+  @impl true
+  def handle_event("deactivate", %{"id" => id}, socket) do
+    server_acc = Servers.get_server_acc!(id)
+    {:ok, update_server_acc} = Servers.deactivate_acc(server_acc)
+
+    {:noreply, stream_insert(socket, :server_accs, update_server_acc, at: -1)}
+  end
+  
   def handle_event("change-filter", %{"filter" => params}, socket) do
     {:noreply, socket |> push_patch(to: ~p"/server_accs?#{params_to_bindings(params)}")}
   end
