@@ -54,7 +54,7 @@ defmodule OmcWeb.ServerLive.Task do
     Servers.sync_server_accs_status(socket.assigns.server)
     {:noreply, socket}
   end
-  
+
   def handle_event("clear-log", _unsigned_params, socket) do
     ServerTaskManager.clear_task_log(socket.assigns.server.id)
     {:noreply, socket |> assign(task_log: "")}

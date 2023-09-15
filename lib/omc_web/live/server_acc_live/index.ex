@@ -1,4 +1,5 @@
 defmodule OmcWeb.ServerAccLive.Index do
+  alias Omc.Servers.ServerOps
   use OmcWeb, :live_view
 
   alias Omc.Servers
@@ -79,7 +80,27 @@ defmodule OmcWeb.ServerAccLive.Index do
 
     {:noreply, stream_insert(socket, :server_accs, update_server_acc, at: -1)}
   end
-  
+
+  @impl true
+  def handle_event("download", %{"id" => id}, socket) do
+    server_acc = Servers.get_server_acc!(id)
+
+    case ServerOps.acc_file_path(server_acc) |> File.read() do
+      {:ok, content} ->
+        {:noreply,
+         socket
+         |> push_event("download-file", %{
+           text: content,
+           filename: server_acc.name <> ".ovpn"
+         })}
+
+      {:error, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "file not found!")}
+    end
+  end
+
   def handle_event("change-filter", %{"filter" => params}, socket) do
     {:noreply, socket |> push_patch(to: ~p"/server_accs?#{params_to_bindings(params)}")}
   end

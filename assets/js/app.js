@@ -22,6 +22,7 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 import InfiniteScroll from "./infiniteScroll"
+import DownloadFile from "./downloadfile"
 
 let execJS = (selector, attr) => {
   document.querySelectorAll(selector).forEach(el => liveSocket.execJS(el, el.getAttribute(attr)))
@@ -29,6 +30,7 @@ let execJS = (selector, attr) => {
 
 let Hooks = {}
 Hooks.InfiniteScroll = InfiniteScroll
+Hooks.DownloadFile = DownloadFile
 
 Hooks.Flash = {
   mounted(){
