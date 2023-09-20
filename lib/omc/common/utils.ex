@@ -12,6 +12,7 @@ defmodule Omc.Common.Utils do
     case(:maps.next(:maps.iterator(attrs))) do
       {k, _, _} when is_atom(k) -> attrs |> Map.put(key, value)
       {k, _, _} when is_binary(k) -> attrs |> Map.put(to_string(key), value)
+      :none -> attrs |> Map.put(key, value)
       _ -> raise "invalid key type; only atom and binary is supported"
     end
   end

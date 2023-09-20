@@ -3,7 +3,6 @@ defmodule Omc.Servers.ServerAcc do
   import Ecto.Changeset
 
   schema "server_accs" do
-    import Ecto.Schema
     field :description, :string
     field :name, :string
 

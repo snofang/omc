@@ -10,6 +10,16 @@ import Config
 config :omc, data: Path.expand("../.data", Path.dirname(__ENV__.file))
 config :omc, ansible: Path.expand("../rel/overlays/ansible", Path.dirname(__ENV__.file))
 
+#
+# Telegram
+#
+config :omc, :telegram,
+  enabled: false,
+  token: "this should be provided via system environment variable",
+  max_bot_concurrency: 1_000
+
+config :tesla, adapter: {Tesla.Adapter.Hackney, [recv_timeout: 40_000]}
+
 config :omc,
   ecto_repos: [Omc.Repo]
 

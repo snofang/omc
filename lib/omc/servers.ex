@@ -10,6 +10,7 @@ defmodule Omc.Servers do
   alias Ecto.Repo
   alias Ecto.Repo
   alias Omc.Repo
+  alias Omc.Common.Utils
 
   alias Omc.Servers.Server
 
@@ -64,7 +65,7 @@ defmodule Omc.Servers do
     %Server{}
     |> Server.changeset(
       attrs
-      |> Omc.Common.Utils.put_attr_safe!(:status, :active)
+      |> Utils.put_attr_safe!(:status, :active)
     )
     |> Repo.insert()
   end

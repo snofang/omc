@@ -52,7 +52,9 @@ defmodule Omc.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-      {:mox, "~> 1.0.2"}
+      {:mox, "~> 1.0.2"},
+      {:telegram, github: "visciang/telegram", tag: "1.1.0"},
+      {:hackney, "~> 1.18"}
     ]
   end
 
