@@ -7,19 +7,22 @@ defmodule Omc.Repo.Migrations.CreateUsersAccess do
       add :user_type, :string, null: false
       # This references no where for flexibility
       add :user_id, :string, null: false
+      add :currency, :string, null: false
       add :user_data, :map, default: %{}, null: false
-      add :credit, :decimal, default: 0, null: false
+      add :credit, :integer, default: 0, null: false
       add :description, :string
+      add :lock_version, :integer, default: 1
       timestamps()
     end
 
-    create unique_index(:ledgers, [:user_type, :user_id])
+    create unique_index(:ledgers, [:user_type, :user_id, :currency])
 
     create table(:ledger_txs) do
       add :ledger_id, references(:ledgers), null: false
       # Posible values: :credit, :debit
-      add :credit_debit, :string, null: false
-      add :balance_amount, :decimal, null: false
+      add :type, :string, null: false
+      add :currency, :string, null: false
+      add :amount, :integer, null: false
       # To specify the source or cause of this; e.g. :manual, :ledger_acc, :payment, etc.
       add :context, :string, null: false
 
@@ -28,10 +31,10 @@ defmodule Omc.Repo.Migrations.CreateUsersAccess do
       timestamps(updated_at: false)
     end
 
-    create table(:ledger_accs) do
-      add :ledger_id, references(:ledgers), null: false
+    create table(:user_accs) do
+      add :user_type, :string, null: false
+      add :user_id, :string, null: false
       add :server_acc_id, references(:server_accs), null: false
-      add :price_per_day, :decimal, null: false
       add :activated_at, :naive_datetime, null: false
       add :deactivated_at, :naive_datetime
     end
