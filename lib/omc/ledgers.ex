@@ -1,10 +1,9 @@
 defmodule Omc.Ledgers do
-  alias Ecto.Repo
   alias Omc.Repo
   alias Omc.Ledgers.{Ledger, LedgerTx}
-  import Ecto.Query
+  import Ecto.Query, warn: false
 
-def get_ledger(%{user_type: user_type, user_id: user_id} = attrs) do
+  def get_ledger(%{user_type: user_type, user_id: user_id} = attrs) do
     currency = attrs |> Map.get(:currency, default_currency())
 
     Ledger
@@ -18,7 +17,14 @@ def get_ledger(%{user_type: user_type, user_id: user_id} = attrs) do
     |> Repo.insert()
   end
 
-  def create_ledger_tx(
+  def get_ledger_txs(attrs) do
+    attrs
+    |> Map.put_new(:currency, default_currency())
+    |> LedgerTx.ledger_tx_query()
+    |> Repo.all()
+  end
+
+  def create_ledger_tx!(
         %{
           user_type: _user_type,
           user_id: _user_id,
@@ -43,22 +49,22 @@ def get_ledger(%{user_type: user_type, user_id: user_id} = attrs) do
       Repo.insert(LedgerTx.create_changeset(attrs |> Map.put(:ledger_id, ledger.id)))
     end)
     |> Repo.transaction()
+    |> then(fn {:ok, changes} ->
+      %{ledger: Map.get(changes, :ledger_updated), ledger_tx: Map.get(changes, :ledger_tx)}
+    end)
   end
 
-  defp ledger_update_changeset(ledger, %{context: context, amount: amount}) do
-    case context do
-      :payment when amount > 0 ->
+  defp ledger_update_changeset(ledger, %{type: type, amount: amount}) when amount > 0 do
+    case type do
+      :credit ->
         Ledger.update_changeset(ledger, %{credit: ledger.credit + amount})
 
-      :ledger_acc when amount > 0 ->
+      :debit ->
         Ledger.update_changeset(ledger, %{credit: ledger.credit - amount})
-
-      :manual when amount > 0 or amount < 0 ->
-        Ledger.update_changeset(ledger, %{credit: ledger.credit + amount})
     end
   end
 
-  defp default_currency() do
+  def default_currency() do
     Application.get_env(:omc, :default_currency)
   end
 end

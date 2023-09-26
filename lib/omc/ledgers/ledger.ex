@@ -12,8 +12,8 @@ defmodule Omc.Ledgers.Ledger do
     field :description, :string
     field :lock_version, :integer, default: 1
     timestamps()
-    has_many :ledger_txs, Omc.Ledgers.LedgerTx
-    has_many :ledger_accs, Omc.Ledgers.LedgerAcc
+    # has_many :ledger_txs, Omc.Ledgers.LedgerTx
+    # has_many :ledger_accs, Omc.Ledgers.LedgerAcc
   end
 
   def create_changeset(ledger, attrs) do

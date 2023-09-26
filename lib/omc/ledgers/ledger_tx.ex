@@ -8,14 +8,16 @@ defmodule Omc.Ledgers.LedgerTx do
   use Ecto.Schema
   import Ecto.Schema
   import Ecto.Changeset
+  alias Omc.Ledgers.{Ledger, LedgerTx}
+  import Ecto.Query
 
   schema "ledger_txs" do
-    field :ledger_id, :id
-    field :type, Ecto.Enum, values: [:credit, :debit]
-    field :currency, :string
-    field :amount, :integer
-    field :context, Ecto.Enum, values: [:manual, :ledger_acc, :payment]
-    field :context_id, :id
+    field(:ledger_id, :id)
+    field(:type, Ecto.Enum, values: [:credit, :debit])
+    field(:currency, :string)
+    field(:amount, :integer)
+    field(:context, Ecto.Enum, values: [:manual, :ledger_acc, :payment])
+    field(:context_id, :id)
     timestamps(updated_at: false)
   end
 
@@ -39,5 +41,15 @@ defmodule Omc.Ledgers.LedgerTx do
       value when value in [nil, :manual] -> changeset
       _ -> validate_required(changeset, [:context_id])
     end
+  end
+
+  def ledger_tx_query(%{user_type: user_type, user_id: user_id, currency: currency}) do
+    from(l in Ledger,
+      join: tx in LedgerTx,
+      on: l.id == tx.ledger_id,
+      where: l.user_type == ^user_type and l.user_id == ^user_id and l.currency == ^currency,
+      order_by: [desc: :inserted_at],
+      select: tx
+    )
   end
 end

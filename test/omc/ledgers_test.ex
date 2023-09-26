@@ -71,23 +71,50 @@ defmodule Omc.LedgersTest do
   # end
 
   describe "create_ledger_tx/1" do
-    # setup %{} do
-    #   %{ledger: ledger_fixture()}
-    # end
+    setup %{} do
+      ledger_tx_fixrute()
+    end
 
-    test "ledger itself id created by a tx" do
-      {:ok,
-       %{
-         ledger: %Ledger{} = ledger,
-         ledger_updated: %Ledger{} = ledger_updated,
-         ledger_tx: %LedgerTx{} = _ledger_tx
-       }} = Ledgers.create_ledger_tx(valid_ledger_tx_attrubutes(%{amount: 200, type: :credit}))
+    test "ledger itself is created by a tx" do
+      attrs = valid_ledger_tx_attrubutes()
+      assert nil == Ledgers.get_ledger(attrs)
 
-      assert ledger.credit == 0
-      assert ledger_updated.credit == 200
+      %{
+        ledger: %Ledger{} = ledger,
+        ledger_tx: %LedgerTx{} = _ledger_tx
+      } = Ledgers.create_ledger_tx!(%{attrs | amount: 200, type: :credit})
 
-      assert ledger_updated ==
-               Ledgers.get_ledger(%{user_type: ledger.user_type, user_id: ledger.user_id})
+      fetched_ledger = Ledgers.get_ledger(attrs)
+      assert fetched_ledger.user_id == attrs |> Map.get(:user_id)
+      assert fetched_ledger.user_type == attrs |> Map.get(:user_type)
+      assert fetched_ledger.currency == Ledgers.default_currency()
+      assert fetched_ledger.credit == 200
+      assert fetched_ledger == ledger
+    end
+
+    test "adding credit/debit tx should increase/decrease ledger credit total amount", %{
+      ledger: ledger
+    } do
+      ledger_updated =
+        valid_ledger_tx_attrubutes(%{user_id: ledger.user_id, type: :credit, amount: 100})
+        |> Ledgers.create_ledger_tx!()
+        |> then(fn changes -> Map.get(changes, :ledger) end)
+
+      assert ledger_updated.credit == ledger.credit + 100
+
+      ledger_updated =
+        valid_ledger_tx_attrubutes(%{user_id: ledger.user_id, type: :credit, amount: 100})
+        |> Ledgers.create_ledger_tx!()
+        |> then(fn changes -> Map.get(changes, :ledger) end)
+
+      assert ledger_updated.credit == ledger.credit + 200
+
+      ledger_updated =
+        valid_ledger_tx_attrubutes(%{user_id: ledger.user_id, type: :debit, amount: 200})
+        |> Ledgers.create_ledger_tx!()
+        |> then(fn changes -> Map.get(changes, :ledger) end)
+
+      assert ledger_updated.credit == ledger.credit
     end
 
     # test "all fileds are required for non :manual ledger creation" do
