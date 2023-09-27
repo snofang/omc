@@ -4,72 +4,6 @@ defmodule Omc.LedgersTest do
   alias Omc.Ledgers.{Ledger, LedgerTx}
   import Omc.LedgersFixtures
 
-  # describe "get_ledger/2" do
-  #   test "when ledger does not exist, return null" do
-  #     assert Ledgers.get_ledger(:local, "some_user_id", "IRR") == nil
-  #   end
-  #
-  #   test "returns ledger if it exists" do
-  #     %{id: id} = ledger = ledger_fixture()
-  #     assert %{id: ^id} = Ledgers.get_ledger(ledger.user_type, ledger.user_id, "IRR")
-  #   end
-  # end
-
-  # describe "create_ledger/1" do
-  #   test "requires user_type, user_id be set" do
-  #     {:error, changeset} = Ledgers.create_ledger(%{})
-  #
-  #     assert %{
-  #              user_type: ["can't be blank"],
-  #              user_id: ["can't be blank"]
-  #            } = errors_on(changeset)
-  #   end
-  #
-  #   test "empty user_id is not accepted" do
-  #     {:error, changeset} = Ledgers.create_ledger(%{user_type: :local, user_id: ""})
-  #
-  #     assert %{
-  #              user_id: ["can't be blank"]
-  #            } = errors_on(changeset)
-  #   end
-  #
-  #   test "duplicate ledger with same user_id, user_type raises" do
-  #     ledger1 = ledger_fixture()
-  #
-  #     assert_raise Ecto.ConstraintError,
-  #                  fn ->
-  #                    Ledgers.create_ledger(%{
-  #                      user_type: ledger1.user_type,
-  #                      user_id: ledger1.user_id
-  #                    })
-  #                  end
-  #   end
-  #
-  #   test "default credit value is zero" do
-  #     assert {:ok, %{credit: 0}} =
-  #              Ledgers.create_ledger(%{user_type: :telegram, user_id: "123456"})
-  #   end
-  # end
-  #
-  # describe "update_ledger/1" do
-  #   setup do
-  #     %{ledger: ledger_fixture()}
-  #   end
-  #
-  #   test "credit change is reauired", %{ledger: ledger} do
-  #     {:error, changeset} = Ledgers.update_ledger(ledger, %{})
-  #     assert %{credit: ["did not change"]} = errors_on(changeset)
-  #   end
-  #
-  #   test "credit change should only affect :credit field", %{ledger: ledger} do
-  #     {:ok, updated_ledger} =
-  #       Ledgers.update_ledger(ledger, %{user_id: "new_user_id", credit: 123.45})
-  #
-  #     assert updated_ledger.user_id == ledger.user_id
-  #     assert updated_ledger.credit == Decimal.new("123.45")
-  #   end
-  # end
-
   describe "create_ledger_tx/1" do
     setup %{} do
       ledger_tx_fixrute()
@@ -92,7 +26,7 @@ defmodule Omc.LedgersTest do
       assert fetched_ledger == ledger
     end
 
-    test "adding credit/debit tx should increase/decrease ledger credit total amount", %{
+    test "adding credit/debit tx should increase/decrease ledger's credit amount", %{
       ledger: ledger
     } do
       ledger_updated =
@@ -116,29 +50,29 @@ defmodule Omc.LedgersTest do
 
       assert ledger_updated.credit == ledger.credit
     end
+  end
 
-    # test "all fileds are required for non :manual ledger creation" do
-    #   {:error, changeset} = Ledgers.create_ledger_tx(%{type: :manual})
-    #
-    #   assert %{
-    #            ledger_id: ["can't be blank"],
-    #            amount: ["can't be blank"],
-    #            context: ["can't be blank"],
-    #            context_ref: ["can't be blank"]
-    #          } = errors_on(changeset)
-    # end
-    #
-    # test "credit type should must increase parent ledger credit", %{ledger: ledger} do
-    #   {:ok, ledger_tx} =
-    #     Ledgers.create_ledger_tx(%{
-    #       ledger_id: ledger.id,
-    #       type: :credit,
-    #       amount: 2000,
-    #       context: :manual
-    #     })
-    #
-    #   new_ledger = Ledgers.get_ledger(ledger.user_type, ledger.user_id, "IRR")
-    #   assert ledger.credit + 2000 == new_ledger.credit
-    # end
+  describe "get_ledger_txs/1" do
+    setup %{} do
+      ledger_tx_fixrute()
+    end 
+
+    test "get_ledger_txs should returen all txs descending" do
+      
+      attrs = valid_ledger_tx_attrubutes()
+      Ledgers.create_ledger_tx!(%{attrs | amount: 600, type: :credit})
+      Ledgers.create_ledger_tx!(%{attrs | amount: 100, type: :credit})
+      Ledgers.create_ledger_tx!(%{attrs | amount: 50, type: :debit})
+      Ledgers.create_ledger_tx!(%{attrs | amount: 150, type: :debit})
+
+
+      txs = Ledgers.get_ledger_txs(attrs)
+      assert txs |> length() == 4
+      assert %{amount: 150, type: :debit} = Enum.at(txs, 0)
+      assert %{amount: 50, type: :debit} = Enum.at(txs, 1)
+      assert %{amount: 100, type: :credit} = Enum.at(txs, 2)
+      assert %{amount: 600, type: :credit} = Enum.at(txs, 3)
+      
+    end
   end
 end

@@ -48,7 +48,7 @@ defmodule Omc.Ledgers.LedgerTx do
       join: tx in LedgerTx,
       on: l.id == tx.ledger_id,
       where: l.user_type == ^user_type and l.user_id == ^user_id and l.currency == ^currency,
-      order_by: [desc: :inserted_at],
+      order_by: [desc: tx.id],
       select: tx
     )
   end
