@@ -30,13 +30,5 @@ defmodule Omc.Repo.Migrations.CreateUsersAccess do
       add :context_id, :id, null: true
       timestamps(updated_at: false)
     end
-
-    create table(:user_accs) do
-      add :user_type, :string, null: false
-      add :user_id, :string, null: false
-      add :server_acc_id, references(:server_accs), null: false
-      add :activated_at, :naive_datetime, null: false
-      add :deactivated_at, :naive_datetime
-    end
   end
 end

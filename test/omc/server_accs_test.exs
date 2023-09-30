@@ -1,6 +1,5 @@
 defmodule Omc.ServersAccsTest do
   use Omc.DataCase, async: false
-  alias Omc.Servers.ServerOps
   alias Omc.Servers
   import Omc.ServersFixtures
   import Omc.AccountsFixtures
@@ -20,30 +19,23 @@ defmodule Omc.ServersAccsTest do
 
     # :active_pending & not File.exists -> no change
     acc_file_path(server_acc) |> File.rm()
-    Servers.sync_server_accs_status(server)
+    Servers.sync_server_accs_status(server.id)
     assert Servers.get_server_acc!(server_acc.id).status == :active_pending
     assert Servers.get_server_acc!(server_acc.id).lock_version == server_acc.lock_version
 
     # :active_pending &  File.exists -> :active
     acc_file_path(server_acc) |> File.touch()
-    Servers.sync_server_accs_status(server)
+    Servers.sync_server_accs_status(server.id)
     assert Servers.get_server_acc!(server_acc.id).status == :active
 
     # :deactive_pending &  File.exists -> :deactive_pending
     Servers.deactivate_acc(Servers.get_server_acc!(server_acc.id))
-    Servers.sync_server_accs_status(server)
+    Servers.sync_server_accs_status(server.id)
     assert Servers.get_server_acc!(server_acc.id).status == :deactive_pending
 
     # :deactive_pending &  not File.exists -> :deactive
     acc_file_path(server_acc) |> File.rm()
-    Servers.sync_server_accs_status(server)
+    Servers.sync_server_accs_status(server.id)
     assert Servers.get_server_acc!(server_acc.id).status == :deactive
-  end
-
-  defp acc_file_path(server_acc) do
-    file_path = ServerOps.acc_file_path(server_acc)
-    # this path should be created during pull from server
-    Path.dirname(file_path) |> File.mkdir_p()
-    file_path
   end
 end

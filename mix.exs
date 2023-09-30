@@ -54,7 +54,8 @@ defmodule Omc.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:mox, "~> 1.0.2"},
       {:telegram, github: "visciang/telegram", tag: "1.1.0"},
-      {:hackney, "~> 1.18"}
+      {:hackney, "~> 1.18"},
+      {:money, "~> 1.12"}
     ]
   end
 

@@ -65,6 +65,6 @@ defmodule Omc.Ledgers do
   end
 
   def default_currency() do
-    Application.get_env(:omc, :default_currency)
+    Application.get_env(:money, :default_currency) |> to_string()
   end
 end

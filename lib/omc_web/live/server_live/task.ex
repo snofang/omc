@@ -51,7 +51,7 @@ defmodule OmcWeb.ServerLive.Task do
   end
 
   def handle_event("sync-acc-data", _unsigned_params, socket) do
-    Servers.sync_server_accs_status(socket.assigns.server)
+    Servers.sync_server_accs_status(socket.assigns.server.id)
     {:noreply, socket}
   end
 

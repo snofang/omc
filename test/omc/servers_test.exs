@@ -10,27 +10,26 @@ defmodule Omc.ServersTest do
 
   describe "servers" do
     @invalid_attrs %{description: nil, max_accs: nil, name: nil, price: nil, status: nil}
+    setup %{} do
+      %{user: user_fixture()}
+    end
 
-    test "list_servers/0 returns all servers" do
-      user = user_fixture()
+    test "list_servers/0 returns all servers", %{user: user} do
       server = server_fixture(%{user_id: user.id})
       assert Servers.list_servers() == [server]
     end
 
-    test "get_server!/1 returns the server with given id" do
-      user = user_fixture()
+    test "get_server!/1 returns the server with given id", %{user: user} do
       server = server_fixture(%{user_id: user.id})
       assert Servers.get_server!(server.id) == server
     end
 
-    test "create_server/1 with valid data creates a server" do
-      user = user_fixture()
-
+    test "create_server/1 with valid data creates a server", %{user: user} do
       valid_attrs = %{
         description: "some description",
         max_accs: 42,
         name: "some.name",
-        price: "120.5",
+        price: "120.99",
         user_id: user.id
       }
 
@@ -38,12 +37,24 @@ defmodule Omc.ServersTest do
       assert server.description == "some description"
       assert server.max_accs == 42
       assert server.name == "some.name"
-      assert server.price == Decimal.new("120.5")
+      assert server.price == "120.99"
       assert server.status == :active
     end
 
     test "create_server/1 with invalid data returns error changeset" do
       assert {:error, %Ecto.Changeset{}} = Servers.create_server(@invalid_attrs)
+    end
+
+    test "create_server/1 with invalid price returns error changeset", %{user: user} do
+      valid_attrs = server_valid_attrs() |> Map.put(:user_id, user.id)
+      assert {:error, %{errors: [price: _]}} =
+               Servers.create_server(valid_attrs |> Map.put(:price, nil))
+
+      assert {:error, %{errors: [price: _]}} =
+               Servers.create_server(valid_attrs |> Map.put(:price, "a23"))
+
+      assert {:error, %{errors: [price: _]}} =
+               Servers.create_server(valid_attrs |> Map.put(:price, "123.123"))
     end
 
     test "update_server/2 with valid data updates the server" do
@@ -62,7 +73,7 @@ defmodule Omc.ServersTest do
       assert server.description == "some updated description"
       assert server.max_accs == 43
       assert server.name == "some.updated.name"
-      assert server.price == Decimal.new("456.7")
+      assert server.price == "456.7"
       assert server.status == :deactive
     end
 
@@ -183,7 +194,7 @@ defmodule Omc.ServersTest do
     end
 
     test "server_acc name should be unique within a server", %{user: user} do
-      server_common_attrs = %{user_id: user.id, max_accs: 110, price: 50}
+      server_common_attrs = %{user_id: user.id, max_accs: 110, price: "50"}
 
       {:ok, server1} =
         server_common_attrs

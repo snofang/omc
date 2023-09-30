@@ -55,16 +55,14 @@ defmodule Omc.LedgersTest do
   describe "get_ledger_txs/1" do
     setup %{} do
       ledger_tx_fixrute()
-    end 
+    end
 
     test "get_ledger_txs should returen all txs descending" do
-      
       attrs = valid_ledger_tx_attrubutes()
       Ledgers.create_ledger_tx!(%{attrs | amount: 600, type: :credit})
       Ledgers.create_ledger_tx!(%{attrs | amount: 100, type: :credit})
       Ledgers.create_ledger_tx!(%{attrs | amount: 50, type: :debit})
       Ledgers.create_ledger_tx!(%{attrs | amount: 150, type: :debit})
-
 
       txs = Ledgers.get_ledger_txs(attrs)
       assert txs |> length() == 4
@@ -72,7 +70,6 @@ defmodule Omc.LedgersTest do
       assert %{amount: 50, type: :debit} = Enum.at(txs, 1)
       assert %{amount: 100, type: :credit} = Enum.at(txs, 2)
       assert %{amount: 600, type: :credit} = Enum.at(txs, 3)
-      
     end
   end
 end

@@ -6,13 +6,9 @@ defmodule Omc.Servers do
   import Ecto.Query, warn: false
   import Ecto.Query.API, only: [like: 2], warn: false
   alias Phoenix.PubSub
-  alias Omc.Servers.ServerOps
-  alias Ecto.Repo
-  alias Ecto.Repo
+  alias Omc.Servers.{Server, ServerOps}
   alias Omc.Repo
   alias Omc.Common.Utils
-
-  alias Omc.Servers.Server
 
   @doc """
   Returns the list of servers.
@@ -25,12 +21,14 @@ defmodule Omc.Servers do
   """
   def list_servers do
     Repo.all(Server)
+    |> Enum.map(&Server.put_price/1)
   end
 
   def list_servers(user_id) do
     Server
     |> where(user_id: ^user_id)
     |> Repo.all()
+    |> Enum.map(&Server.put_price/1)
   end
 
   @doc """
@@ -47,7 +45,7 @@ defmodule Omc.Servers do
       ** (Ecto.NoResultsError)
 
   """
-  def get_server!(id), do: Repo.get!(Server, id)
+  def get_server!(id), do: Repo.get!(Server, id) |> Server.put_price()
 
   @doc """
   Creates a server.
@@ -298,15 +296,15 @@ defmodule Omc.Servers do
   Updates waiting for changes accs(those having :active_pending or :deactive_pending status)
   based on current acc file existance
   """
-  @spec sync_server_accs_status(Server.t()) :: :ok
-  def sync_server_accs_status(server) do
-    list_server_accs(%{server_id: server.id, status: :active_pending})
+  @spec sync_server_accs_status(:integer) :: :ok
+  def sync_server_accs_status(server_id) do
+    list_server_accs(%{server_id: server_id, status: :active_pending})
     |> Enum.each(fn acc ->
       update_server_acc(acc, ServerOps.acc_file_based_status_change(acc))
       |> broadcast_server_update()
     end)
 
-    list_server_accs(%{server_id: server.id, status: :deactive_pending})
+    list_server_accs(%{server_id: server_id, status: :deactive_pending})
     |> Enum.each(fn acc ->
       update_server_acc(acc, ServerOps.acc_file_based_status_change(acc))
       |> broadcast_server_update()
