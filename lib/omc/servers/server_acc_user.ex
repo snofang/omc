@@ -8,6 +8,7 @@ defmodule Omc.Servers.ServerAccUser do
     field :user_id, :string
     field :server_acc_id, :id
     field :prices, {:array, Money.Ecto.Map.Type}
+    field :allocated_at, :naive_datetime
     field :started_at, :naive_datetime
     field :ended_at, :naive_datetime
     timestamps()
@@ -21,6 +22,27 @@ defmodule Omc.Servers.ServerAccUser do
       :server_acc_id,
       :prices
     ])
+    |> allocate_changeset()
     |> unique_constraint([:server_acc_id])
+  end
+
+  def allocate_changeset(data) do
+    data
+    |> change(%{allocated_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)})
+  end
+  @doc """
+  Starts acc usage by setting `started_at`.
+  """
+  def start_changeset(data) do
+    data
+    |> change(%{started_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)})
+  end
+
+  @doc """
+  Ends acc usage by setting `ended_at`.
+  """
+  def end_changeset(data) do
+    data
+    |> change(%{ended_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)})
   end
 end

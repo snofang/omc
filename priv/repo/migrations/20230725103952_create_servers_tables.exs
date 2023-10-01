@@ -33,6 +33,7 @@ defmodule Omc.Repo.Migrations.CreateServers do
       add(:user_id, :string, null: false)
       add(:server_acc_id, references(:server_accs), null: false)
       add(:prices, :map, null: false)
+      add(:allocated_at, :naive_datetime, null: false)
       add(:started_at, :naive_datetime)
       add(:ended_at, :naive_datetime)
       timestamps()
