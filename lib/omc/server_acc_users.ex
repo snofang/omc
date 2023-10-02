@@ -1,8 +1,26 @@
 defmodule Omc.ServerAccUsers do
+  use GenServer
   alias Omc.Servers
   alias Omc.Repo
   alias Omc.Servers.{Server, ServerAcc, ServerAccUser}
   import Ecto.Query, warn: false
+
+  def start_link(_args) do
+    GenServer.start_link(__MODULE__, Application.get_env(:omc, :acc_allocation_cleanup), name: __MODULE__)
+  end
+
+  @impl GenServer
+  def init(acc_allocation_args) do
+    Process.send_after(self(), :allocation_cleanup, acc_allocation_args[:schedule])
+    {:ok, acc_allocation_args}
+  end
+
+  @impl GenServer
+  def handle_info(:allocation_cleanup, acc_allocation_args) do
+    cleanup_acc_allocations(acc_allocation_args[:timeout])
+    Process.send_after(self(), :allocation_cleanup, acc_allocation_args[:schedule])
+    {:noreply, acc_allocation_args}
+  end
 
   # Allocates a `ServerAcc` to a user by creating a record of `ServerAccUser` in db and 
   # setting its `allocated_at` to the current `NaiveDateTime`.
@@ -123,7 +141,8 @@ defmodule Omc.ServerAccUsers do
           server_acc_user: ServerAccUser.t()
         }
   def end_server_acc_user!(server_acc_user) do
-    {:ok, %{server_acc_updated: server_acc_updated, server_acc_user_updated: server_acc_user_updated}} =
+    {:ok,
+     %{server_acc_updated: server_acc_updated, server_acc_user_updated: server_acc_user_updated}} =
       Ecto.Multi.new()
       # getting server_acc
       |> Ecto.Multi.run(:server_acc, fn _repo, _changes ->
@@ -138,5 +157,15 @@ defmodule Omc.ServerAccUsers do
       |> Repo.transaction()
 
     %{server_acc: server_acc_updated, server_acc_user: server_acc_user_updated}
+  end
+
+  @doc false
+  def cleanup_acc_allocations(timeout) do
+    query =
+      from(sau in ServerAccUser,
+        where: is_nil(sau.started_at) and sau.allocated_at < ago(^timeout, "second")
+      )
+
+    Repo.delete_all(query)
   end
 end

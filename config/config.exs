@@ -7,12 +7,24 @@
 # General application configuration
 import Config
 
-config :omc, data: Path.expand("../.data", Path.dirname(__ENV__.file))
-config :omc, ansible: Path.expand("../rel/overlays/ansible", Path.dirname(__ENV__.file))
+config :omc, 
+  data: Path.expand("../.data", Path.dirname(__ENV__.file)),
+  ansible: Path.expand("../rel/overlays/ansible", Path.dirname(__ENV__.file))
+
 
 config :money,
   default_currency: :IRR
 
+#
+# acc_allocation_cleanup
+#
+config :omc, :acc_allocation_cleanup,
+  enabled: false,
+  # in seconds
+  timeout: 15 * 60,
+  # in milliseconds
+  schedule: 30 * 1_000
+  
 #
 # Telegram
 #

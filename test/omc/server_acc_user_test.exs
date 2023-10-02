@@ -1,5 +1,5 @@
 defmodule Omc.ServerAccUserTest do
-  use Omc.DataCase, async: false
+  use Omc.DataCase, async: true
   alias Omc.ServerAccUsers
   import Omc.ServersFixtures
   import Omc.AccountsFixtures
@@ -77,6 +77,24 @@ defmodule Omc.ServerAccUserTest do
       assert happend_now_or_a_second_later(sau2.allocated_at)
       assert sau1 == %{sau2 | allocated_at: sau1.allocated_at}
     end
+
+    test "allocated expired accs should be cleanup calling cleanup_acc_allocations/1",
+         %{user_attrs: user_attrs} do
+      assert ServerAccUsers.get_server_acc_user_allocated(user_attrs) == nil
+      ServerAccUsers.allocate_server_acc_user(user_attrs)
+      assert ServerAccUsers.get_server_acc_user_allocated(user_attrs) != nil
+
+      # it is still not passed 5 seconds from allocation; then nothing should happen
+      ServerAccUsers.cleanup_acc_allocations(5)
+      sau = ServerAccUsers.get_server_acc_user_allocated(user_attrs)
+      assert sau != nil
+
+      sau
+      |> change([allocated_at: sau.allocated_at |> NaiveDateTime.add(-5)])
+      |> Repo.update()
+      ServerAccUsers.cleanup_acc_allocations(5)
+      assert ServerAccUsers.get_server_acc_user_allocated(user_attrs) == nil
+    end
   end
 
   describe "start/stop acc allocation" do
@@ -98,8 +116,7 @@ defmodule Omc.ServerAccUserTest do
 
     test "ending server_acc_user should set its ended_at field and deactivate server_acc",
          %{server_acc_user: sau} do
-      %{server_acc: sa, server_acc_user: update_sau} =
-        ServerAccUsers.end_server_acc_user!(sau)
+      %{server_acc: sa, server_acc_user: update_sau} = ServerAccUsers.end_server_acc_user!(sau)
 
       assert sa.status == :deactive_pending
       assert happend_now_or_a_second_later(update_sau.ended_at)
