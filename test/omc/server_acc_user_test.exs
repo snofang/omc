@@ -1,4 +1,5 @@
 defmodule Omc.ServerAccUserTest do
+  alias Omc.Ledgers
   use Omc.DataCase, async: true
   alias Omc.ServerAccUsers
   import Omc.ServersFixtures
@@ -75,7 +76,11 @@ defmodule Omc.ServerAccUserTest do
       refute happend_now_or_a_second_later(dummy_date_sau.allocated_at)
       {:ok, sau2} = ServerAccUsers.allocate_server_acc_user(user_attrs)
       assert happend_now_or_a_second_later(sau2.allocated_at)
-      assert sau1 == %{sau2 | allocated_at: sau1.allocated_at}
+
+      assert sau1 ==
+               sau2
+               |> Map.replace(:allocated_at, sau1.allocated_at)
+               |> Map.replace(:lock_version, sau1.lock_version)
     end
 
     test "allocated expired accs should be cleanup calling cleanup_acc_allocations/1",
@@ -90,8 +95,9 @@ defmodule Omc.ServerAccUserTest do
       assert sau != nil
 
       sau
-      |> change([allocated_at: sau.allocated_at |> NaiveDateTime.add(-5)])
+      |> change(allocated_at: sau.allocated_at |> NaiveDateTime.add(-5))
       |> Repo.update()
+
       ServerAccUsers.cleanup_acc_allocations(5)
       assert ServerAccUsers.get_server_acc_user_allocated(user_attrs) == nil
     end
@@ -103,10 +109,18 @@ defmodule Omc.ServerAccUserTest do
       %{server_acc_user: server_acc_user}
     end
 
+    test "without credit, stating server_acc_user, should prevented.",
+         %{server_acc_user: sau} do
+      assert {:error, :no_credit} = ServerAccUsers.start_server_acc_user(sau)
+    end
+
     test "starting server_acc_user should set its started_at field",
          %{server_acc_user: sau} do
       # it should be nil before any start operation
       assert sau.started_at == nil
+
+      add_some_credit(sau)
+
       # it should be set after start operation
       {:ok, %{started_at: started_at}} = ServerAccUsers.start_server_acc_user(sau)
       assert started_at != nil
@@ -114,13 +128,31 @@ defmodule Omc.ServerAccUserTest do
       assert happend_now_or_a_second_later(started_at)
     end
 
+    test "it should not be possible to end server_acc_user if not started",
+         %{server_acc_user: sau} do
+      {:error, :server_acc_user, _, _} = ServerAccUsers.end_server_acc_user(sau)
+    end
+
     test "ending server_acc_user should set its ended_at field and deactivate server_acc",
          %{server_acc_user: sau} do
-      %{server_acc: sa, server_acc_user: update_sau} = ServerAccUsers.end_server_acc_user!(sau)
+      add_some_credit(sau)
+      {:ok, sau} = ServerAccUsers.start_server_acc_user(sau)
+
+      {:ok, %{server_acc: sa, server_acc_user: sau}} = ServerAccUsers.end_server_acc_user(sau)
 
       assert sa.status == :deactive_pending
-      assert happend_now_or_a_second_later(update_sau.ended_at)
+      assert happend_now_or_a_second_later(sau.ended_at)
     end
+  end
+
+  defp add_some_credit(sau) do
+    Ledgers.create_ledger_tx!(%{
+      user_type: sau.user_type,
+      user_id: sau.user_id,
+      context: :manual,
+      money: Money.new(123),
+      type: :credit
+    })
   end
 
   defp happend_now_or_a_second_later(naive_datetime) do

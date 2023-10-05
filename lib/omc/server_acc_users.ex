@@ -1,12 +1,15 @@
 defmodule Omc.ServerAccUsers do
   use GenServer
+  alias Omc.Ledgers
   alias Omc.Servers
   alias Omc.Repo
   alias Omc.Servers.{Server, ServerAcc, ServerAccUser}
   import Ecto.Query, warn: false
 
   def start_link(_args) do
-    GenServer.start_link(__MODULE__, Application.get_env(:omc, :acc_allocation_cleanup), name: __MODULE__)
+    GenServer.start_link(__MODULE__, Application.get_env(:omc, :acc_allocation_cleanup),
+      name: __MODULE__
+    )
   end
 
   @impl GenServer
@@ -20,6 +23,20 @@ defmodule Omc.ServerAccUsers do
     cleanup_acc_allocations(acc_allocation_args[:timeout])
     Process.send_after(self(), :allocation_cleanup, acc_allocation_args[:schedule])
     {:noreply, acc_allocation_args}
+  end
+
+  @doc """
+  Returns all `ServerAccUser`s which are in use.
+  """
+  def get_server_acc_users_in_use(%{user_type: user_type, user_id: user_id}) do
+    from(sau in ServerAccUser,
+      where:
+        sau.user_type == ^user_type and
+          sau.user_id == ^user_id and
+          not is_nil(sau.started_at) and
+          is_nil(sau.ended_at)
+    )
+    |> Repo.all()
   end
 
   # Allocates a `ServerAcc` to a user by creating a record of `ServerAccUser` in db and 
@@ -126,37 +143,39 @@ defmodule Omc.ServerAccUsers do
   Starts allocated `ServerAccUser` by filling its `started_at` to current `NaiveDateTime`
   This is the state in which acc should be available for use/download.
   """
-  def start_server_acc_user(server_acc_user) do
-    server_acc_user
-    |> ServerAccUser.start_changeset()
-    |> Repo.update()
+  @spec start_server_acc_user(ServerAccUser.t()) ::
+          {:ok, ServerAccUser.t()} | {:error, Ecto.Changest.t()} | {:error, :no_credit}
+  def start_server_acc_user(%ServerAccUser{} = sau) do
+    # TODO: to cosider required minimum credit for starting 
+    Ledgers.get_ledgers(%{user_type: sau.user_type, user_id: sau.user_id})
+    |> Enum.reduce(0, &(&1.credit + &2))
+    |> case do
+      credit_sum when credit_sum > 0 ->
+        sau
+        |> ServerAccUser.start_changeset()
+        |> Repo.update()
+
+      _ ->
+        {:error, :no_credit}
+    end
   end
 
   @doc """
   Ends started `ServerAccUser` by setting its `ended_at` to current `NaiveDateTime` and also
   deactivating related `ServerAcc`.
+  returns on success a multi resutl {:ok, %{server_acc: _, server_acc_user: _}}
   """
-  @spec end_server_acc_user!(ServerAccUser.t()) :: %{
-          server_acc: ServerAcc.t(),
-          server_acc_user: ServerAccUser.t()
-        }
-  def end_server_acc_user!(server_acc_user) do
-    {:ok,
-     %{server_acc_updated: server_acc_updated, server_acc_user_updated: server_acc_user_updated}} =
-      Ecto.Multi.new()
-      # getting server_acc
-      |> Ecto.Multi.run(:server_acc, fn _repo, _changes ->
-        {:ok, Servers.get_server_acc!(server_acc_user.server_acc_id)}
-      end)
-      # marking acc for deactivation
-      |> Ecto.Multi.run(:server_acc_updated, fn _repo, %{server_acc: server_acc} ->
-        Servers.deactivate_acc(server_acc)
-      end)
-      # ending acc allocation
-      |> Ecto.Multi.update(:server_acc_user_updated, ServerAccUser.end_changeset(server_acc_user))
-      |> Repo.transaction()
+  def end_server_acc_user(%ServerAccUser{} = sau) do
+    server_acc = Servers.get_server_acc!(sau.server_acc_id)
 
-    %{server_acc: server_acc_updated, server_acc_user: server_acc_user_updated}
+    Ecto.Multi.new()
+    # marking acc for deactivation
+    |> Ecto.Multi.run(:server_acc, fn _repo, _changes ->
+      Servers.deactivate_acc(server_acc)
+    end)
+    # ending acc allocation
+    |> Ecto.Multi.update(:server_acc_user, ServerAccUser.end_changeset(sau))
+    |> Repo.transaction()
   end
 
   @doc false

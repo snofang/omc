@@ -3,12 +3,17 @@ import Config
 # Only in tests, remove the complexity from the password hashing algorithm
 config :bcrypt_elixir, :log_rounds, 1
 
+#
+# money & currency
+# 
+config :omc, supported_currencies: [:IRR, :USD, :EUR]
+
 config :omc, :acc_allocation,
   # in seconds
   timeout: 1,
   # in milliseconds
   schedule: 100
-  
+
 # Configure your database
 #
 # The MIX_TEST_PARTITION environment variable can be used

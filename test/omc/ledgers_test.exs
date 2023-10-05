@@ -16,7 +16,7 @@ defmodule Omc.LedgersTest do
       %{
         ledger: %Ledger{} = ledger,
         ledger_tx: %LedgerTx{} = _ledger_tx
-      } = Ledgers.create_ledger_tx!(%{attrs | amount: 200, type: :credit})
+      } = Ledgers.create_ledger_tx!(%{attrs | money: Money.new(200), type: :credit})
 
       fetched_ledger = Ledgers.get_ledger(attrs)
       assert fetched_ledger.user_id == attrs |> Map.get(:user_id)
@@ -30,21 +30,29 @@ defmodule Omc.LedgersTest do
       ledger: ledger
     } do
       ledger_updated =
-        valid_ledger_tx_attrubutes(%{user_id: ledger.user_id, type: :credit, amount: 100})
+        valid_ledger_tx_attrubutes(%{
+          user_id: ledger.user_id,
+          type: :credit,
+          money: Money.new(100)
+        })
         |> Ledgers.create_ledger_tx!()
         |> then(fn changes -> Map.get(changes, :ledger) end)
 
       assert ledger_updated.credit == ledger.credit + 100
 
       ledger_updated =
-        valid_ledger_tx_attrubutes(%{user_id: ledger.user_id, type: :credit, amount: 100})
+        valid_ledger_tx_attrubutes(%{
+          user_id: ledger.user_id,
+          type: :credit,
+          money: Money.new(100)
+        })
         |> Ledgers.create_ledger_tx!()
         |> then(fn changes -> Map.get(changes, :ledger) end)
 
       assert ledger_updated.credit == ledger.credit + 200
 
       ledger_updated =
-        valid_ledger_tx_attrubutes(%{user_id: ledger.user_id, type: :debit, amount: 200})
+        valid_ledger_tx_attrubutes(%{user_id: ledger.user_id, type: :debit, money: Money.new(200)})
         |> Ledgers.create_ledger_tx!()
         |> then(fn changes -> Map.get(changes, :ledger) end)
 
@@ -59,10 +67,10 @@ defmodule Omc.LedgersTest do
 
     test "get_ledger_txs should returen all txs descending" do
       attrs = valid_ledger_tx_attrubutes()
-      Ledgers.create_ledger_tx!(%{attrs | amount: 600, type: :credit})
-      Ledgers.create_ledger_tx!(%{attrs | amount: 100, type: :credit})
-      Ledgers.create_ledger_tx!(%{attrs | amount: 50, type: :debit})
-      Ledgers.create_ledger_tx!(%{attrs | amount: 150, type: :debit})
+      Ledgers.create_ledger_tx!(%{attrs | money: Money.new(600), type: :credit})
+      Ledgers.create_ledger_tx!(%{attrs | money: Money.new(100), type: :credit})
+      Ledgers.create_ledger_tx!(%{attrs | money: Money.new(50), type: :debit})
+      Ledgers.create_ledger_tx!(%{attrs | money: Money.new(150), type: :debit})
 
       txs = Ledgers.get_ledger_txs(attrs)
       assert txs |> length() == 4

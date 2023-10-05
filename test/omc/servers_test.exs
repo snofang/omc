@@ -47,6 +47,7 @@ defmodule Omc.ServersTest do
 
     test "create_server/1 with invalid price returns error changeset", %{user: user} do
       valid_attrs = server_valid_attrs() |> Map.put(:user_id, user.id)
+
       assert {:error, %{errors: [price: _]}} =
                Servers.create_server(valid_attrs |> Map.put(:price, nil))
 

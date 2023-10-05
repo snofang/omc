@@ -21,7 +21,6 @@ defmodule Omc.Repo.Migrations.CreateUsersAccess do
       add :ledger_id, references(:ledgers), null: false
       # Posible values: :credit, :debit
       add :type, :string, null: false
-      add :currency, :string, null: false
       add :amount, :integer, null: false
       # To specify the source or cause of this; e.g. :manual, :ledger_acc, :payment, etc.
       add :context, :string, null: false

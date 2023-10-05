@@ -2,7 +2,7 @@ defmodule Omc.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
-alias Omc.ServerAccUsers
+  alias Omc.ServerAccUsers
 
   use Application
 
@@ -23,7 +23,7 @@ alias Omc.ServerAccUsers
         # Start the TaskSupervisor
         {Task.Supervisor, name: Omc.TaskSupervisor},
         # Start ServerTaskManager
-        Omc.Servers.ServerTaskManager,
+        Omc.Servers.ServerTaskManager
       ]
       # Start server_acc_user cleanup scheduling
       |> add_if(

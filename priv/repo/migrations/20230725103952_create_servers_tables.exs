@@ -36,6 +36,7 @@ defmodule Omc.Repo.Migrations.CreateServers do
       add(:allocated_at, :naive_datetime, null: false)
       add(:started_at, :naive_datetime)
       add(:ended_at, :naive_datetime)
+      add(:lock_version, :integer, default: 1)
       timestamps()
     end
 

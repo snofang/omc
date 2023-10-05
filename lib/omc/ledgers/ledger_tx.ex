@@ -14,9 +14,8 @@ defmodule Omc.Ledgers.LedgerTx do
   schema "ledger_txs" do
     field(:ledger_id, :id)
     field(:type, Ecto.Enum, values: [:credit, :debit])
-    field(:currency, :string)
     field(:amount, :integer)
-    field(:context, Ecto.Enum, values: [:manual, :ledger_acc, :payment])
+    field(:context, Ecto.Enum, values: [:manual, :usage, :payment])
     field(:context_id, :id)
     timestamps(updated_at: false)
   end
@@ -26,12 +25,11 @@ defmodule Omc.Ledgers.LedgerTx do
     |> cast(attrs, [
       :ledger_id,
       :type,
-      :currency,
       :amount,
       :context,
       :context_id
     ])
-    |> validate_required([:ledger_id, :type, :currency, :amount, :context])
+    |> validate_required([:ledger_id, :type, :amount, :context])
     |> validate_number(:amount, greater_than: 0)
     |> validate_context()
   end

@@ -2,12 +2,13 @@ defmodule Omc.Ledgers.Ledger do
   use Ecto.Schema
   import Ecto.Schema
   import Ecto.Changeset
+  @supported_currencies Application.compile_env(:omc, :supported_currencies)
 
   schema "ledgers" do
     field :user_type, Ecto.Enum, values: [:local, :telegram]
     field :user_id, :string
     field :user_data, :map, default: %{}
-    field :currency, :string
+    field :currency, Ecto.Enum, values: @supported_currencies
     field :credit, :integer, default: 0
     field :description, :string
     field :lock_version, :integer, default: 1
@@ -18,11 +19,21 @@ defmodule Omc.Ledgers.Ledger do
 
   def create_changeset(ledger, attrs) do
     ledger
-    |> cast(attrs, [:user_type, :user_id, :user_data, :currency, :credit, :description])
+    |> cast(attrs, [:user_type, :user_id, :currency, :credit])
     |> validate_required([:user_type, :user_id, :currency, :credit])
   end
 
-  def update_changeset(ledger, attrs) do
+  def update_changeset(ledger, %{type: type, amount: amount}) when amount > 0 do
+    case type do
+      :credit ->
+        __update_changeset(ledger, %{credit: ledger.credit + amount})
+
+      :debit ->
+        __update_changeset(ledger, %{credit: ledger.credit - amount})
+    end
+  end
+
+  defp __update_changeset(ledger, attrs) do
     ledger
     |> cast(attrs, [:credit])
     |> validate_required([:credit])
