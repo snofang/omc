@@ -20,7 +20,7 @@ defmodule Omc.LedgersFixtures do
     })
   end
 
-  def ledger_tx_fixrute(attrs \\ %{}) do
+  def ledger_tx_fixture!(attrs \\ %{}) do
     Ledgers.create_ledger_tx!(valid_ledger_tx_attrubutes(attrs))
   end
 end

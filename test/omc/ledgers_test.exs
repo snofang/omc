@@ -6,7 +6,7 @@ defmodule Omc.LedgersTest do
 
   describe "create_ledger_tx/1" do
     setup %{} do
-      ledger_tx_fixrute()
+      ledger_tx_fixture!()
     end
 
     test "ledger itself is created by a tx" do
@@ -62,7 +62,7 @@ defmodule Omc.LedgersTest do
 
   describe "get_ledger_txs/1" do
     setup %{} do
-      ledger_tx_fixrute()
+      ledger_tx_fixture!()
     end
 
     test "get_ledger_txs should returen all txs descending" do

@@ -11,6 +11,14 @@ defmodule Omc.Ledgers.LedgerTx do
   alias Omc.Ledgers.{Ledger, LedgerTx}
   import Ecto.Query
 
+  @type t :: %__MODULE__{
+          ledger_id: integer(),
+          type: atom(),
+          amount: integer(),
+          context: atom(),
+          context_id: integer()
+        }
+
   schema "ledger_txs" do
     field(:ledger_id, :id)
     field(:type, Ecto.Enum, values: [:credit, :debit])

@@ -1,5 +1,4 @@
 defmodule Omc.ServerAccUserTest do
-  alias Omc.Ledgers
   use Omc.DataCase, async: true
   alias Omc.ServerAccUsers
   import Omc.ServersFixtures
@@ -119,7 +118,8 @@ defmodule Omc.ServerAccUserTest do
       # it should be nil before any start operation
       assert sau.started_at == nil
 
-      add_some_credit(sau)
+      # adding dome credit
+      ledger_tx_fixture!(%{user_id: sau.user_id, user_type: sau.user_type})
 
       # it should be set after start operation
       {:ok, %{started_at: started_at}} = ServerAccUsers.start_server_acc_user(sau)
@@ -135,7 +135,8 @@ defmodule Omc.ServerAccUserTest do
 
     test "ending server_acc_user should set its ended_at field and deactivate server_acc",
          %{server_acc_user: sau} do
-      add_some_credit(sau)
+      # adding some credit
+      ledger_tx_fixture!(%{user_id: sau.user_id, user_type: sau.user_type})
       {:ok, sau} = ServerAccUsers.start_server_acc_user(sau)
 
       {:ok, %{server_acc: sa, server_acc_user: sau}} = ServerAccUsers.end_server_acc_user(sau)
@@ -143,16 +144,6 @@ defmodule Omc.ServerAccUserTest do
       assert sa.status == :deactive_pending
       assert happend_now_or_a_second_later(sau.ended_at)
     end
-  end
-
-  defp add_some_credit(sau) do
-    Ledgers.create_ledger_tx!(%{
-      user_type: sau.user_type,
-      user_id: sau.user_id,
-      context: :manual,
-      money: Money.new(123),
-      type: :credit
-    })
   end
 
   defp happend_now_or_a_second_later(naive_datetime) do

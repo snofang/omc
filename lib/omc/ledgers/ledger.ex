@@ -4,6 +4,15 @@ defmodule Omc.Ledgers.Ledger do
   import Ecto.Changeset
   @supported_currencies Application.compile_env(:omc, :supported_currencies)
 
+  @type t :: %__MODULE__{
+          user_type: atom(),
+          user_id: binary(),
+          user_data: map(),
+          currency: atom(),
+          credit: integer(),
+          description: binary()
+        }
+
   schema "ledgers" do
     field :user_type, Ecto.Enum, values: [:local, :telegram]
     field :user_id, :string
@@ -42,5 +51,13 @@ defmodule Omc.Ledgers.Ledger do
       %{changes: %{credit: _}} = changeset -> changeset
       %{} = changeset -> add_error(changeset, :credit, "did not change")
     end
+  end
+
+  @doc """
+  Returns credit value in `Money`.
+  """
+  @spec credit_money(__MODULE__.t()) :: Money.t()
+  def credit_money(%__MODULE__{} = ledger) do
+    Money.new(ledger.credit, ledger.currency)
   end
 end

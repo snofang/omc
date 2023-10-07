@@ -50,18 +50,22 @@ defmodule Omc.Ledgers do
   @doc """
   Creates a new `LedgerTx` and updates its related `Ledger` accordingly.
   """
+  def create_ledger_tx!(attrs)
+
   @spec create_ledger_tx!(%{
-          user_type: binary(),
+          user_type: atom(),
           user_id: binary(),
-          context: atom(),
+          context: :manual | :payment | :usage,
+          context_id: integer() | nil,
           money: Money.t(),
-          type: atom()
+          type: :credit | :debit
         }) :: %{ledger: Ledger.t(), ledger_tx: LedgerTx.t()}
   def create_ledger_tx!(%{
         user_type: user_type,
         user_id: user_id,
         context: context,
-        money: %Money{} = money,
+        context_id: context_id,
+        money: money,
         type: type
       }) do
     # creating ledger if not exists
@@ -91,6 +95,7 @@ defmodule Omc.Ledgers do
         ledger_update_changeset(%{
           ledger: ledger,
           context: context,
+          context_id: context_id,
           amount: money.amount,
           type: type
         })
@@ -103,24 +108,45 @@ defmodule Omc.Ledgers do
     end)
   end
 
+  @spec create_ledger_tx!(%{
+          user_type: atom(),
+          user_id: binary(),
+          context: :manual,
+          money: Money.t(),
+          type: :credit | :debit
+        }) :: %{ledger: Ledger.t(), ledger_tx: LedgerTx.t()}
+  def create_ledger_tx!(
+        %{
+          user_type: _user_type,
+          user_id: _user_id,
+          context: _context,
+          money: _money,
+          type: _type
+        } = attrs
+      ) do
+    create_ledger_tx!(attrs |> Map.put(:context_id, nil))
+  end
+
   @doc """
   Returns changesets required to insert a `LedgerTx` and update its `Ledger` accordingly.
   """
+  def ledger_update_changeset(attrs)
+
   @spec ledger_update_changeset(%{
           ledger: Ledger.t(),
-          context: atom(),
+          context: :usage,
+          context_id: integer(),
           amount: integer(),
-          type: atom()
+          type: :debit
         }) :: %{
           ledger_changeset: Ecto.Changeset.t(),
           ledger_tx_changeset: Ecto.Changeset.t()
         }
-  def ledger_update_changeset(attrs)
-
   def ledger_update_changeset(
         %{
           ledger: _ledger,
           context: :usage,
+          context_id: _server_acc_user_id,
           amount: _amount,
           type: :debit
         } = attrs
@@ -128,6 +154,15 @@ defmodule Omc.Ledgers do
     __ledger_update_changeset__(attrs)
   end
 
+  @spec ledger_update_changeset(%{
+          ledger: Ledger.t(),
+          context: :payment,
+          amount: integer(),
+          type: :credit
+        }) :: %{
+          ledger_changeset: Ecto.Changeset.t(),
+          ledger_tx_changeset: Ecto.Changeset.t()
+        }
   def ledger_update_changeset(
         %{
           ledger: _ledger,
@@ -136,9 +171,18 @@ defmodule Omc.Ledgers do
           type: :credit
         } = attrs
       ) do
-    __ledger_update_changeset__(attrs)
+    __ledger_update_changeset__(attrs |> Map.put(:context_id, nil))
   end
 
+  @spec ledger_update_changeset(%{
+          ledger: Ledger.t(),
+          context: :manual,
+          amount: integer(),
+          type: :credit | :debit
+        }) :: %{
+          ledger_changeset: Ecto.Changeset.t(),
+          ledger_tx_changeset: Ecto.Changeset.t()
+        }
   def ledger_update_changeset(
         %{
           ledger: _ledger,
@@ -147,7 +191,7 @@ defmodule Omc.Ledgers do
           type: _credit_debit
         } = attrs
       ) do
-    __ledger_update_changeset__(attrs)
+    __ledger_update_changeset__(attrs |> Map.put(:context_id, nil))
   end
 
   defp __ledger_update_changeset__(
