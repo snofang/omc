@@ -46,7 +46,7 @@ defmodule Omc.UsagesTest do
 
       assert Usages.calc_usage(sau, :USD) |> Money.compare(Money.new(0, :USD)) == 0
     end
-    
+
     test "not happend time usage should be zero" do
       sau = %ServerAccUser{
         prices: [Money.new(100, :USD)],
