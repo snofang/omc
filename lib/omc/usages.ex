@@ -23,7 +23,7 @@ defmodule Omc.Usages do
 
   defmodule UsageState do
     @moduledoc false
-    
+
     defstruct ledgers: [],
               server_acc_users: [],
               ledger_changesets: [],
@@ -60,6 +60,7 @@ defmodule Omc.Usages do
         server_acc_user_create_changeset(sau)
         |> Ecto.Changeset.apply_changes()
         |> Map.replace(:id, System.unique_integer([:positive]))
+
       sau_new_start_changeset = ServerAccUser.start_changeset(sau_new)
 
       state
@@ -186,11 +187,18 @@ defmodule Omc.Usages do
     NaiveDateTime.utc_now()
     |> NaiveDateTime.truncate(:second)
     |> NaiveDateTime.diff(server_acc_user.started_at)
-    |> Decimal.new()
-    |> Decimal.mult(price(server_acc_user, currency) |> Money.to_decimal())
-    |> Decimal.div(@pricing_duration_in_seconds)
-    |> Money.parse(currency)
-    |> then(fn {:ok, money} -> money end)
+    |> case do
+      diff when diff > 0 ->
+        diff
+        |> Decimal.new()
+        |> Decimal.mult(price(server_acc_user, currency) |> Money.to_decimal())
+        |> Decimal.div(@pricing_duration_in_seconds)
+        |> Money.parse(currency)
+        |> then(fn {:ok, money} -> money end)
+
+      _ ->
+        Money.new(0, currency)
+    end
   end
 
   @doc false
