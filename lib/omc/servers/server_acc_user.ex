@@ -4,14 +4,13 @@ defmodule Omc.Servers.ServerAccUser do
   import Ecto.Changeset
 
   schema "server_acc_users" do
-    field(:user_type, Ecto.Enum, values: [:local, :telegram])
-    field(:user_id, :string)
-    field(:server_acc_id, :id)
-    field(:prices, {:array, Money.Ecto.Map.Type})
-    field(:allocated_at, :naive_datetime)
-    field(:started_at, :naive_datetime)
-    field(:ended_at, :naive_datetime)
-    field(:lock_version, :integer, default: 1)
+    field :user_type, Ecto.Enum, values: [:local, :telegram]
+    field :user_id, :string
+    field :server_acc_id, :id
+    field :allocated_at, :naive_datetime
+    field :started_at, :naive_datetime
+    field :ended_at, :naive_datetime
+    field :lock_version, :integer, default: 1
     timestamps()
   end
 
@@ -20,8 +19,7 @@ defmodule Omc.Servers.ServerAccUser do
     |> cast(attrs, [
       :user_type,
       :user_id,
-      :server_acc_id,
-      :prices
+      :server_acc_id
     ])
     |> allocate_changeset()
     |> unique_constraint([:server_acc_id])

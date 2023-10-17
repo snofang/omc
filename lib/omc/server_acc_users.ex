@@ -83,14 +83,12 @@ defmodule Omc.ServerAccUsers do
   def create_server_acc_user(%{
         user_type: user_type,
         user_id: user_id,
-        server: server,
         server_acc: server_acc
       }) do
     %{
       user_type: user_type,
       user_id: user_id,
       server_acc_id: server_acc.id,
-      prices: server.prices,
       allocated_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
     }
     |> ServerAccUser.create_chageset()

@@ -2,17 +2,18 @@ defmodule Omc.Servers.Server do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Schema
+  alias Omc.Common.PricePlan
 
   schema "servers" do
-    field(:description, :string)
-    field(:max_accs, :integer)
-    field(:name, :string)
+    field :description, :string
+    field :max_accs, :integer
+    field :name, :string
     # TODO: To remove this after adding multiple price support 
-    field(:price, :string, virtual: true)
-    field(:prices, {:array, Money.Ecto.Map.Type})
-    field(:status, Ecto.Enum, values: [:active, :deactive])
-    field(:user_id, :id)
-    has_many(:server_accs, Omc.Servers.ServerAcc)
+    field :price, :string, virtual: true
+    embeds_many :price_plans, PricePlan, on_replace: :delete
+    field :status, Ecto.Enum, values: [:active, :deactive]
+    field :user_id, :id
+    has_many :server_accs, Omc.Servers.ServerAcc
 
     timestamps()
   end
@@ -22,6 +23,7 @@ defmodule Omc.Servers.Server do
     server
     |> cast(attrs, [:name, :status, :price, :max_accs, :description, :user_id])
     |> validate_required([:name, :status, :user_id, :price, :max_accs])
+    # |> cast_embed(:price_plans, required: true)
     |> validate_format(:price, ~r/^\d*(\.\d{1,2})?$/)
     |> put_price_change()
     |> unique_constraint(:name)
@@ -39,7 +41,14 @@ defmodule Omc.Servers.Server do
       case value
            |> Money.parse() do
         {:ok, money} ->
-          changeset |> put_change(:prices, [money])
+          changeset
+          |> put_embed(:price_plans, [
+            %PricePlan{
+              name: "default",
+              duration_days: 30,
+              prices: [money]
+            }
+          ])
 
         _ ->
           changeset
@@ -60,7 +69,9 @@ defmodule Omc.Servers.Server do
     Map.put(
       server,
       :price,
-      server.prices
+      server.price_plans
+      |> List.first()
+      |> then(fn price_plan -> price_plan.prices end)
       |> List.first()
       |> then(fn money -> Decimal.new(money.amount) |> Decimal.div(100) |> to_string() end)
     )

@@ -11,77 +11,85 @@ defmodule Omc.Usages do
   system wants to see usage date for persistance.
   """
 
-  alias Omc.Servers.ServerAccUser
+  alias Omc.Servers
+  alias Omc.Usages.UsageItem
   alias Omc.ServerAccUsers
+  alias Omc.Servers.ServerAccUser
   alias Omc.Ledgers
   alias Omc.Ledgers.Ledger
+  alias Omc.Usages.Usage
+  alias Omc.Repo
+  import Ecto.Query
 
-  # Note: server price is fixed for 30 days
-  @pricing_duration_in_seconds 30 * 24 * 60 * 60
   # Minimum duration in seconds which is considered in usage calculations
   @minimum_considerable_usasge_in_seconds 60 * 60
 
   defmodule UsageState do
     @moduledoc false
 
-    defstruct ledgers: [],
-              server_acc_users: [],
-              ledger_changesets: [],
-              ledger_tx_changesets: [],
-              server_acc_user_changesets: [],
-              server_acc_user_create_changesets: []
+    defstruct usages: [],
+              ledgers: [],
+              changesets: []
 
-    def add_usage_tx(
+    def add_usage_ledger_tx(
           %__MODULE__{} = state,
-          %Ledger{} = ledger,
           %Money{} = money,
-          %ServerAccUser{} = sau
+          %{} = usage_item_attrs
         ) do
-      Ledgers.ledger_update_changeset(%{
-        ledger: ledger,
-        context: :usage,
-        context_id: sau.id,
-        amount: money.amount,
-        type: :debit
-      })
-      |> then(fn %{ledger_changeset: ledger_changeset, ledger_tx_changeset: ledger_tx_changeset} ->
-        state
-        |> add_item(:ledger_changesets, ledger_changeset)
-        |> apply_changeset(:ledgers, ledger_changeset)
-        |> add_item(:ledger_tx_changesets, ledger_tx_changeset)
-        |> server_acc_user_end_start(sau)
-      end)
+      state
+      |> add_changesets(money, usage_item_attrs)
+      |> apply_usage_changeset()
+      |> apply_ledger_changeset()
     end
 
-    defp server_acc_user_end_start(state, %ServerAccUser{} = sau) do
-      sau_end_changeset = ServerAccUser.end_changeset(sau)
+    defp add_changesets(%__MODULE__{} = state, money, usage_item_attrs) do
+      state
+      |> add_item(
+        :changesets,
+        Ledgers.ledger_update_changeset(%{
+          ledger: ledger_by_currency(state, money.currency),
+          context: :usage,
+          context_id: -1,
+          amount: money.amount,
+          type: :debit
+        })
+        |> Map.put(:usage_item_changeset, UsageItem.create_changeset(usage_item_attrs))
+      )
+    end
 
-      sau_new =
-        server_acc_user_create_changeset(sau)
-        |> Ecto.Changeset.apply_changes()
-        |> Map.replace(:id, System.unique_integer([:positive]))
-
-      sau_new_start_changeset = ServerAccUser.start_changeset(sau_new)
+    defp apply_usage_changeset(%__MODULE__{} = state) do
+      %{usage_item_changeset: changeset} = state.changesets |> List.last()
 
       state
-      # ending exising sau
-      |> add_item(:server_acc_user_changesets, sau_end_changeset)
-      |> apply_changeset(:server_acc_users, sau_end_changeset)
-      # adding new sau
-      |> add_item(:server_acc_user_create_changesets, server_acc_user_create_changeset(sau))
-      |> add_item(:server_acc_users, sau_new)
-      # staring new sau
-      |> add_item(:server_acc_user_changesets, sau_new_start_changeset)
-      |> apply_changeset(:server_acc_users, sau_new_start_changeset)
+      |> Map.replace(
+        :usages,
+        state.usages
+        |> Enum.map(fn usage ->
+          if usage.id == changeset.changes.usage_id do
+            usage
+            |> Map.replace(
+              :usage_items,
+              usage.usage_items ++ [Ecto.Changeset.apply_changes(changeset)]
+            )
+          else
+            usage
+          end
+        end)
+      )
     end
 
-    defp server_acc_user_create_changeset(sau) do
-      ServerAccUser.create_chageset(%{
-        user_type: sau.user_type,
-        user_id: sau.user_id,
-        server_acc_id: sau.server_acc_id,
-        prices: sau.prices
-      })
+    # defp apply_ledger_tx_changeset(%__MODULE__{} = state) do
+    #   %{ledger_tx_changeset: changeset} = state.changesets |> List.last()
+    #
+    #   state
+    #   |> apply_changeset(:ledger_tx_changesets, changeset)
+    # end
+
+    defp apply_ledger_changeset(%__MODULE__{} = state) do
+      %{ledger_changeset: changeset} = state.changesets |> List.last()
+
+      state
+      |> apply_changeset(:ledgers, changeset)
     end
 
     defp add_item(%__MODULE__{} = state, member, item) do
@@ -103,6 +111,11 @@ defmodule Omc.Usages do
         end)
       )
     end
+
+    defp ledger_by_currency(%__MODULE__{} = state, currency) do
+      state.ledgers
+      |> Enum.find(&(&1.currency == currency))
+    end
   end
 
   @doc """
@@ -112,38 +125,38 @@ defmodule Omc.Usages do
   @spec usage_state(%{user_type: atom(), user_id: binary()}) :: UsageState.t()
   def usage_state(%{user_type: _user_type, user_id: _user_id} = attrs) do
     %UsageState{
-      ledgers: Ledgers.get_ledgers(attrs),
-      server_acc_users: ServerAccUsers.get_server_acc_users_in_use(attrs)
+      usages: list_active_usages(attrs),
+      ledgers: Ledgers.get_ledgers(attrs)
     }
     |> __usage_state__()
   end
 
   @doc false
   def __usage_state__(%UsageState{} = state) do
-    case first_in_use_server_acc_user(state.server_acc_users) do
+    case first_duration_usage(state.usages) do
       nil ->
         state
 
-      sau ->
+      usage ->
         case first_oldest_no_zero_credit_ledger(state.ledgers) do
           # No credit, going to make last used ledger's credit negetive
           nil ->
             first_newset_used_credit(state.ledgers)
-            |> use_credit(sau, state)
+            |> use_credit(usage, state, :duration)
             |> __usage_state__()
 
           # Some credit, going to use it.
           ledger ->
             ledger
-            |> use_credit(sau, state)
+            |> use_credit(usage, state, :duration)
             |> __usage_state__()
         end
     end
   end
 
   @doc false
-  def use_credit(%Ledger{} = ledger, %ServerAccUser{} = sau, %UsageState{} = state) do
-    (amount = calc_usage(sau, ledger.currency))
+  def use_credit(%Ledger{} = ledger, %Usage{} = usage, %UsageState{} = state, :duration) do
+    (amount = calc_duration_usage(usage, ledger.currency))
     |> Money.compare(Money.new(ledger.credit, ledger.currency))
     |> case do
       # usage amount is greater than credit
@@ -153,8 +166,14 @@ defmodule Omc.Usages do
 
       # usage amount is less than or equal credit
       _ ->
-        state
-        |> UsageState.add_usage_tx(ledger, amount, sau)
+        usage_item_attrs = %{
+          type: :duration,
+          started_at: usage_start_time(usage),
+          ended_at: now(),
+          usage_id: usage.id
+        }
+
+        UsageState.add_usage_ledger_tx(state, amount, usage_item_attrs)
     end
   end
 
@@ -167,43 +186,71 @@ defmodule Omc.Usages do
   end
 
   @doc false
-  @spec first_in_use_server_acc_user([%ServerAccUser{}]) :: %ServerAccUser{} | nil
-  def first_in_use_server_acc_user(server_acc_users) do
-    server_acc_users
-    |> Enum.filter(
-      &(&1.started_at != nil and &1.ended_at == nil and
-          NaiveDateTime.utc_now()
-          |> NaiveDateTime.truncate(:second)
-          |> NaiveDateTime.diff(&1.started_at) >= @minimum_considerable_usasge_in_seconds)
-    )
+  def first_duration_usage(usages) do
+    usages
+    |> Enum.filter(fn usage ->
+      now()
+      |> NaiveDateTime.diff(usage_start_time(usage))
+      |> Kernel.>=(@minimum_considerable_usasge_in_seconds)
+    end)
     |> List.first()
   end
 
-  @doc """
-  Calculates usage in a given currency 
-  """
-  @spec calc_usage(ServerAccUser.t(), atom()) :: Money.t()
-  def calc_usage(server_acc_user, currency) do
-    NaiveDateTime.utc_now()
-    |> NaiveDateTime.truncate(:second)
-    |> NaiveDateTime.diff(server_acc_user.started_at)
-    |> case do
-      diff when diff > 0 ->
-        diff
-        |> Decimal.new()
-        |> Decimal.mult(price(server_acc_user, currency) |> Money.to_decimal())
-        |> Decimal.div(@pricing_duration_in_seconds)
-        |> Money.parse(currency)
-        |> then(fn {:ok, money} -> money end)
+  @doc false
+  def usage_start_time(%Usage{} = usage) do
+    case usage.usage_items |> List.last() do
+      nil ->
+        usage.started_at
 
-      _ ->
-        Money.new(0, currency)
+      last_usage_item ->
+        last_usage_item.ended_at
     end
   end
 
+  @spec calc_duration_usage(%Usage{}, atom()) :: Money.t()
+  def calc_duration_usage(%Usage{} = usage, currency) do
+    calc_duration_usage(
+      usage,
+      currency,
+      NaiveDateTime.utc_now()
+      |> NaiveDateTime.truncate(:second)
+      |> NaiveDateTime.diff(usage_start_time(usage))
+    )
+  end
+
   @doc false
-  def price(server_acc_user, currency) do
-    server_acc_user.prices
+  def calc_duration_usage(%Usage{} = usage, currency, %UsageItem{type: :duration} = usage_item) do
+    calc_duration_usage(
+      usage,
+      currency,
+      usage_item.ended_at
+      |> NaiveDateTime.diff(usage_item.started_at)
+    )
+  end
+
+  def calc_duration_usage(%Usage{} = usage, currency, duration_in_seconds)
+      when duration_in_seconds > 0 do
+    duration_in_seconds
+    |> Decimal.new()
+    |> Decimal.mult(price(usage, currency) |> Money.to_decimal())
+    |> Decimal.div(usage.price_plan.duration_days * 24 * 60 * 60)
+    |> Money.parse(currency)
+    |> then(fn {:ok, money} -> money end)
+  end
+
+  def calc_duration_usage(%Usage{} = _usage, currency, duration_in_seconds)
+      when duration_in_seconds <= 0 do
+    Money.new(0, currency)
+  end
+
+  # def calc_usage_uptime(%Usage{} = usage, %Money{} = money) do
+  #   # TODO
+  #   now()
+  # end
+
+  @doc false
+  def price(%Usage{} = usage, currency) do
+    usage.price_plan.prices
     |> Enum.find(fn money -> money.currency == currency end)
   end
 
@@ -225,4 +272,61 @@ defmodule Omc.Usages do
   end
 
   def minimum_considerable_usasge_in_seconds, do: @minimum_considerable_usasge_in_seconds
+
+  # def restart_usage(%ServerAccUser{} = sau) do
+  #   Ecto.Multi.new()
+  #   |> Ecto.Multi.run(:server_acc_user_end, fn _repo, _changes ->
+  #     ServerAccUsers.end_server_acc_user()
+  #   end)
+  #
+  #   # |> Ecto.Multi.run(:server_acc_user_start, fn _repo, _changes ->)
+  # end
+
+  # TODO: Optimize via inner query to fetch only the last usage item
+  defp list_active_usages(%{user_type: _, user_id: _} = attrs) do
+    server_acc_users = ServerAccUsers.get_server_acc_users_in_use(attrs)
+
+    usage_items = from(ui in UsageItem, order_by: [asc: ui.id])
+
+    from(u in Usage,
+      where:
+        u.server_acc_user_id in ^(server_acc_users |> Enum.map(&Map.get(&1, :id))) and
+          is_nil(u.ended_at),
+      preload: [usage_items: ^usage_items]
+    )
+    |> Repo.all()
+  end
+
+  defp now() do
+    NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+  end
+
+  @doc """
+  Creates new `Usage` to indicate usage start.
+  From this on, it is possible to calculate duration or volume usage.
+  """
+  @spec start_usage!(%ServerAccUser{}) :: %{usage: %Usage{}, server_acc_user: %ServerAccUser{}}
+  def start_usage!(%ServerAccUser{} = sau) do
+    {:ok, %{sau_started: sau_started, usage_started: usage_started}} =
+      Ecto.Multi.new()
+      |> Ecto.Multi.run(:sau_started, fn _repo, _changes ->
+        ServerAccUsers.start_server_acc_user(sau)
+      end)
+      |> Ecto.Multi.run(:usage_started, fn _repo, %{sau_started: sau_started} ->
+        create_usage(sau_started)
+      end)
+      |> Repo.transaction()
+
+    %{usage: usage_started |> Repo.preload(:usage_items), server_acc_user: sau_started}
+  end
+
+  defp create_usage(%ServerAccUser{} = sau) do
+    %{
+      server_acc_user_id: sau.id,
+      started_at: now(),
+      price_plan: Servers.get_default_server_price_plan(sau.server_acc_id)
+    }
+    |> Usage.create_changeset()
+    |> Repo.insert()
+  end
 end

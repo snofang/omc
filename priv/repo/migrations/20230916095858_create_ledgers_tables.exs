@@ -1,11 +1,11 @@
-defmodule Omc.Repo.Migrations.CreateUsersAccess do
+defmodule Omc.Repo.Migrations.CreateLedgersTables do
   use Ecto.Migration
 
   def change do
     create table(:ledgers) do
       # This can be :local, :telegram, or any other places where users authenticated and identified uniquely
       add :user_type, :string, null: false
-      # This references no where for flexibility
+      # This references nowhere for flexibility
       add :user_id, :string, null: false
       add :currency, :string, null: false
       add :user_data, :map, default: %{}, null: false
@@ -22,12 +22,15 @@ defmodule Omc.Repo.Migrations.CreateUsersAccess do
       # Posible values: :credit, :debit
       add :type, :string, null: false
       add :amount, :integer, null: false
-      # To specify the source or cause of this; e.g. :manual, :ledger_acc, :payment, etc.
+      # To specify the source or cause of this; e.g. :manual, :usage, :payment, etc.
       add :context, :string, null: false
-
-      # Nornally this should refer to a table(e.g. :payments, :ledger_accs, etc.), and in case of manual it can be null
+      # Nornally this should refer to a table(e.g. :payments, :ledger_accs, etc.),
+      # and in case of manual it can be null
       add :context_id, :id, null: true
       timestamps(updated_at: false)
     end
+
+    create index(:ledger_txs, [:ledger_id])
+    create index(:ledger_txs, [:context, :context_id])
   end
 end

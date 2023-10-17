@@ -17,14 +17,12 @@ defmodule Omc.ServerAccUserTest do
   describe "allocate server_acc_user tests" do
     test "creates a server_acc_user record with expected fields set/unset", %{
       user_attrs: user_attrs,
-      server_acc: server_acc,
-      server: server
+      server_acc: server_acc
     } do
       {:ok, server_acc_user} = ServerAccUsers.allocate_new_server_acc_user(user_attrs)
       assert user_attrs.user_type == server_acc_user.user_type
       assert user_attrs.user_id == server_acc_user.user_id
       assert server_acc.id == server_acc_user.server_acc_id
-      assert server_acc_user.prices == server.prices
       refute server_acc_user.started_at
       refute server_acc_user.ended_at
       assert happend_now_or_a_second_later(server_acc_user.allocated_at)

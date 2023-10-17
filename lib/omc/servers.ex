@@ -328,4 +328,12 @@ defmodule Omc.Servers do
         )
     end
   end
+
+  def get_default_server_price_plan(server_acc_id) do
+    server_acc_id
+    |> get_server_acc!()
+    |> then(fn sa -> get_server!(sa.server_id) end)
+    |> then(fn s -> s.price_plans end)
+    |> List.first()
+  end
 end
