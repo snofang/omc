@@ -83,6 +83,7 @@ defmodule Omc.Ledgers do
         ledger_update_changeset(%{
           ledger: ledger,
           context: context,
+          context_id: context_id,
           amount: money.amount,
           type: type
         })

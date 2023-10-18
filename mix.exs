@@ -57,7 +57,6 @@ defmodule Omc.MixProject do
       {:hackney, "~> 1.18"},
       {:money, "~> 1.12"},
       {:quantum, "~> 3.0"}
-      
     ]
   end
 

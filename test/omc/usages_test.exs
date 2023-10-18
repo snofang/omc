@@ -1,4 +1,5 @@
 defmodule Omc.UsagesTest do
+  alias Omc.Ledgers
   use Omc.DataCase, async: true
   alias Omc.Usages
   alias Omc.ServerAccUsers
@@ -22,13 +23,56 @@ defmodule Omc.UsagesTest do
 
       computed_money_credit =
         user_attrs
-        |> Usages.usage_state()
+        |> Usages.get_usage_state()
         |> get_in([Access.key(:ledgers), Access.at(0)])
         |> Ledger.credit_money()
 
       assert @initial_credit
              |> Money.subtract((@server_price.amount * 5 / 30) |> round())
              |> Money.compare(computed_money_credit) == 0
+    end
+  end
+
+  describe "usage_state_persist/1 tests" do
+    setup :setup_usage_stareted
+
+    test "5 days usage state should not cause any persistance", %{
+      usage: usage,
+      user_attrs: user_attrs
+    } do
+      {:ok, _usage} =
+        usage
+        |> change(started_at: Utils.now(-5 * 24 * 60 * 60))
+        |> Repo.update()
+
+      # compute usage_state
+      usage_state = Usages.get_usage_state(user_attrs)
+      assert usage_state.changesets |> length() == 1
+      # trying to persis eligible changesets
+      Usages.persist_usage_state!(usage_state)
+      # recompute changeset
+      usage_state = Usages.get_usage_state(user_attrs)
+      assert usage_state.changesets |> length() == 1
+    end
+
+    test "20 days usage state should cause two persistance items", %{
+      usage: usage,
+      user_attrs: user_attrs
+    } do
+      {:ok, _usage} =
+        usage
+        |> change(started_at: Utils.now(-20 * 24 * 60 * 60))
+        |> Repo.update()
+
+      # compute usage_state
+      usage_state = Usages.get_usage_state(user_attrs)
+      assert usage_state.changesets |> length() == 2
+      # trying to persis eligible changesets
+      Usages.persist_usage_state!(usage_state)
+      # recompute changeset
+      usage_state = Usages.get_usage_state(user_attrs)
+      assert usage_state.changesets |> length() == 0
+      assert Ledgers.get_ledger(user_attrs) |> then(& &1.credit) < 0
     end
   end
 

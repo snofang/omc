@@ -11,13 +11,49 @@ defmodule Omc.Usages do
   @doc """
   Returns current usage state (without persisting anything) in terms of current computed last `UsageState`
   """
-  @spec usage_state(%{user_type: atom(), user_id: binary()}) :: UsageState.t()
-  def usage_state(%{user_type: _user_type, user_id: _user_id} = attrs) do
+  @spec get_usage_state(%{user_type: atom(), user_id: binary()}) :: UsageState.t()
+  def get_usage_state(%{user_type: _user_type, user_id: _user_id} = attrs) do
     %UsageState{
       usages: list_active_usages(attrs),
       ledgers: Ledgers.get_ledgers(attrs)
     }
     |> UsageState.compute()
+  end
+
+  @doc """
+  Persists those changesets of a computed `UserState` which are final.
+  Final changesets are those which caused a ledger's credit non-positive.
+  Returns same `UsageState` intact
+  """
+  def persist_usage_state!(%UsageState{} = usage_state) do
+    usage_state.changesets
+    |> Enum.filter(fn %{ledger_changeset: changeset} -> changeset.changes.credit <= 0 end)
+    |> Enum.map(fn changeset -> {:ok, _} = persist_usage_state_changeset(changeset) end)
+
+    usage_state
+  end
+
+  defp persist_usage_state_changeset(%{
+         ledger_changeset: ledger_changeset,
+         ledger_tx_changeset: ledger_tx_changeset,
+         usage_item_changeset: usage_item_changeset
+       }) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.insert(:usage_item, usage_item_changeset)
+    |> Ecto.Multi.run(:ledger, fn _repo, %{usage_item: usage_item} ->
+      # TODO: this is messy; Ledgers should expose a function to persist changesets.
+      %{
+        user_type: ledger_changeset.data.user_type,
+        user_id: ledger_changeset.data.user_id,
+        context: :usage,
+        context_id: usage_item.id,
+        money: Money.new(ledger_tx_changeset.changes.amount, ledger_changeset.data.currency),
+        type: :debit
+      }
+      |> Ledgers.create_ledger_tx!()
+      |> then(&{:ok, &1})
+    end)
+    |> Repo.transaction()
   end
 
   # def restart_usage(%ServerAccUser{} = sau) do

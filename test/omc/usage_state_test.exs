@@ -150,6 +150,7 @@ defmodule Omc.UsageStateTest do
 
       usage_started_at_30days_after = usage_started_at |> NaiveDateTime.add(30 * 24 * 60 * 60)
       usage_started_at_45days_after = usage_started_at |> NaiveDateTime.add(45 * 24 * 60 * 60)
+
       assert [
                %{
                  ledger_changeset: %{
