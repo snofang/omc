@@ -1,29 +1,9 @@
 defmodule Omc.ServerAccUsers do
-  use GenServer
   alias Omc.Ledgers
   alias Omc.Servers
   alias Omc.Repo
   alias Omc.Servers.{Server, ServerAcc, ServerAccUser}
   import Ecto.Query, warn: false
-
-  def start_link(_args) do
-    GenServer.start_link(__MODULE__, Application.get_env(:omc, :acc_allocation_cleanup),
-      name: __MODULE__
-    )
-  end
-
-  @impl GenServer
-  def init(acc_allocation_args) do
-    Process.send_after(self(), :allocation_cleanup, acc_allocation_args[:schedule])
-    {:ok, acc_allocation_args}
-  end
-
-  @impl GenServer
-  def handle_info(:allocation_cleanup, acc_allocation_args) do
-    cleanup_acc_allocations(acc_allocation_args[:timeout])
-    Process.send_after(self(), :allocation_cleanup, acc_allocation_args[:schedule])
-    {:noreply, acc_allocation_args}
-  end
 
   @doc """
   Returns all `ServerAccUser`s which are in use.

@@ -45,7 +45,7 @@ defmodule Omc.Usages do
   end
 
   @doc """
-  It creates a new `Usage` `started_at` now and following on, it'll be possible to calculate `sau` usages.
+  Creates a new `Usage` `started_at` now and following on, it'll be possible to calculate `sau` usages.
   """
   @spec start_usage!(%ServerAccUser{}) :: %{usage: %Usage{}, server_acc_user: %ServerAccUser{}}
   def start_usage!(%ServerAccUser{} = sau) do

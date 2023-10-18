@@ -2,7 +2,6 @@ defmodule Omc.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
-  alias Omc.ServerAccUsers
 
   use Application
 
@@ -23,13 +22,10 @@ defmodule Omc.Application do
         # Start the TaskSupervisor
         {Task.Supervisor, name: Omc.TaskSupervisor},
         # Start ServerTaskManager
-        Omc.Servers.ServerTaskManager
+        Omc.Servers.ServerTaskManager,
+        # Scheduler
+        Omc.Scheduler
       ]
-      # Start server_acc_user cleanup scheduling
-      |> add_if(
-        Application.get_env(:omc, :acc_allocation_cleanup)[:enabled],
-        ServerAccUsers
-      )
       # Start Telegram bot 
       |> add_if(
         Application.get_env(:omc, :telegram)[:enabled],

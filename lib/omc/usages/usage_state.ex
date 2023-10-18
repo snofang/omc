@@ -18,6 +18,9 @@ defmodule Omc.Usages.UsageState do
             ledgers: [],
             changesets: []
 
+  @doc """
+  Computes last state of usage in terms of `Omc.Usages.UsageState`.
+  """
   def compute(%__MODULE__{} = state) do
     case first_duration_usage(state.usages) do
       nil ->
@@ -264,7 +267,7 @@ defmodule Omc.Usages.UsageState do
   end
 
   @doc false
-  def first_least_used_no_zero_ledger(ledgers) do
+  defp first_least_used_no_zero_ledger(ledgers) do
     ledgers
     |> Enum.filter(&(&1.updated_at != nil and &1.credit > 0))
     |> Enum.sort(&(NaiveDateTime.compare(&1.updated_at, &2.updated_at) == :lt))

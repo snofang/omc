@@ -55,7 +55,9 @@ defmodule Omc.MixProject do
       {:mox, "~> 1.0.2"},
       {:telegram, github: "visciang/telegram", tag: "1.1.0"},
       {:hackney, "~> 1.18"},
-      {:money, "~> 1.12"}
+      {:money, "~> 1.12"},
+      {:quantum, "~> 3.0"}
+      
     ]
   end
 

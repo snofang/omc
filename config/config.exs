@@ -20,14 +20,13 @@ config :money,
 config :omc, supported_currencies: [:IRR]
 
 #
-# acc_allocation_cleanup
+# scheduler
 #
-config :omc, :acc_allocation_cleanup,
-  enabled: false,
-  # in seconds
-  timeout: 15 * 60,
-  # in milliseconds
-  schedule: 30 * 1_000
+config :omc, Omc.Scheduler,
+  jobs: [
+    # runs every minutes and allocation timeout is 15 minutes
+    # {"* * * * *", {Omc.ServerAccUsers, :cleanup_acc_allocations, [15 * 60]}}, 
+  ]
 
 #
 # Telegram
