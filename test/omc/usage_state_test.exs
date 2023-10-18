@@ -4,11 +4,14 @@ defmodule Omc.UsageStateTest do
   alias Omc.Common.PricePlan
   alias Omc.Usages.{UsageState, Usage}
   alias Omc.Common.Utils
+  @price_plan_duration 30 * 24 * 60 * 60
+  @usd_price Money.new(500, :USD)
+  @eur_price Money.new(450, :EUR)
 
   setup %{} do
     price_plan = %PricePlan{
-      duration: 30 * 24 * 60 * 60,
-      prices: [Money.new(500, :USD), Money.new(450, :EUR)]
+      duration: @price_plan_duration,
+      prices: [@usd_price, @eur_price]
     }
 
     %{price_plan: price_plan}
@@ -49,10 +52,15 @@ defmodule Omc.UsageStateTest do
     end
   end
 
-  describe "compute/1 simple one ledger, one usage, cases" do
+  describe "compute/1, one ledger, one usage, cases" do
     setup %{price_plan: price_plan} do
       ledgers = [
-        %Ledger{id: 10, currency: :USD, credit: 500, updated_at: Utils.now(-1 * 24 * 60 * 60)}
+        %Ledger{
+          id: 10,
+          currency: :USD,
+          credit: 500,
+          updated_at: Utils.now(-1 * 24 * 60 * 60)
+        }
       ]
 
       usages = [%Usage{id: 20, price_plan: price_plan, started_at: Utils.now(), usage_items: []}]
@@ -61,7 +69,7 @@ defmodule Omc.UsageStateTest do
       %{usage_state: usage_state}
     end
 
-    test "no usage within @minimum_duration", %{
+    test "before @minimum_duration usage test", %{
       usage_state: usage_state
     } do
       usage_state =
@@ -75,7 +83,7 @@ defmodule Omc.UsageStateTest do
       assert computed_usage_state == usage_state
     end
 
-    test "after @minimum_duration there should be usage", %{
+    test "after @minimum_duration usage test", %{
       usage_state: usage_state,
       price_plan: price_plan
     } do
@@ -102,7 +110,7 @@ defmodule Omc.UsageStateTest do
       assert computed_usage_state.changesets |> length() == 1
     end
 
-    test "all credit usage test", %{
+    test "30 days usage test", %{
       usage_state: usage_state
     } do
       # 30 days usage
@@ -121,15 +129,16 @@ defmodule Omc.UsageStateTest do
              |> Money.compare(Money.new(0, :USD)) == 0
     end
 
-    test "more than credit usage test", %{
+    test "45 days usage test", %{
       usage_state: usage_state
     } do
+      usage_started_at = Utils.now(-45 * 24 * 60 * 60)
       # 45 days usage
       usage_state =
         usage_state
         |> put_in(
           [Access.key(:usages), Access.at(0), Access.key(:started_at)],
-          Utils.now(-1 * 45 * 24 * 60 * 60)
+          usage_started_at
         )
 
       %UsageState{} = computed_usage_state = UsageState.compute(usage_state)
@@ -138,6 +147,68 @@ defmodule Omc.UsageStateTest do
              |> List.first()
              |> Ledger.credit_money()
              |> Money.compare(Money.new(-250, :USD)) == 0
+
+      usage_started_at_30days_after = usage_started_at |> NaiveDateTime.add(30 * 24 * 60 * 60)
+      usage_started_at_45days_after = usage_started_at |> NaiveDateTime.add(45 * 24 * 60 * 60)
+      assert [
+               %{
+                 ledger_changeset: %{
+                   changes: %{credit: 0},
+                   errors: [],
+                   valid?: true
+                 },
+                 ledger_tx_changeset: %{
+                   changes: %{
+                     amount: 500,
+                     context: :usage,
+                     context_id: -1,
+                     ledger_id: 10,
+                     type: :debit
+                   },
+                   errors: [],
+                   valid?: true
+                 },
+                 usage_item_changeset: %{
+                   changes: %{
+                     ended_at: ^usage_started_at_30days_after,
+                     started_at: ^usage_started_at,
+                     type: :duration,
+                     usage_id: 20
+                   },
+                   errors: [],
+                   valid?: true
+                 }
+               },
+               %{
+                 ledger_changeset: %{
+                   changes: %{credit: -250},
+                   errors: [],
+                   valid?: true
+                 },
+                 ledger_tx_changeset: %{
+                   changes: %{
+                     amount: 250,
+                     context: :usage,
+                     context_id: -1,
+                     ledger_id: 10,
+                     type: :debit
+                   },
+                   errors: [],
+                   valid?: true
+                 },
+                 usage_item_changeset: %{
+                   action: nil,
+                   changes: %{
+                     ended_at: ^usage_started_at_45days_after,
+                     started_at: ^usage_started_at_30days_after,
+                     type: :duration,
+                     usage_id: 20
+                   },
+                   errors: [],
+                   valid?: true
+                 }
+               }
+             ] = computed_usage_state.changesets
     end
   end
 end

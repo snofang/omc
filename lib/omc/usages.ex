@@ -1,16 +1,4 @@
 defmodule Omc.Usages do
-  @moduledoc """
-  Collects all functionalities related to calculating user's acc usages by providing required
-  changesets to:
-    - update a `ledger`. 
-    - adding coresponding `ledger_tx`
-    - starting/ending `Usage`/`UsageItem`
-  It is better to not persist any changeset if possible, and instead use
-  calculated values (applying changeset in memory) as much as possible; Because most of the times 
-  users wants to see their remaning credit using this module and somtimes on some periodic calls 
-  system wants to see usage date for possible persistance/closure.
-  """
-
   alias Omc.Servers
   alias Omc.Usages.UsageItem
   alias Omc.ServerAccUsers
@@ -57,8 +45,7 @@ defmodule Omc.Usages do
   end
 
   @doc """
-  Creates new `Usage` to indicate usage start.
-  From this on, it is possible to calculate duration or volume usage.
+  It creates a new `Usage` `started_at` now and following on, it'll be possible to calculate `sau` usages.
   """
   @spec start_usage!(%ServerAccUser{}) :: %{usage: %Usage{}, server_acc_user: %ServerAccUser{}}
   def start_usage!(%ServerAccUser{} = sau) do
