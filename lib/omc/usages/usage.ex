@@ -4,14 +4,14 @@ defmodule Omc.Usages.Usage do
   alias Omc.Usages.UsageItem
   import Ecto.Schema
   import Ecto.Changeset
-  
 
   schema "usages" do
     field :server_acc_user_id, :id
     embeds_one :price_plan, PricePlan
     field :started_at, :naive_datetime
     field :ended_at, :naive_datetime
-    has_many :usage_items, UsageItem end
+    has_many :usage_items, UsageItem
+  end
 
   @doc false
   def create_changeset(attrs) do

@@ -45,7 +45,7 @@ defmodule Omc.Servers.Server do
           |> put_embed(:price_plans, [
             %PricePlan{
               name: "default",
-              duration_days: 30,
+              duration: 30 * 24 * 60 * 60,
               prices: [money]
             }
           ])
