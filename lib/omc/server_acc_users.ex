@@ -25,7 +25,7 @@ defmodule Omc.ServerAccUsers do
   # and serves as mechanism to reserve an acc(before final activation which happens in `start` operation).
   # Actually a naive cart implementation it is.
   @doc false
-  @spec allocate_new_server_acc_user(%{user_type: binary(), user_id: binary()}) ::
+  @spec allocate_new_server_acc_user(%{user_type: atom(), user_id: binary()}) ::
           {:ok, ServerAccUser.t()} | {:error, :no_server_acc_available} | {:error, any()}
   def allocate_new_server_acc_user(%{user_type: _, user_id: _} = user_attrs) do
     case first_available_server_and_acc() do
@@ -47,7 +47,7 @@ defmodule Omc.ServerAccUsers do
   Allocates a new `ServerAccUser` or if there exists one, renew its `allocated_at` field and 
   and rerurn the updated one.
   """
-  @spec allocate_server_acc_user(%{user_type: binary(), user_id: binary()}) ::
+  @spec allocate_server_acc_user(%{user_type: atom(), user_id: binary()}) ::
           {:ok, ServerAccUser.t()} | {:error, :no_server_acc_available} | {:error, any()}
   def allocate_server_acc_user(%{user_type: _user_type, user_id: _user_id} = user_attrs) do
     existing_sau = get_server_acc_user_allocated(user_attrs)
@@ -103,7 +103,7 @@ defmodule Omc.ServerAccUsers do
   @doc """
   Returns already allocated `ServerAccUser` if exists or nil.
   """
-  @spec get_server_acc_user_allocated(%{user_type: binary(), user_id: binary()}) ::
+  @spec get_server_acc_user_allocated(%{user_type: atom(), user_id: binary()}) ::
           ServerAccUser.t()
   def get_server_acc_user_allocated(%{user_type: user_type, user_id: user_id}) do
     query =

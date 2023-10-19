@@ -5,6 +5,7 @@ defmodule Omc.ServersFixtures do
   """
   alias Omc.Servers
   alias Omc.Servers.{ServerOps}
+  import Omc.AccountsFixtures
 
   @doc """
   Generate a unique server name.
@@ -27,6 +28,7 @@ defmodule Omc.ServersFixtures do
   def server_fixture(attrs \\ %{}) do
     {:ok, server} =
       attrs
+      |> Map.put_new(:user_id, user_fixture() |> then(& &1.id))
       |> Enum.into(server_valid_attrs())
       |> Omc.Servers.create_server()
 

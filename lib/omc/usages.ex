@@ -22,7 +22,7 @@ defmodule Omc.Usages do
 
   @doc """
   Persists those changesets of a computed `UserState` which are final.
-  Final changesets are those which caused a ledger's credit non-positive.
+  Final changesets are those which caused a ledger's credit to be non-positive.
   Returns same `UsageState` intact
   """
   def persist_usage_state!(%UsageState{} = usage_state) do
@@ -31,6 +31,40 @@ defmodule Omc.Usages do
     |> Enum.map(fn changeset -> {:ok, _} = persist_usage_state_changeset(changeset) end)
 
     usage_state
+  end
+
+  @doc """
+  Loop on every user which have active `Usage`(s), compute their `UsageState` and persist them.
+  Note: this is a time consuming process and mostly intended to run on daily schedules or so.
+  """
+  def update_usage_states(page \\ 1, batch_size \\ 10) do
+    (users = get_active_users(page, batch_size))
+    |> Enum.each(fn user_attrs ->
+      user_attrs
+      |> get_usage_state()
+      |> persist_usage_state!()
+    end)
+
+    if users |> length() > 0, do: update_usage_states(page + 1, batch_size)
+  end
+
+  @doc """
+  Lists users which have active running usage(s) with paging.
+  """
+  @spec get_active_users(pos_integer(), pos_integer()) :: [
+          %{user_type: atom(), user_id: binary()}
+        ]
+  def get_active_users(page \\ 1, limit \\ 10) when page > 0 and limit > 0 do
+    from(sau in ServerAccUser,
+      join: usage in Usage,
+      on: usage.server_acc_user_id == sau.id,
+      where: is_nil(usage.ended_at),
+      distinct: true,
+      select: %{user_type: sau.user_type, user_id: sau.user_id},
+      limit: ^limit,
+      offset: ^((page - 1) * limit)
+    )
+    |> Repo.all()
   end
 
   defp persist_usage_state_changeset(%{
