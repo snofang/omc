@@ -118,10 +118,9 @@ defmodule Omc.ServerAccUsers do
   end
 
   @doc """
-  Starts allocated `ServerAccUser` by filling its `started_at` to current `NaiveDateTime`
-  This is the state in which acc should be available for use/download.
+  Starts allocated `ServerAccUser` by filling its `started_at` to current `NaiveDateTime`.
   """
-  @spec start_server_acc_user(ServerAccUser.t()) ::
+  @spec start_server_acc_user(%ServerAccUser{}) ::
           {:ok, ServerAccUser.t()} | {:error, Ecto.Changest.t()} | {:error, :no_credit}
   def start_server_acc_user(%ServerAccUser{} = sau) do
     # TODO: to cosider required minimum credit for starting 
@@ -164,5 +163,10 @@ defmodule Omc.ServerAccUsers do
       )
 
     Repo.delete_all(query)
+  end
+
+  def get_server_acc_user(id) do
+    ServerAccUser
+    |> Repo.get(id)
   end
 end

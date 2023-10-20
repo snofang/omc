@@ -22,7 +22,7 @@ defmodule Omc.Usages.Usage do
     |> validate_required([:server_acc_user_id, :price_plan, :started_at])
   end
 
-  def update_changeset(%__MODULE__{} = usage) do
+  def end_changeset(%__MODULE__{} = usage) do
     usage
     |> change(ended_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second))
   end

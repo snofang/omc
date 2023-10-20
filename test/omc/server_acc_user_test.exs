@@ -1,4 +1,5 @@
 defmodule Omc.ServerAccUserTest do
+  alias Omc.TestUtils
   use Omc.DataCase, async: true
   alias Omc.ServerAccUsers
   import Omc.ServersFixtures
@@ -25,7 +26,7 @@ defmodule Omc.ServerAccUserTest do
       assert server_acc.id == server_acc_user.server_acc_id
       refute server_acc_user.started_at
       refute server_acc_user.ended_at
-      assert happend_now_or_a_second_later(server_acc_user.allocated_at)
+      assert TestUtils.happend_now_or_a_second_later(server_acc_user.allocated_at)
     end
 
     test "if there is no more acc, returns {:error, :no_server_acc_available}", %{
@@ -70,9 +71,9 @@ defmodule Omc.ServerAccUserTest do
         |> change(%{allocated_at: ~N[2020-01-01 00:00:00]})
         |> Repo.update()
 
-      refute happend_now_or_a_second_later(dummy_date_sau.allocated_at)
+      refute TestUtils.happend_now_or_a_second_later(dummy_date_sau.allocated_at)
       {:ok, sau2} = ServerAccUsers.allocate_server_acc_user(user_attrs)
-      assert happend_now_or_a_second_later(sau2.allocated_at)
+      assert TestUtils.happend_now_or_a_second_later(sau2.allocated_at)
 
       assert sau1 ==
                sau2
@@ -123,7 +124,7 @@ defmodule Omc.ServerAccUserTest do
       {:ok, %{started_at: started_at}} = ServerAccUsers.start_server_acc_user(sau)
       assert started_at != nil
       # started time shoule be approximately (bearing tollerance of one second) now
-      assert happend_now_or_a_second_later(started_at)
+      assert TestUtils.happend_now_or_a_second_later(started_at)
     end
 
     test "it should not be possible to end server_acc_user if not started",
@@ -140,12 +141,7 @@ defmodule Omc.ServerAccUserTest do
       {:ok, %{server_acc: sa, server_acc_user: sau}} = ServerAccUsers.end_server_acc_user(sau)
 
       assert sa.status == :deactive_pending
-      assert happend_now_or_a_second_later(sau.ended_at)
+      assert TestUtils.happend_now_or_a_second_later(sau.ended_at)
     end
-  end
-
-  defp happend_now_or_a_second_later(naive_datetime) do
-    diff_from_now_in_seconds = NaiveDateTime.utc_now() |> NaiveDateTime.diff(naive_datetime)
-    diff_from_now_in_seconds >= 0 and diff_from_now_in_seconds <= 1
   end
 end

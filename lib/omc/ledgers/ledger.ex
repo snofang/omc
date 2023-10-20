@@ -14,13 +14,13 @@ defmodule Omc.Ledgers.Ledger do
         }
 
   schema "ledgers" do
-    field :user_type, Ecto.Enum, values: [:local, :telegram]
-    field :user_id, :string
-    field :user_data, :map, default: %{}
-    field :currency, Ecto.Enum, values: @supported_currencies
-    field :credit, :integer, default: 0
-    field :description, :string
-    field :lock_version, :integer, default: 1
+    field(:user_type, Ecto.Enum, values: [:local, :telegram])
+    field(:user_id, :string)
+    field(:user_data, :map, default: %{})
+    field(:currency, Ecto.Enum, values: @supported_currencies)
+    field(:credit, :integer, default: 0)
+    field(:description, :string)
+    field(:lock_version, :integer, default: 1)
     timestamps()
     # has_many :ledger_txs, Omc.Ledgers.LedgerTx
     # has_many :ledger_accs, Omc.Ledgers.LedgerAcc
@@ -59,5 +59,9 @@ defmodule Omc.Ledgers.Ledger do
   @spec credit_money(__MODULE__.t()) :: Money.t()
   def credit_money(%__MODULE__{} = ledger) do
     Money.new(ledger.credit, ledger.currency)
+  end
+
+  def user_attrs(%__MODULE__{} = ledger) do
+    %{user_type: ledger.user_type, user_id: ledger.user_id}
   end
 end

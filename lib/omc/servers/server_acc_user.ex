@@ -4,13 +4,13 @@ defmodule Omc.Servers.ServerAccUser do
   import Ecto.Changeset
 
   schema "server_acc_users" do
-    field :user_type, Ecto.Enum, values: [:local, :telegram]
-    field :user_id, :string
-    field :server_acc_id, :id
-    field :allocated_at, :naive_datetime
-    field :started_at, :naive_datetime
-    field :ended_at, :naive_datetime
-    field :lock_version, :integer, default: 1
+    field(:user_type, Ecto.Enum, values: [:local, :telegram])
+    field(:user_id, :string)
+    field(:server_acc_id, :id)
+    field(:allocated_at, :naive_datetime)
+    field(:started_at, :naive_datetime)
+    field(:ended_at, :naive_datetime)
+    field(:lock_version, :integer, default: 1)
     timestamps()
   end
 
@@ -55,5 +55,9 @@ defmodule Omc.Servers.ServerAccUser do
       changeset ->
         changeset
     end
+  end
+
+  def user_attrs(%__MODULE__{} = sau) when sau != nil do
+    %{user_id: sau.user_id, user_type: sau.user_type}
   end
 end

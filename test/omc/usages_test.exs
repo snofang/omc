@@ -1,4 +1,7 @@
 defmodule Omc.UsagesTest do
+  alias Omc.Servers
+  alias Omc.ServerAccUsers
+  alias Omc.TestUtils
   alias Omc.Ledgers
   use Omc.DataCase, async: true
   alias Omc.Usages
@@ -126,8 +129,8 @@ defmodule Omc.UsagesTest do
       assert active_users |> get_in([Access.at(0), Access.key(:user_id)]) == ledger2.user_id
     end
 
-    test "users who's usage closed should not be listed", %{server: _server, ledger: _ledger} do
-      # TODO: implement this after usage closure functionality developed
+    test "users who's usage ended should not be listed", %{server: _server, ledger: _ledger} do
+      # TODO: implement this after usage ending functionality developed
     end
   end
 
@@ -172,6 +175,62 @@ defmodule Omc.UsagesTest do
       assert Ledgers.get_ledger(ledger) |> Map.get(:credit) == 0
       assert Ledgers.get_ledger(ledger1) |> Map.get(:credit) == 0
       assert Ledgers.get_ledger(ledger2) |> Map.get(:credit) == 0
+    end
+  end
+
+  describe "Omc.Usages.end_usage/1" do
+    setup :setup_a_usage_started
+
+    test "ending usage should end usage, server_user_acc, and server_acc", %{
+      usage: usage,
+      ledger: ledger
+    } do
+      {:ok, %{usage: usage_ended}} =
+        usage
+        |> usage_used_fixture(1 * 24 * 60 * 60)
+        |> Usages.end_usage()
+
+      assert usage_ended.ended_at |> TestUtils.happend_now_or_a_second_later()
+
+      # usage state
+      usage_state = Usages.get_usage_state(Ledger.user_attrs(ledger))
+      assert usage_state.ledgers |> List.first() |> Map.get(:credit) < @initial_credit.amount
+      assert usage_state.usages == []
+      assert usage_state.changesets == []
+
+      # server_user_acc
+      sau = ServerAccUsers.get_server_acc_user(usage.server_acc_user_id)
+      assert TestUtils.happend_now_or_a_second_later(sau.ended_at)
+
+      # server_acc
+      acc = Servers.get_server_acc!(sau.server_acc_id)
+      assert acc.status == :deactive_pending
+    end
+
+    test "multiple usages, ending one should not affect the others", %{
+      usage: usage,
+      ledger: ledger,
+      server: server
+    } do
+      # three usages for one user
+      usage
+      |> usage_used_fixture(1 * 24 * 60 * 60)
+
+      usage1 =
+        usage_fixture(%{server: server, user_attrs: ledger})
+        |> usage_used_fixture(2 * 24 * 60 * 60)
+
+      usage_fixture(%{server: server, user_attrs: ledger})
+      |> usage_used_fixture(3 * 24 * 60 * 60)
+
+      # ending one of them
+      Usages.end_usage(usage1)
+
+      # usage state
+      usage_state = Usages.get_usage_state(Ledger.user_attrs(ledger))
+      assert usage_state.ledgers |> List.first() |> Map.get(:credit) < @initial_credit.amount
+      assert usage_state.usages |> length() == 2
+      assert usage_state.changesets |> length() == 2
     end
   end
 

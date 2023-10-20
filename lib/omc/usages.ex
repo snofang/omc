@@ -1,4 +1,5 @@
 defmodule Omc.Usages do
+  alias Ecto.Repo
   alias Omc.Servers
   alias Omc.Usages.UsageItem
   alias Omc.ServerAccUsers
@@ -21,13 +22,21 @@ defmodule Omc.Usages do
   end
 
   @doc """
-  Persists those changesets of a computed `UserState` which are final.
-  Final changesets are those which caused a ledger's credit to be non-positive.
-  Returns same `UsageState` intact
+  Persists those changesets of a computed `UserState`.
+    
+  By default only final changeset are presisted; final changesets are those which 
+  caused a ledger's credit to be non-positive. Returns same `UsageState` intact
+    
+  ## Options 
+    - `:all` If true, then all changeset are persisted; It means all computed `UsageItem`(s)
+      along their related ledger updates are persisted.
+      default value is false
   """
-  def persist_usage_state!(%UsageState{} = usage_state) do
+  def persist_usage_state!(%UsageState{} = usage_state, opts \\ []) do
     usage_state.changesets
-    |> Enum.filter(fn %{ledger_changeset: changeset} -> changeset.changes.credit <= 0 end)
+    |> Enum.filter(fn %{ledger_changeset: changeset} ->
+      changeset.changes.credit <= 0 or Keyword.get(opts, :all, false)
+    end)
     |> Enum.map(fn changeset -> {:ok, _} = persist_usage_state_changeset(changeset) end)
 
     usage_state
@@ -141,4 +150,37 @@ defmodule Omc.Usages do
     |> Usage.create_changeset()
     |> Repo.insert()
   end
+
+  @doc """
+  Ends `usage` by setting its `ended_at` to current `NaiveDateTime` and:
+  - Persists all of its `UsageState` chanesets.
+  - Marking related `Omc.Servers.ServerAcc` for deactivation.
+  """
+  def end_usage(%Usage{} = usage) do
+    sau = ServerAccUsers.get_server_acc_user(usage.server_acc_user_id)
+    # Computing UsageState just for one usage
+    usage_state =
+      %UsageState{
+        usages: [usage],
+        ledgers: Ledgers.get_ledgers(ServerAccUser.user_attrs(sau))
+      }
+      |> UsageState.compute()
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.run(:usage_state, fn _repo, _changes ->
+      persist_usage_state!(usage_state, all: true)
+      {:ok, usage_state}
+    end)
+    |> Ecto.Multi.update(:usage, Usage.end_changeset(usage))
+    |> Ecto.Multi.run(:server_acc_user, fn _repo, _changes ->
+      ServerAccUsers.end_server_acc_user(sau)
+    end)
+    |> Repo.transaction()
+  end
+
+  # defp get_usage(usage_id) do
+  #   Usage
+  #   |> Repo.get(usage_id)
+  #   |> Repo.preload(:usage_items)
+  # end
 end

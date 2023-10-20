@@ -286,7 +286,7 @@ defmodule Omc.Servers do
   marks acc for deactivation
   it will be done/effective by some preodic user management ops 
   """
-  def deactivate_acc(acc) do
+  def deactivate_acc(%ServerAcc{} = acc) do
     acc
     |> ServerAcc.changeset(%{status: :deactive_pending})
     |> Repo.update()
