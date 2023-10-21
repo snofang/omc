@@ -279,4 +279,11 @@ defmodule Omc.Usages.UsageState do
   defp now() do
     NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
   end
+
+  def changesets_of_ledger(%__MODULE__{} = state, ledger) do
+    state.changesets
+    |> Enum.filter(fn %{ledger_changeset: changeset} ->
+      changeset.data.id == ledger.id
+    end)
+  end
 end

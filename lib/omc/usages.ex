@@ -7,6 +7,7 @@ defmodule Omc.Usages do
   alias Omc.Ledgers
   alias Omc.Usages.{Usage, UsageState}
   alias Omc.Repo
+  alias Omc.Ledgers.Ledger
   import Ecto.Query
 
   @doc """
@@ -22,7 +23,7 @@ defmodule Omc.Usages do
   end
 
   @doc """
-  Persists those changesets of a computed `UserState`.
+  Persists changesets of a computed `UserState`.
     
   By default only final changeset are presisted; final changesets are those which 
   caused a ledger's credit to be non-positive. Returns same `UsageState` intact
@@ -33,17 +34,18 @@ defmodule Omc.Usages do
       default value is false
   """
   def persist_usage_state!(%UsageState{} = usage_state, opts \\ []) do
-    usage_state.changesets
-    |> Enum.filter(fn %{ledger_changeset: changeset} ->
-      changeset.changes.credit <= 0 or Keyword.get(opts, :all, false)
+    usage_state.ledgers
+    |> Enum.filter(fn ledger -> ledger.credit <= 0 or Keyword.get(opts, :all, false) end)
+    |> Enum.each(fn ledger ->
+      UsageState.changesets_of_ledger(usage_state, ledger)
+      |> Enum.each(fn changeset -> {:ok, _} = persist_usage_state_changeset(changeset) end)
     end)
-    |> Enum.map(fn changeset -> {:ok, _} = persist_usage_state_changeset(changeset) end)
 
     usage_state
   end
 
   @doc """
-  Loop on every user which have active `Usage`(s), compute their `UsageState` and persist them.
+  Loops on every user which have active `Usage`(s), compute their `UsageState` and persist them.
   Note: this is a time consuming process and mostly intended to run on daily schedules or so.
   """
   def update_usage_states(page \\ 1, batch_size \\ 10) do
@@ -178,9 +180,47 @@ defmodule Omc.Usages do
     |> Repo.transaction()
   end
 
-  # defp get_usage(usage_id) do
-  #   Usage
-  #   |> Repo.get(usage_id)
-  #   |> Repo.preload(:usage_items)
-  # end
+  @doc """
+  Ends no-credit usages.
+    
+  Note: this is a time consuming process and mostly intended to run on a daily schedule or so.
+  """
+  def end_usages_with_no_credit(page \\ 1, batch_size \\ 10) do
+    (usages = get_active_no_credit_usages(page, batch_size))
+    |> Enum.each(fn usage ->
+      usage
+      |> end_usage()
+    end)
+
+    if usages |> length() > 0, do: end_usages_with_no_credit(page + 1, batch_size)
+  end
+
+  @spec get_active_no_credit_usages(pos_integer(), pos_integer()) :: [
+          %{user_type: atom(), user_id: binary()}
+        ]
+  def get_active_no_credit_usages(page \\ 1, limit \\ 10) when page > 0 and limit > 0 do
+    ledger_sum =
+      from(ledger in Ledger,
+        group_by: [ledger.user_id, ledger.user_type],
+        select: %{
+          user_id: ledger.user_id,
+          user_type: ledger.user_type,
+          credit_sum: sum(ledger.credit)
+        }
+      )
+
+    from(usage in Usage,
+      where: is_nil(usage.ended_at),
+      join: sau in ServerAccUser,
+      on: sau.id == usage.server_acc_user_id,
+      join: ledger in subquery(ledger_sum),
+      on: ledger.user_id == sau.user_id and ledger.user_type == sau.user_type,
+      where: ledger.credit_sum <= 0,
+      select: usage,
+      limit: ^limit,
+      offset: ^((page - 1) * limit),
+      preload: :usage_items
+    )
+    |> Repo.all()
+  end
 end

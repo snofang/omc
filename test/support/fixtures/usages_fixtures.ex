@@ -36,7 +36,7 @@ defmodule Omc.UsagesFixtures do
     usage
   end
 
-  def usage_used_fixture(%Usages.Usage{} = usage, duration) do
+  def usage_duration_use_fixture(%Usages.Usage{} = usage, duration) do
     {:ok, usage_updated} =
       usage
       |> Ecto.Changeset.change(started_at: Omc.Common.Utils.now(-1 * duration))
