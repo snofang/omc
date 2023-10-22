@@ -495,6 +495,47 @@ defmodule Omc.UsagesTest do
     end
   end
 
+  describe "Omc.Usages.update_usages/0" do
+    setup :setup_a_usage_started
+
+    test "in one run updates ledgers, close no-credit usages, and renew expired ones", %{
+      usage: usage,
+      ledger: ledger,
+      server: server
+    } do
+      # making default one as a candidate of close no-credit
+      usage_duration_use_fixture(usage, 15, :day)
+
+      # setting up another user; more than 30 days credit, renew candidate
+      ledger1 = ledger_fixture(@initial_credit |> Money.multiply(3))
+
+      renew_usage =
+        usage_fixture(%{server: server, user_attrs: ledger1})
+        |> usage_duration_use_fixture(30, :day)
+
+      no_change_usage =
+        usage_fixture(%{server: server, user_attrs: ledger1})
+        |> usage_duration_use_fixture(5, :day)
+
+      Usages.update_usages()
+
+      assert Usages.get_usage_state(ledger)
+             |> then(& &1.usages)
+             |> length() == 0
+
+      usage_state1 = Usages.get_usage_state(ledger1)
+
+      assert get_in(usage_state1.usages, [Access.at(0)]) |> Map.replace(:usage_items, []) ==
+               no_change_usage
+
+      assert get_in(usage_state1.usages, [Access.at(1), Access.key(:started_at)])
+             |> TestUtils.happend_now_or_a_second_later()
+
+      assert get_in(usage_state1.usages, [Access.at(1), Access.key(:server_acc_user_id)]) ==
+               renew_usage.server_acc_user_id
+    end
+  end
+
   defp setup_a_usage_started(%{} = _context) do
     server = server_fixture(@server_price)
     ledger = ledger_fixture(@initial_credit)

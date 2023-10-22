@@ -27,5 +27,5 @@ config :omc, Omc.Scheduler,
   jobs: [
     # runs every minutes and allocation timeout is 15 minutes
     {"* * * * *", {Omc.ServerAccUsers, :cleanup_acc_allocations, [15 * 60]}},
-    {"* 0 * * *", {Omc.Usages, :update_usage_states, []}}
+    {"* 0 * * *", {Omc.Usages, :update_usages, []}}
   ]

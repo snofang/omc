@@ -1,4 +1,5 @@
 defmodule Omc.Usages do
+  require Logger
   alias Ecto.Repo
   alias Omc.Servers
   alias Omc.Usages.UsageItem
@@ -273,5 +274,20 @@ defmodule Omc.Usages do
     |> Enum.each(&renew_usage/1)
 
     if usages |> length() > 0, do: renew_usages_expired()
+  end
+
+  @doc """
+  Updates usages calling the followings in sequence:
+    - update_usage_states/0: to update ledgers as required.
+    - end_usages_with_no_credit/0
+    - renew_usages_expired/0
+
+  Note: this is a time consuming proces and intended to run on a schedule.
+  """
+  def update_usages() do
+    Logger.info("-- update usages --")
+    update_usage_states()
+    end_usages_with_no_credit()
+    renew_usages_expired()
   end
 end
