@@ -27,9 +27,9 @@ defmodule Omc.Common.Utils do
     app_dir
   end
 
-  def now(offset \\ 0) do
+  def now(offset \\ 0, unit \\ :second) do
     NaiveDateTime.utc_now()
     |> NaiveDateTime.truncate(:second)
-    |> NaiveDateTime.add(offset)
+    |> NaiveDateTime.add(offset, unit)
   end
 end

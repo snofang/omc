@@ -11,6 +11,7 @@ defmodule Omc.Repo.Migrations.CreateUsagesTables do
 
     create index(:usages, [:server_acc_user_id])
     create index(:usages, [:ended_at])
+    create index(:usages, [:price_plan], using: :gin)
 
     create table(:usage_items) do
       add :usage_id, references(:usages, on_delete: :nothing), null: false

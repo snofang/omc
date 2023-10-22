@@ -15,7 +15,7 @@ defmodule Omc.UsagesTest do
     setup :setup_a_usage_started
 
     test "5 days usage credit check", %{usage: usage, ledger: ledger} do
-      usage_duration_use_fixture(usage, 5 * 24 * 60 * 60)
+      usage_duration_use_fixture(usage, 5, :day)
 
       computed_money_credit =
         ledger
@@ -34,16 +34,16 @@ defmodule Omc.UsagesTest do
       server: server
     } do
       # 4 usage, 15 days consumption 
-      usage_duration_use_fixture(usage, 5 * 24 * 60 * 60)
+      usage_duration_use_fixture(usage, 5, :day)
 
       usage_fixture(%{server: server, user_attrs: ledger})
-      |> usage_duration_use_fixture(6 * 24 * 60 * 60)
+      |> usage_duration_use_fixture(6, :day)
 
       usage_fixture(%{server: server, user_attrs: ledger})
-      |> usage_duration_use_fixture(1 * 24 * 60 * 60)
+      |> usage_duration_use_fixture(1, :day)
 
       usage_fixture(%{server: server, user_attrs: ledger})
-      |> usage_duration_use_fixture(3 * 24 * 60 * 60)
+      |> usage_duration_use_fixture(3, :day)
 
       usage_state = Usages.get_usage_state(ledger)
       assert get_in(usage_state.ledgers, [Access.at(0), Access.key(:credit)]) == 0
@@ -57,7 +57,7 @@ defmodule Omc.UsagesTest do
       usage: usage,
       ledger: ledger
     } do
-      usage_duration_use_fixture(usage, 5 * 24 * 60 * 60)
+      usage_duration_use_fixture(usage, 5, :day)
 
       # compute usage_state
       usage_state = Usages.get_usage_state(ledger)
@@ -73,7 +73,7 @@ defmodule Omc.UsagesTest do
       usage: usage,
       ledger: ledger
     } do
-      usage_duration_use_fixture(usage, 20 * 24 * 60 * 60)
+      usage_duration_use_fixture(usage, 20, :day)
 
       # compute usage_state
       usage_state = Usages.get_usage_state(ledger)
@@ -92,16 +92,16 @@ defmodule Omc.UsagesTest do
       server: server
     } do
       # 4 usage, 15 days consumption 
-      usage_duration_use_fixture(usage, 5 * 24 * 60 * 60)
+      usage_duration_use_fixture(usage, 5, :day)
 
       usage_fixture(%{server: server, user_attrs: ledger})
-      |> usage_duration_use_fixture(6 * 24 * 60 * 60)
+      |> usage_duration_use_fixture(6, :day)
 
       usage_fixture(%{server: server, user_attrs: ledger})
-      |> usage_duration_use_fixture(1 * 24 * 60 * 60)
+      |> usage_duration_use_fixture(1, :day)
 
       usage_fixture(%{server: server, user_attrs: ledger})
-      |> usage_duration_use_fixture(3 * 24 * 60 * 60)
+      |> usage_duration_use_fixture(3, :day)
 
       # compute usage_state
       usage_state = Usages.get_usage_state(ledger)
@@ -194,11 +194,11 @@ defmodule Omc.UsagesTest do
       ledger: ledger
     } do
       # fixing all credit consuption.
-      usage_duration_use_fixture(usage, 15 * 24 * 60 * 60)
+      usage_duration_use_fixture(usage, 15, :day)
       # Another user, usages, one day consumption.
       ledger1 = ledger_fixture(@initial_credit)
       usage1 = usage_fixture(%{server: server, user_attrs: ledger1})
-      usage_duration_use_fixture(usage1, 1 * 24 * 60 * 60)
+      usage_duration_use_fixture(usage1, 1, :day)
 
       Usages.update_usage_states()
       assert Ledgers.get_ledger(ledger) |> Map.get(:credit) == 0
@@ -211,11 +211,11 @@ defmodule Omc.UsagesTest do
       ledger: ledger
     } do
       # fixing all credit consuption.
-      usage_duration_use_fixture(usage, 15 * 24 * 60 * 60)
+      usage_duration_use_fixture(usage, 15, :day)
       # Another user, usages, one day consumption.
       ledger1 = ledger_fixture(@initial_credit)
       usage1 = usage_fixture(%{server: server, user_attrs: ledger1})
-      usage_duration_use_fixture(usage1, 1 * 24 * 60 * 60)
+      usage_duration_use_fixture(usage1, 1, :day)
 
       Usages.update_usage_states()
       assert Ledgers.get_ledger(ledger) |> Map.get(:credit) == 0
@@ -228,15 +228,15 @@ defmodule Omc.UsagesTest do
       ledger: ledger
     } do
       # fixing all credit consuption.
-      usage_duration_use_fixture(usage, 15 * 24 * 60 * 60)
+      usage_duration_use_fixture(usage, 15, :day)
       # another user and usages; fixing all credit consuption.
       ledger1 = ledger_fixture(@initial_credit)
       usage1 = usage_fixture(%{server: server, user_attrs: ledger1})
-      usage_duration_use_fixture(usage1, 15 * 24 * 60 * 60)
+      usage_duration_use_fixture(usage1, 15, :day)
       # another user and usages; fixing all credit consuption.
       ledger2 = ledger_fixture(@initial_credit)
       usage2 = usage_fixture(%{server: server, user_attrs: ledger2})
-      usage_duration_use_fixture(usage2, 15 * 24 * 60 * 60)
+      usage_duration_use_fixture(usage2, 15, :day)
 
       Usages.update_usage_states(1, 1)
 
@@ -253,10 +253,10 @@ defmodule Omc.UsagesTest do
       usage: usage,
       ledger: ledger
     } do
-      {:ok, %{usage: usage_ended}} =
+      usage_ended =
         usage
-        |> usage_duration_use_fixture(1 * 24 * 60 * 60)
-        |> Usages.end_usage()
+        |> usage_duration_use_fixture(1, :day)
+        |> Usages.end_usage!()
 
       assert usage_ended.ended_at |> TestUtils.happend_now_or_a_second_later()
 
@@ -282,17 +282,17 @@ defmodule Omc.UsagesTest do
     } do
       # three usages for one user
       usage
-      |> usage_duration_use_fixture(1 * 24 * 60 * 60)
+      |> usage_duration_use_fixture(1, :day)
 
       usage1 =
         usage_fixture(%{server: server, user_attrs: ledger})
-        |> usage_duration_use_fixture(2 * 24 * 60 * 60)
+        |> usage_duration_use_fixture(2, :day)
 
       usage_fixture(%{server: server, user_attrs: ledger})
-      |> usage_duration_use_fixture(3 * 24 * 60 * 60)
+      |> usage_duration_use_fixture(3, :day)
 
       # ending one of them
-      Usages.end_usage(usage1)
+      Usages.end_usage!(usage1)
 
       # usage state
       usage_state = Usages.get_usage_state(Ledger.user_attrs(ledger))
@@ -312,27 +312,27 @@ defmodule Omc.UsagesTest do
          } do
       # default usage more than full usage; making its credit negative
       usage
-      |> usage_duration_use_fixture(20 * 24 * 60 * 60)
+      |> usage_duration_use_fixture(20, :day)
 
       # another user having two usages; fixing all credit consuption.
       ledger1 = ledger_fixture(@initial_credit)
 
       usage1 =
         usage_fixture(%{server: server, user_attrs: ledger1})
-        |> usage_duration_use_fixture(10 * 24 * 60 * 60)
+        |> usage_duration_use_fixture(10, :day)
 
       usage2 =
         usage_fixture(%{server: server, user_attrs: ledger1})
-        |> usage_duration_use_fixture(5 * 24 * 60 * 60)
+        |> usage_duration_use_fixture(5, :day)
 
       # another user having two usages; fixing under credit consuption.
       ledger2 = ledger_fixture(@initial_credit)
 
       usage_fixture(%{server: server, user_attrs: ledger2})
-      |> usage_duration_use_fixture(1 * 24 * 60 * 60)
+      |> usage_duration_use_fixture(1, :day)
 
       usage_fixture(%{server: server, user_attrs: ledger2})
-      |> usage_duration_use_fixture(5 * 24 * 60 * 60)
+      |> usage_duration_use_fixture(5, :day)
 
       # berfor `update_usage_states/0` there should be no result
       assert Usages.get_active_no_credit_usages() |> length() == 0
@@ -352,7 +352,7 @@ defmodule Omc.UsagesTest do
 
     test "a usage with no credit should ended", %{usage: usage, ledger: ledger} do
       usage
-      |> usage_duration_use_fixture(15 * 24 * 60 * 60)
+      |> usage_duration_use_fixture(15, :day)
 
       Usages.update_usage_states()
       Usages.end_usages_with_no_credit()
@@ -368,25 +368,25 @@ defmodule Omc.UsagesTest do
       ledger: ledger
     } do
       # default usage, all credit consumption
-      usage_duration_use_fixture(usage, 15 * 24 * 60 * 60)
+      usage_duration_use_fixture(usage, 15, :day)
 
       # another user and usages; fixing more than credit consumption.
       ledger1 = ledger_fixture(@initial_credit)
 
       usage_fixture(%{server: server, user_attrs: ledger1})
-      |> usage_duration_use_fixture(20 * 24 * 60 * 60)
+      |> usage_duration_use_fixture(20, :day)
 
       # another user and usages; fixing all credit consuption.
       ledger2 = ledger_fixture(@initial_credit)
 
       usage_fixture(%{server: server, user_attrs: ledger2})
-      |> usage_duration_use_fixture(5 * 24 * 60 * 60)
+      |> usage_duration_use_fixture(5, :day)
 
       usage_fixture(%{server: server, user_attrs: ledger2})
-      |> usage_duration_use_fixture(7 * 24 * 60 * 60)
+      |> usage_duration_use_fixture(7, :day)
 
       usage_fixture(%{server: server, user_attrs: ledger2})
-      |> usage_duration_use_fixture(6 * 24 * 60 * 60)
+      |> usage_duration_use_fixture(6, :day)
 
       Usages.update_usage_states()
       Usages.end_usages_with_no_credit()
@@ -394,6 +394,104 @@ defmodule Omc.UsagesTest do
       assert get_in(Usages.get_usage_state(ledger), [Access.key(:usages)]) == []
       assert get_in(Usages.get_usage_state(ledger1), [Access.key(:usages)]) == []
       assert get_in(Usages.get_usage_state(ledger2), [Access.key(:usages)]) == []
+    end
+  end
+
+  describe "Omc.Usages.get_active_expired_usages/2" do
+    setup :setup_a_usage_started
+
+    test "should return expired usages", %{usage: usage, server: server} do
+      # default usage, less than price duration usage
+      usage_duration_use_fixture(usage, 29, :day)
+      assert Usages.get_active_expired_usages() |> length() == 0
+
+      # default usage, duraiton usage
+      usage_duration_use_fixture(usage, 30, :day)
+      assert Usages.get_active_expired_usages() |> length() == 1
+
+      # another user and usages; less and more than duration
+      ledger1 = ledger_fixture(@initial_credit)
+
+      usage_fixture(%{server: server, user_attrs: ledger1})
+      |> usage_duration_use_fixture(20, :day)
+
+      usage_fixture(%{server: server, user_attrs: ledger1})
+      |> usage_duration_use_fixture(39, :day)
+
+      assert Usages.get_active_expired_usages() |> length() == 2
+    end
+  end
+
+  describe "Omc.Usages.renew/1" do
+    setup :setup_a_usage_started
+
+    test "should end usage, create new one starting from now", %{usage: usage, ledger: ledger} do
+      {:ok, %{usage: new_usage}} =
+        usage
+        |> usage_duration_use_fixture(5, :day)
+        |> Usages.renew_usage()
+
+      usage_state = Usages.get_usage_state(ledger)
+
+      # ledgers credit updated
+      assert usage_state.ledgers
+             |> List.first()
+             |> (& &1.credit).() < @initial_credit.amount
+
+      # same usage result from ending as the one got from usage_state
+      assert new_usage |> Map.put(:usage_items, []) == usage_state.usages |> List.first()
+
+      # different id; realy new one creted 
+      assert new_usage.id != usage.id
+
+      # started_at now
+      assert new_usage.started_at |> TestUtils.happend_now_or_a_second_later()
+
+      # same server_acc_user_id
+      assert new_usage.server_acc_user_id == usage.server_acc_user_id
+    end
+  end
+
+  describe "Omc.Usages.renew_usages_expired" do
+    setup :setup_a_usage_started
+
+    test "expired usages should renewed", %{usage: usage, ledger: ledger} do
+      usage_duration_use_fixture(usage, 30, :day)
+      Usages.renew_usages_expired()
+
+      # there should exist a usage strted now
+      assert get_in(Usages.get_usage_state(ledger), [
+               Access.key(:usages),
+               Access.at(0),
+               Access.key(:started_at)
+             ])
+             |> TestUtils.happend_now_or_a_second_later()
+    end
+
+    test "all expired usages should renewed(tail call test)", %{
+      usage: usage,
+      ledger: ledger,
+      server: server
+    } do
+      usage_duration_use_fixture(usage, 30, :day)
+
+      # another expired usage
+      usage_fixture(%{server: server, user_attrs: ledger})
+      |> usage_duration_use_fixture(32, :day)
+
+      # another expired usage
+      usage_fixture(%{server: server, user_attrs: ledger})
+      |> usage_duration_use_fixture(30, :day)
+
+      Usages.renew_usages_expired(1, 1)
+
+      # there should exist a usage strted now
+      assert Usages.get_usage_state(ledger)
+             |> then(& &1.usages)
+             |> Enum.reduce(
+               true,
+               &(TestUtils.happend_now_or_a_second_later(&1.started_at) and &2)
+             )
     end
   end
 

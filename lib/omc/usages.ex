@@ -156,9 +156,23 @@ defmodule Omc.Usages do
   @doc """
   Ends `usage` by setting its `ended_at` to current `NaiveDateTime` and:
   - Persists all of its `UsageState` chanesets.
-  - Marking related `Omc.Servers.ServerAcc` for deactivation.
+  - Ends its `ServerAccUser`.
   """
-  def end_usage(%Usage{} = usage) do
+  def end_usage!(%Usage{} = usage) do
+    {:ok, %{end_usage_only: %{usage: usage}}} =
+      Ecto.Multi.new()
+      |> Ecto.Multi.run(:end_usage_only, fn _repo, _changes -> end_usage_only(usage) end)
+      |> Ecto.Multi.run(:end_server_acc_user, fn _repo, _changes ->
+        ServerAccUsers.get_server_acc_user(usage.server_acc_user_id)
+        |> ServerAccUsers.end_server_acc_user()
+      end)
+      |> Repo.transaction()
+
+    usage
+  end
+
+  # Ends `usage` without affecting its `ServerAccUser`.
+  defp end_usage_only(%Usage{} = usage) do
     sau = ServerAccUsers.get_server_acc_user(usage.server_acc_user_id)
     # Computing UsageState just for one usage
     usage_state =
@@ -174,9 +188,6 @@ defmodule Omc.Usages do
       {:ok, usage_state}
     end)
     |> Ecto.Multi.update(:usage, Usage.end_changeset(usage))
-    |> Ecto.Multi.run(:server_acc_user, fn _repo, _changes ->
-      ServerAccUsers.end_server_acc_user(sau)
-    end)
     |> Repo.transaction()
   end
 
@@ -189,7 +200,7 @@ defmodule Omc.Usages do
     (usages = get_active_no_credit_usages(page, batch_size))
     |> Enum.each(fn usage ->
       usage
-      |> end_usage()
+      |> end_usage!()
     end)
 
     if usages |> length() > 0, do: end_usages_with_no_credit(page + 1, batch_size)
@@ -222,5 +233,45 @@ defmodule Omc.Usages do
       preload: :usage_items
     )
     |> Repo.all()
+  end
+
+  @doc """
+  Lists usages which their price duration has expired. 
+  """
+  def get_active_expired_usages(page \\ 1, limit \\ 10) when page > 0 and limit > 0 do
+    # TODO: to investigate the gin index effectiveness for this 
+    from(u in Usage,
+      where: is_nil(u.ended_at) and u.started_at <= ago(u.price_plan["duration"], "second"),
+      limit: ^limit,
+      offset: ^((page - 1) * limit),
+      preload: :usage_items
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Ends `usage` and creates new one starting now and having fresh price plan copied from 
+  related server.
+  """
+  # TODO: The new price plan should be similar; having same `duration`, `max_volume` as the old one. And if 
+  # nothing similar found, the first available price should be selected. 
+  def renew_usage(%Usage{} = usage) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.run(:usage_old, fn _repo, _changes -> end_usage_only(usage) end)
+    |> Ecto.Multi.run(:usage, fn _repo, _changes ->
+      ServerAccUsers.get_server_acc_user(usage.server_acc_user_id)
+      |> create_usage()
+    end)
+    |> Repo.transaction()
+  end
+
+  @doc """
+  Renews 
+  """
+  def renew_usages_expired(page \\ 1, limit \\ 1) do
+    (usages = get_active_expired_usages(page, limit))
+    |> Enum.each(&renew_usage/1)
+
+    if usages |> length() > 0, do: renew_usages_expired()
   end
 end

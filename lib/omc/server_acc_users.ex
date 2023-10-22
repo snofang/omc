@@ -165,6 +165,7 @@ defmodule Omc.ServerAccUsers do
     Repo.delete_all(query)
   end
 
+  @spec get_server_acc_user(integer()) :: %ServerAccUser{}
   def get_server_acc_user(id) do
     ServerAccUser
     |> Repo.get(id)
