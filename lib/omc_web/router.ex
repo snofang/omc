@@ -26,6 +26,11 @@ defmodule OmcWeb.Router do
     # get "/", PageController, :home
   end
 
+  scope "/api/payment", OmcWeb do
+    pipe_through(:api)
+    get "/:ipg", PaymentController, :callback
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", OmcWeb do
   #   pipe_through :api

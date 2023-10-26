@@ -20,6 +20,18 @@ config :money,
 config :omc, supported_currencies: [:IRR]
 
 #
+# ipgs
+# 
+config :omc, :ipgs,
+  wp: [
+    currencies: [:IRR],
+    module: Omc.Payments.PaymentProviderWp,
+    base_url: "___TODO___CINFIG___",
+    api_key: "___TODO___CINFIG___",
+    type: :pull
+  ]
+
+#
 # scheduler
 #
 config :omc, Omc.Scheduler,

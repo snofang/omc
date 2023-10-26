@@ -8,11 +8,16 @@ config :bcrypt_elixir, :log_rounds, 1
 # 
 config :omc, supported_currencies: [:IRR, :USD, :EUR]
 
-config :omc, :acc_allocation,
-  # in seconds
-  timeout: 1,
-  # in milliseconds
-  schedule: 100
+#
+# ipgs
+# 
+config :omc, :ipgs,
+  wp: [
+    base_url: "https://example.com/api",
+    api_key: "api_key_example"
+  ]
+
+config :tesla, Omc.Payments.PaymentProviderWp, adapter: Tesla.Mock
 
 # Configure your database
 #
