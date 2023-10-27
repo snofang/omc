@@ -1,6 +1,5 @@
 defmodule Omc.Payments do
-  alias Omc.Payments.PaymentState
-  alias Omc.Payments.PaymentRequest
+  alias Omc.Payments.{PaymentRequest, PaymentState}
   alias Omc.Payments.PaymentProvider
   import Ecto.Query
   alias Omc.Repo
@@ -27,18 +26,32 @@ defmodule Omc.Payments do
     end
   end
 
+  @doc """
+  Handles callback from an `ipg` and creates new status update record related 
+  to already existing `Omc.Payments.PaymentRequest`
+
+  The callback is normally a web api call, it receives both `params` and `body` of given call 
+  and passes them to underliying provider for detail processing and calculating resulted 
+  new status.
+    
+  returns response used to be returned as the web api requestd callback.
+  """
+  @spec callback(atom(), map(), map() | nil) :: {:ok, term()} | {:error, term()}
   def callback(ipg, params, body) do
-    state_attrs =
-      %{ref: ref, res: res, state: _state} = PaymentProvider.callback(ipg, params, body)
+    case PaymentProvider.callback(ipg, params, body) do
+      {:ok, state_attrs = %{ref: ref, state: _state, data: _date}, res} ->
+        get_payment_request(ref)
+        |> case do
+          nil ->
+            {:error, PaymentProvider.not_found_response(ipg)}
 
-    get_payment_request(ref)
-    |> case do
-      nil ->
-        {:error, :not_found}
+          request ->
+            {:ok, _state} = insert_payment_state(request, state_attrs)
+            {:ok, res}
+        end
 
-      request ->
-        {:ok, _state} = insert_payment_state(request, state_attrs)
-        {:ok, res}
+      {:error, res} ->
+        {:error, res}
     end
   end
 
@@ -58,7 +71,11 @@ defmodule Omc.Payments do
     end
   end
 
-  defp get_payment_request(ref) do
+  @doc """
+  Gets `Omc.Payments.PaymentRequest` by `ref` if exists or nil.
+  """
+  @spec get_payment_request(binary()) :: %PaymentRequest{} | nil
+  def get_payment_request(ref) do
     PaymentRequest
     |> where(ref: ^ref)
     |> preload(:payment_states)

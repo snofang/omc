@@ -21,7 +21,7 @@ defmodule Omc.Repo.Migrations.CreatePaymentRequests do
       add :payment_request_id, references(:payment_requests), null: false
       add :state, :string, null: false
       add :data, :map, null: false
-      timestamps(udate_at: false)
+      timestamps(updated_at: false)
     end
 
     create index(:payment_states, [:payment_request_id])

@@ -6,6 +6,7 @@ defmodule Omc.Payments.PaymentProviderWp do
   plug(Tesla.Middleware.BaseUrl, Application.get_env(:omc, :ipgs)[:wp][:base_url])
   plug(Tesla.Middleware.JSON)
 
+  @impl PaymentProvider
   def send_payment_request(%{money: money, ref: ref}) do
     get("/create_request",
       query: [
@@ -37,10 +38,12 @@ defmodule Omc.Payments.PaymentProviderWp do
     Application.get_env(:omc, :ipgs)[:app_endpoint]
   end
 
+  @impl PaymentProvider
   def callback(%{"reference" => ref, "state" => "wait_for_confirm"}, _body) do
-    %{state: :pending, ref: ref, res: %{ok: true}}
+    {:ok, %{state: :pending, ref: ref, data: %{"state" => "wait_for_confirm"}}, %{ok: true}}
   end
 
+  @impl PaymentProvider
   def callback(
         %{
           "reference" => ref,
@@ -50,14 +53,15 @@ defmodule Omc.Payments.PaymentProviderWp do
         },
         _body
       ) do
-    %{
-      state: :cancelled,
-      data: %{state: :error, error_key: error_key, error_message: error_message},
-      ref: ref,
-      res: %{ok: true}
-    }
+    {:ok,
+     %{
+       state: :cancelled,
+       data: %{state: "error", error_key: error_key, error_message: error_message},
+       ref: ref
+     }, %{ok: true}}
   end
 
+  @impl PaymentProvider
   def callback(
         params = %{
           "reference" => _,
@@ -67,5 +71,15 @@ defmodule Omc.Payments.PaymentProviderWp do
         body
       ) do
     callback(params |> Map.put("error_message", nil), body)
+  end
+
+  @impl PaymentProvider
+  def callback(_params, _body) do
+    {:error, %{ok: false}}
+  end
+
+  @impl PaymentProvider
+  def not_found_response() do
+    %{ok: false, error: "NOT_FOUND"}
   end
 end

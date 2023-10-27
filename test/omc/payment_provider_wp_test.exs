@@ -1,4 +1,4 @@
-defmodule Omc.PaymentProviderWp do
+defmodule Omc.PaymentProviderWpTest do
   alias Omc.Payments.PaymentProviderWp
   use Omc.DataCase, aync: true
   import Tesla.Mock
@@ -69,6 +69,54 @@ defmodule Omc.PaymentProviderWp do
 
       assert PaymentProviderWp.send_payment_request(%{money: Money.new(12345), ref: ref}) ==
                {:error, :something_wrong}
+    end
+  end
+
+  describe "callback/1" do
+    test "wait_for_confirm callback" do
+      assert {:ok, %{state: :pending, ref: "some_ref", data: %{"state" => "wait_for_confirm"}},
+              %{ok: true}} =
+               PaymentProviderWp.callback(
+                 %{
+                   "reference" => "some_ref",
+                   "state" => "wait_for_confirm"
+                 },
+                 nil
+               )
+    end
+
+    test "error callback" do
+      assert {:ok,
+              %{
+                state: :cancelled,
+                ref: "some_ref",
+                data: %{
+                  state: "error",
+                  error_key: "some_error_key",
+                  error_message: "some_error_message"
+                }
+              },
+              %{ok: true}} =
+               PaymentProviderWp.callback(
+                 %{
+                   "reference" => "some_ref",
+                   "state" => "error",
+                   "error_key" => "some_error_key",
+                   "error_message" => "some_error_message"
+                 },
+                 nil
+               )
+    end
+
+    test "wrong state callback" do
+      assert {:error, %{ok: false}} =
+               PaymentProviderWp.callback(
+                 %{
+                   "reference" => "some_ref",
+                   "state" => "some_unknown_state"
+                 },
+                 nil
+               )
     end
   end
 end
