@@ -47,18 +47,20 @@ defmodule Omc.Payments.PaymentProviderOxapay do
   end
 
   @impl PaymentProvider
-  def callback(_params, data = %{"status" => "Expired", "trackId" => ref}) do
+  def callback(_params, data = %{"status" => status, "trackId" => ref})
+      when status in ["Expired", "Failed"] do
     {:ok, %{state: :failed, ref: ref, data: data}, "OK"}
   end
 
   @impl PaymentProvider
-  def callback(_params, data = %{"status" => "Failed", "trackId" => ref}) do
-    {:ok, %{state: :failed, ref: ref, data: data}, "OK"}
-  end
-
-  @impl PaymentProvider
-  def callback(_params, data = %{"trackId" => ref}) do
+  def callback(_params, data = %{"status" => status, "trackId" => ref})
+      when status in ["New", "Waiting", "Confirming"] do
     {:ok, %{state: :pending, ref: ref, data: data}, "OK"}
+  end
+
+  @impl PaymentProvider
+  def callback(_params, _data) do
+    {:error, "NOK"}
   end
 
   @impl PaymentProvider

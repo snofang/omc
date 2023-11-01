@@ -11,8 +11,8 @@ defmodule Omc.PaymentFixtures do
 
       {:ok,
        attrs
-       |> Map.put(:data,  %{some_data_key: "some_data_key_value"})
-       |> Map.put(:ref,  ref |> Integer.to_string())
+       |> Map.put(:data, %{some_data_key: "some_data_key_value"})
+       |> Map.put(:ref, ref |> Integer.to_string())
        |> Map.put(:url, "https://example.com/pay/" <> to_string(ref))
        |> Map.put(:type, :push)}
     end)

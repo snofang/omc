@@ -149,10 +149,40 @@ defmodule Omc.PaymentProviderOxapayTest do
                )
     end
 
-    test "Others callback", %{data: data} do
-      body = data |> Map.put("status", "Others")
+    test "Confirming callback", %{data: data} do
+      body = data |> Map.put("status", "Confirming")
 
       assert {:ok, %{state: :pending, ref: "123456789", data: ^body}, "OK"} =
+               PaymentProviderOxapay.callback(
+                 nil,
+                 body
+               )
+    end
+
+    test "Waiting callback", %{data: data} do
+      body = data |> Map.put("status", "Waiting")
+
+      assert {:ok, %{state: :pending, ref: "123456789", data: ^body}, "OK"} =
+               PaymentProviderOxapay.callback(
+                 nil,
+                 body
+               )
+    end
+
+    test "New callback", %{data: data} do
+      body = data |> Map.put("status", "New")
+
+      assert {:ok, %{state: :pending, ref: "123456789", data: ^body}, "OK"} =
+               PaymentProviderOxapay.callback(
+                 nil,
+                 body
+               )
+    end
+
+    test "non valid status", %{data: data} do
+      body = data |> Map.put("status", "Others")
+
+      assert {:error, "NOK"} =
                PaymentProviderOxapay.callback(
                  nil,
                  body

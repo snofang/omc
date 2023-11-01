@@ -50,5 +50,18 @@ defmodule OmcWeb.PaymentControllerTest do
 
       assert json_response(conn, 200) == "OK"
     end
+
+    test "failure due to invalid format", %{conn: conn, payment_request: payment_request} do
+      conn =
+        post(
+          conn,
+          ~p"/api/payment/oxapay",
+          %{
+            "trackId" => payment_request.ref
+          }
+        )
+
+      assert json_response(conn, 400) == "NOK"
+    end
   end
 end
