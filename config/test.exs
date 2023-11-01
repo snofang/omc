@@ -17,7 +17,7 @@ config :omc, :ipgs,
     api_key: "api_key_example"
   ]
 
-config :tesla, Omc.Payments.PaymentProviderWp, adapter: Tesla.Mock
+config :tesla, Omc.Payments.PaymentProviderOxapay, adapter: Omc.TeslaMock
 
 # Configure your database
 #

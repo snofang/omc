@@ -10,12 +10,13 @@ defmodule Omc.Repo.Migrations.CreatePaymentRequests do
       add :ipg, :string, null: false
       add :type, :string, null: false
       add :url, :string, null: false
+      add :data, :map, null: false
       timestamps(updated_at: false)
     end
 
     create index(:payment_requests, [:user_id, :user_type])
     create index(:payment_requests, [:inserted_at])
-    create index(:payment_requests, [:ref])
+    create unique_index(:payment_requests, [:ref])
 
     create table(:payment_states) do
       add :payment_request_id, references(:payment_requests), null: false

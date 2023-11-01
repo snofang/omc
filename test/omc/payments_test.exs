@@ -3,7 +3,7 @@ defmodule Omc.PaymentsTest do
   alias Omc.LedgersFixtures
   alias Omc.Payments
   alias Omc.Payments.PaymentRequest
-  alias Omc.PaymentProviderWpMock
+  alias Omc.PaymentProviderOxapayMock
   use Omc.DataCase, async: true
   import Mox
   import Omc.PaymentFixtures
@@ -17,19 +17,34 @@ defmodule Omc.PaymentsTest do
       user_id: user_id,
       user_type: user_type
     } do
-      money = Money.new(1300)
-      url = OmcWeb.Endpoint.url() <> "/api/payment/wp"
+      PaymentProviderOxapayMock
+      |> expect(:send_payment_request, fn attrs ->
+        {:ok,
+         attrs
+         |> Map.put(:data, %{a: 1})
+         |> Map.put(:ref, "123")
+         |> Map.put(:url, "https://example.com/pay/123")
+         |> Map.put(:type, :push)}
+      end)
 
-      payment_request =
-        payment_request_fixture(:wp, %{user_type: user_type, user_id: user_id, money: money})
+      money = Money.new(1300)
+
+      {:ok, payment_request} =
+        Payments.create_payment_request(:oxapay, %{
+          user_type: user_type,
+          user_id: user_id,
+          money: money
+        })
 
       assert %PaymentRequest{
                user_id: ^user_id,
                user_type: ^user_type,
                money: ^money,
-               ipg: :wp,
-               type: :pull,
-               url: ^url
+               ipg: :oxapay,
+               type: :push,
+               data: %{a: 1},
+               ref: "123",
+               url: "https://example.com/pay/123"
              } = payment_request
     end
 
@@ -37,17 +52,51 @@ defmodule Omc.PaymentsTest do
       user_id: user_id,
       user_type: user_type
     } do
-      PaymentProviderWpMock
-      |> expect(:send_payment_request, fn %{money: _, ref: _} ->
+      PaymentProviderOxapayMock
+      |> expect(:send_payment_request, fn %{} ->
         {:error, :some_reason}
       end)
 
       assert {:error, :some_reason} =
-               Payments.create_payment_request(:wp, %{
+               Payments.create_payment_request(:oxapay, %{
                  user_type: user_type,
                  user_id: user_id,
                  money: Money.new(1300)
                })
+    end
+
+    test "ref should be unique", %{
+      user_id: user_id,
+      user_type: user_type
+    } do
+      PaymentProviderOxapayMock
+      |> expect(:send_payment_request, 2, fn attrs ->
+        {:ok,
+         attrs
+         |> Map.put(:data, %{a: 1})
+         |> Map.put(:ref, "123")
+         |> Map.put(:url, "https://example.com/pay/123")
+         |> Map.put(:type, :push)}
+      end)
+
+      money = Money.new(1300)
+
+      # first request
+      {:ok, _} =
+        Payments.create_payment_request(:oxapay, %{
+          user_type: user_type,
+          user_id: user_id,
+          money: money
+        })
+
+      # second request
+      assert_raise(Ecto.ConstraintError, fn ->
+        Payments.create_payment_request(:oxapay, %{
+          user_type: user_type,
+          user_id: user_id,
+          money: money
+        })
+      end)
     end
   end
 
@@ -59,17 +108,17 @@ defmodule Omc.PaymentsTest do
     test "callback causing :pending state", %{
       payment_request: payment_request
     } do
-      PaymentProviderWpMock
+      PaymentProviderOxapayMock
       |> expect(:callback, fn _params, _body ->
         {:ok,
          %{
            state: :pending,
            ref: payment_request.ref,
            data: %{"data_field" => "data_field_value"}
-         }, %{"res_field" => "res_field_value"}}
+         }, "OK"}
       end)
 
-      {:ok, %{"res_field" => "res_field_value"}} = Payments.callback(:wp, nil, nil)
+      {:ok, "OK"} = Payments.callback(:oxapay, nil, nil)
       payment_request = Payments.get_payment_request(payment_request.ref)
       assert payment_request.payment_states |> length() == 1
 
@@ -80,7 +129,7 @@ defmodule Omc.PaymentsTest do
     end
 
     test "callback having not exising ref" do
-      PaymentProviderWpMock
+      PaymentProviderOxapayMock
       |> expect(:callback, fn _params, _body ->
         {:ok,
          %{
@@ -89,15 +138,14 @@ defmodule Omc.PaymentsTest do
            data: nil
          }, nil}
       end)
-      |> expect(:not_found_response, fn -> :not_found end)
 
-      assert {:error, :not_found} = Payments.callback(:wp, nil, nil)
+      assert {:error, :not_found} = Payments.callback(:oxapay, nil, nil)
     end
 
-    test "reapeating callback causing :pending state has no effect", %{
+    test "reapeating callback causing same state insert each of them", %{
       payment_request: payment_request
     } do
-      PaymentProviderWpMock
+      PaymentProviderOxapayMock
       |> expect(:callback, 2, fn _params, _body ->
         {:ok,
          %{
@@ -108,7 +156,7 @@ defmodule Omc.PaymentsTest do
       end)
 
       # first callback
-      {:ok, nil} = Payments.callback(:wp, nil, nil)
+      {:ok, nil} = Payments.callback(:oxapay, nil, nil)
       payment_request = Payments.get_payment_request(payment_request.ref)
       assert payment_request.payment_states |> length() == 1
 
@@ -117,13 +165,13 @@ defmodule Omc.PaymentsTest do
              } = payment_request.payment_states |> List.first()
 
       # second one
-      {:ok, nil} = Payments.callback(:wp, nil, nil)
+      {:ok, nil} = Payments.callback(:oxapay, nil, nil)
       payment_request = Payments.get_payment_request(payment_request.ref)
-      assert payment_request.payment_states |> length() == 1
+      assert payment_request.payment_states |> length() == 2
 
       assert %PaymentState{
                state: :pending
-             } = payment_request.payment_states |> List.first()
+             } = payment_request.payment_states |> Enum.at(1)
     end
   end
 end

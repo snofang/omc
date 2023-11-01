@@ -1,41 +1,54 @@
 defmodule OmcWeb.PaymentControllerTest do
   use OmcWeb.ConnCase, async: true
-  alias Omc.Payments.PaymentProviderWp
-  alias Omc.PaymentProviderWpMock
+  alias Omc.PaymentProviderOxapayMock
+  alias Omc.Payments.PaymentProviderOxapay
   import Omc.PaymentFixtures
   import Mox
 
   setup %{conn: conn} do
-    PaymentProviderWpMock
-    |> expect(:callback, fn params, body -> PaymentProviderWp.callback(params, body) end)
-    |> expect(:not_found_response, fn -> PaymentProviderWp.not_found_response() end)
+    PaymentProviderOxapayMock
+    |> expect(:callback, fn params, body -> PaymentProviderOxapay.callback(params, body) end)
 
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
-  describe "callback for wp payment provider" do
+  describe "callback for oxapay payment provider" do
     setup %{} do
       [payment_request: payment_request_fixture()]
     end
 
     test "not existing ref", %{conn: conn} do
       conn =
-        get(
+        post(
           conn,
-          ~p"/api/payment/wp?reference=a6040c4d-a12e-4115-a91a-e8654f16c323&state=wait_for_confirm"
+          ~p"/api/payment/oxapay",
+          %{
+            "status" => "Waiting",
+            "trackId" => "35092972",
+            "amount" => "100",
+            "currency" => "TRX",
+            "type" => "payment"
+          }
         )
 
-      assert json_response(conn, 404) == %{"ok" => false, "error" => "NOT_FOUND"}
+      assert json_response(conn, 404) == "not_found"
     end
 
-    test "not proper state", %{conn: conn, payment_request: payment_request} do
+    test "success state update", %{conn: conn, payment_request: payment_request} do
       conn =
-        get(
+        post(
           conn,
-          ~p"/api/payment/wp?reference=#{payment_request.ref}&state=some_state_unknown"
+          ~p"/api/payment/oxapay",
+          %{
+            "status" => "Waiting",
+            "trackId" => payment_request.ref,
+            "amount" => "100",
+            "currency" => "TRX",
+            "type" => "payment"
+          }
         )
 
-      assert json_response(conn, 400) == %{"ok" => false}
+      assert json_response(conn, 200) == "OK"
     end
   end
 end

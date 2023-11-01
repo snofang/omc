@@ -1,24 +1,21 @@
 defmodule Omc.Payments do
+  require Logger
   alias Omc.Payments.{PaymentRequest, PaymentState}
   alias Omc.Payments.PaymentProvider
   import Ecto.Query
   alias Omc.Repo
 
   def create_payment_request(ipg, %{user_id: user_id, user_type: user_type, money: money}) do
-    ref = Ecto.UUID.generate()
-
-    PaymentProvider.send_paymet_request(ipg, %{money: money, ref: ref})
+    %{
+      user_id: user_id,
+      user_type: user_type,
+      money: money,
+      ipg: ipg
+    }
+    |> PaymentProvider.send_paymet_request()
     |> case do
-      {:ok, payment_url} ->
-        PaymentRequest.create_changeset(%{
-          user_id: user_id,
-          user_type: user_type,
-          money: money,
-          ref: ref,
-          ipg: ipg,
-          type: ipg_type(ipg),
-          url: payment_url
-        })
+      {:ok, params} ->
+        PaymentRequest.create_changeset(params)
         |> Repo.insert()
 
       {:error, reason} ->
@@ -43,7 +40,7 @@ defmodule Omc.Payments do
         get_payment_request(ref)
         |> case do
           nil ->
-            {:error, PaymentProvider.not_found_response(ipg)}
+            {:error, :not_found}
 
           request ->
             {:ok, _state} = insert_payment_state(request, state_attrs)
@@ -55,34 +52,34 @@ defmodule Omc.Payments do
     end
   end
 
-  # prevents multiple state with same state value
-  # note: it does not completely prevent multiple rows with same sate, but those situations are rare
-  # and it doesn't matter if more than one record exist for one state
-  defp insert_payment_state(payment_request, %{state: state} = attrs) do
-    payment_state = payment_request.payment_states |> Enum.find(&(&1.state == state))
-
-    if payment_state do
-      {:ok, payment_state}
-    else
-      attrs
-      |> Map.put(:payment_request_id, payment_request.id)
-      |> PaymentState.create_changeset()
-      |> Repo.insert()
-    end
+  defp insert_payment_state(payment_request, attrs) do
+    attrs
+    |> Map.put(:payment_request_id, payment_request.id)
+    |> PaymentState.create_changeset()
+    |> Repo.insert()
   end
 
   @doc """
   Gets `Omc.Payments.PaymentRequest` by `ref` if exists or nil.
   """
   @spec get_payment_request(binary()) :: %PaymentRequest{} | nil
-  def get_payment_request(ref) do
+  def get_payment_request(ref) when is_binary(ref) do
     PaymentRequest
     |> where(ref: ^ref)
     |> preload(:payment_states)
     |> Repo.one()
   end
 
-  defp ipg_type(ipg) when is_atom(ipg) do
-    Application.get_env(:omc, :ipgs)[ipg][:type]
-  end
+  # def query_next_state(ref) when is_binary(ref) do
+  #   ref
+  #   |> get_payment_request()
+  # |> then(& &1.payment_states)
+  #   |> List.last()
+  #   |> then(& &1.state)
+  #   |> case do
+  #     :pending ->
+  #       
+  #   end
+  #   
+  # end
 end

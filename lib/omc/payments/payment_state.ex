@@ -5,7 +5,7 @@ defmodule Omc.Payments.PaymentState do
 
   schema "payment_states" do
     field(:payment_request_id, :id)
-    field(:state, Ecto.Enum, values: [:pending, :completed, :cancelled])
+    field(:state, Ecto.Enum, values: [:pending, :done, :failed])
     field :data, :map
     timestamps(updated_at: false)
   end

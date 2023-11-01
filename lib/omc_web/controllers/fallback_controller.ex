@@ -1,7 +1,7 @@
 defmodule OmcWeb.FallbackController do
   use OmcWeb, :controller
 
-  def call(conn, {:error, processed_response = %{error: "NOT_FOUND"}}) do
+  def call(conn, {:error, processed_response = :not_found}) do
     conn
     |> put_status(:not_found)
     |> put_view(json: OmcWeb.ErrorJSON)

@@ -9,9 +9,10 @@ defmodule Omc.Payments.PaymentRequest do
     field(:user_type, Ecto.Enum, values: [:telegram, :local])
     field(:money, Money.Ecto.Map.Type)
     field(:ref, :string)
-    field(:ipg, Ecto.Enum, values: [:coinbase, :wp])
+    field(:ipg, Ecto.Enum, values: [:oxapay])
     field(:type, Ecto.Enum, values: [:push, :pull])
     field(:url, :string)
+    field :data, :map
     has_many(:payment_states, PaymentState)
     timestamps(updated_at: false)
   end
@@ -19,6 +20,6 @@ defmodule Omc.Payments.PaymentRequest do
   @doc false
   def create_changeset(attrs) do
     %__MODULE__{}
-    |> change(attrs)
+    |> cast(attrs, [:user_id, :user_type, :money, :ref, :ipg, :type, :url, :data])
   end
 end

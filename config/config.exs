@@ -18,17 +18,19 @@ config :money,
   default_currency: :IRR
 
 config :omc, supported_currencies: [:IRR]
+config :omc, acc_allocation_timeout: 30 * 60
 
 #
 # ipgs
 # 
 config :omc, :ipgs,
-  wp: [
-    currencies: [:IRR],
-    module: Omc.Payments.PaymentProviderWp,
-    base_url: "___TODO___CINFIG___",
-    api_key: "___TODO___CINFIG___",
-    type: :pull
+  return_url: "https://t.me/your_fantastic_bot",
+  oxapay: [
+    currencies: [:USD],
+    module: Omc.Payments.PaymentProviderOxapay,
+    base_url: "https://api.oxapay.com/merchants",
+    api_key: "api_key_example",
+    timeout: (Application.get_env(:omc, :acc_allocation_timeout, 30 * 60) / 60) |> round()
   ]
 
 #
