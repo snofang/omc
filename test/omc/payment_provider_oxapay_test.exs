@@ -1,28 +1,36 @@
 defmodule Omc.PaymentProviderOxapayTest do
   alias Omc.Payments.PaymentProviderOxapay
+  alias Omc.TeslaMock
   use Omc.DataCase, aync: true
   import Mox
 
   setup %{} do
-    req_url = Application.get_env(:omc, :ipgs)[:oxapay][:base_url] <> "/request"
-    %{req_url: req_url}
+    %{
+      merchant: Application.get_env(:omc, :ipgs)[:oxapay][:api_key]
+    }
   end
 
   describe "send_payment_request/1" do
-    test "ok request", %{req_url: req_url} do
-      req_body = %{
-        merchant: Application.get_env(:omc, :ipgs)[:oxapay][:api_key],
-        amount: 5.0,
-        currency: "USD",
-        lifeTime: Application.get_env(:omc, :ipgs)[:oxapay][:timeout],
-        callbackUrl: OmcWeb.Endpoint.url() <> "/api/payment/oxapay",
-        returnUrl: Application.get_env(:omc, :ipgs)[:return_url],
-        email: "123456789" <> "@" <> "telegram"
+    setup %{} do
+      %{
+        req_url: Application.get_env(:omc, :ipgs)[:oxapay][:base_url] <> "/request"
       }
+    end
 
-      req_body_json = Jason.encode!(req_body)
+    test "ok request", %{req_url: req_url, merchant: merchant} do
+      req_body_json =
+        %{
+          merchant: merchant,
+          amount: 5.0,
+          currency: "USD",
+          lifeTime: Application.get_env(:omc, :ipgs)[:oxapay][:timeout],
+          callbackUrl: OmcWeb.Endpoint.url() <> "/api/payment/oxapay",
+          returnUrl: Application.get_env(:omc, :ipgs)[:return_url],
+          email: "123456789" <> "@" <> "telegram"
+        }
+        |> Jason.encode!()
 
-      Omc.TeslaMock
+      TeslaMock
       |> expect(:call, fn %{method: :post, url: ^req_url, body: ^req_body_json}, _opts ->
         {:ok,
          %{
@@ -190,76 +198,76 @@ defmodule Omc.PaymentProviderOxapayTest do
     end
   end
 
-  #
-  # describe "send_state_inquiry_request/1" do
-  #   test "ok request" do
-  #     ref = Ecto.UUID.generate()
-  #
-  #     mock(fn
-  #       %{
-  #         method: :get,
-  #         url: "https://example.com/api/confirm_payment",
-  #         query: [
-  #           api_key: "api_key_example",
-  #           reference: ^ref,
-  #           amount_irr: "123"
-  #         ]
-  #       } ->
-  #         %Tesla.Env{
-  #           status: 200,
-  #           body: %{
-  #             "ok" => true,
-  #             "result" => %{
-  #               "state" => "paid",
-  #               "field1" => "field1_value",
-  #               "field2" => "field2_value"
-  #             }
-  #           }
-  #         }
-  #     end)
-  #
-  #     assert PaymentProviderWp.send_state_inquiry_request(%{money: Money.new(12345), ref: ref}) ==
-  #              {:ok,
-  #               {:completed,
-  #                %{"state" => "paid", "field1" => "field1_value", "field2" => "field2_value"}}}
-  #   end
-  #
-  #   test "some logical error" do
-  #     ref = Ecto.UUID.generate()
-  #
-  #     mock(fn
-  #       %{
-  #         method: :get,
-  #         url: "https://example.com/api/confirm_payment"
-  #       } ->
-  #         %Tesla.Env{
-  #           status: 200,
-  #           body: %{
-  #             "ok" => false,
-  #             "error" => "INVALID_API_CALL"
-  #           }
-  #         }
-  #     end)
-  #
-  #     assert PaymentProviderWp.send_state_inquiry_request(%{money: Money.new(12345), ref: ref}) ==
-  #              {:error, "INVALID_API_CALL"}
-  #   end
-  #
-  #   test "non 200 response status code" do
-  #     ref = Ecto.UUID.generate()
-  #
-  #     mock(fn
-  #       %{
-  #         method: :get,
-  #         url: "https://example.com/api/confirm_payment"
-  #       } ->
-  #         %Tesla.Env{
-  #           status: 404
-  #         }
-  #     end)
-  #
-  #     assert PaymentProviderWp.send_state_inquiry_request(%{money: Money.new(12345), ref: ref}) ==
-  #              {:error, :something_wrong}
-  #   end
-  # end
+  describe "send_state_inquiry_request/1" do
+    setup %{} do
+      inq_url = Application.get_env(:omc, :ipgs)[:oxapay][:base_url] <> "/inquiry"
+      %{inq_url: inq_url}
+    end
+
+    test "ok request", %{inq_url: inq_url, merchant: merchant} do
+      req_body_json = %{trackId: 12345, merchant: merchant} |> Jason.encode!()
+
+      TeslaMock
+      |> expect(:call, fn %{method: :post, url: ^inq_url, body: ^req_body_json}, _opts ->
+        {:ok,
+         %{
+           status: 200,
+           body: %{
+             "result" => 100,
+             "message" => "some success message",
+             "trackId" => 12345,
+             "status" => "Waiting"
+           }
+         }}
+      end)
+
+      assert PaymentProviderOxapay.send_state_inquiry_request("12345") ==
+               {:ok,
+                %{
+                  state: :pending,
+                  ref: "12345",
+                  data: %{
+                    "result" => 100,
+                    "message" => "some success message",
+                    "trackId" => 12345,
+                    "status" => "Waiting"
+                  }
+                }}
+    end
+
+    test "non 100 result code", %{inq_url: inq_url, merchant: merchant} do
+      req_body_json = %{trackId: 12345, merchant: merchant} |> Jason.encode!()
+
+      TeslaMock
+      |> expect(:call, fn %{method: :post, url: ^inq_url, body: ^req_body_json}, _opts ->
+        {:ok,
+         %{
+           status: 200,
+           body: %{
+             "result" => 101,
+             "message" => "some error message"
+           }
+         }}
+      end)
+
+      assert PaymentProviderOxapay.send_state_inquiry_request("12345") ==
+               {:error,
+                %{
+                  error_code: 101,
+                  error_message: "some error message"
+                }}
+    end
+
+    test "non 200 status code", %{inq_url: inq_url, merchant: merchant} do
+      req_body_json = %{trackId: 12345, merchant: merchant} |> Jason.encode!()
+
+      TeslaMock
+      |> expect(:call, fn %{method: :post, url: ^inq_url, body: ^req_body_json}, _opts ->
+        {:ok, %{status: 404, body: %{}}}
+      end)
+
+      assert PaymentProviderOxapay.send_state_inquiry_request("12345") ==
+               {:error, :something_wrong}
+    end
+  end
 end

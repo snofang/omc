@@ -42,20 +42,9 @@ defmodule Omc.Payments.PaymentProviderOxapay do
   end
 
   @impl PaymentProvider
-  def callback(_params, data = %{"status" => "Paid", "trackId" => ref}) do
-    {:ok, %{state: :done, ref: ref, data: data}, "OK"}
-  end
-
-  @impl PaymentProvider
   def callback(_params, data = %{"status" => status, "trackId" => ref})
-      when status in ["Expired", "Failed"] do
-    {:ok, %{state: :failed, ref: ref, data: data}, "OK"}
-  end
-
-  @impl PaymentProvider
-  def callback(_params, data = %{"status" => status, "trackId" => ref})
-      when status in ["New", "Waiting", "Confirming"] do
-    {:ok, %{state: :pending, ref: ref, data: data}, "OK"}
+      when status in ["Expired", "New", "Waiting", "Confirming", "Paid", "Failed"] do
+    {:ok, %{state: get_internal_state(status), ref: ref, data: data}, "OK"}
   end
 
   @impl PaymentProvider
@@ -64,23 +53,45 @@ defmodule Omc.Payments.PaymentProviderOxapay do
   end
 
   @impl PaymentProvider
-  def send_state_inquiry_request(%{money: _money, ref: ref}) do
-    post("/confirm_payment",
-      query: [
-        api_key: api_key(),
-        reference: ref
-        # amount_irr: amount_str(money)
-      ]
+  def send_state_inquiry_request(ref) do
+    track_id = ref |> String.to_integer()
+
+    post(
+      "/inquiry",
+      %{
+        merchant: api_key(),
+        trackId: track_id
+      }
     )
     |> case do
-      {:ok, %{body: %{"ok" => true, "result" => result = %{"state" => "paid"}}}} ->
-        {:ok, {:completed, result}}
+      {:ok, %{body: data = %{"result" => 100, "trackId" => ^track_id, "status" => status}}} ->
+        {:ok, %{state: get_internal_state(status), ref: ref, data: data}}
 
-      {:ok, %{body: %{"ok" => false, "error" => error_key}}} ->
-        {:error, error_key}
+      res = {:ok, %{body: %{"result" => result, "message" => message}}} ->
+        Logger.info("Calling oxapay inquiry for ref=#{ref} failed; response is: #{inspect(res)}")
 
-      _result ->
+        {:error, %{error_code: result, error_message: message}}
+
+      res ->
+        Logger.info("Calling oxapay inquiry for ref=#{ref} failed; response is: #{inspect(res)}")
+
         {:error, :something_wrong}
+    end
+  end
+
+  def get_internal_state(status) do
+    case status do
+      "Expired" ->
+        :failed
+
+      status when status in ["New", "Waiting", "Confirming"] ->
+        :pending
+
+      "Paid" ->
+        :done
+
+      "Failed" ->
+        :failed
     end
   end
 end

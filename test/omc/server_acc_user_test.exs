@@ -79,6 +79,7 @@ defmodule Omc.ServerAccUserTest do
                sau2
                |> Map.replace(:allocated_at, sau1.allocated_at)
                |> Map.replace(:lock_version, sau1.lock_version)
+               |> Map.replace(:updated_at, sau1.updated_at)
     end
 
     test "allocated expired accs should be cleanup calling cleanup_acc_allocations/1",

@@ -6,8 +6,9 @@ defmodule Omc.Payments.PaymentProvider do
               {:ok, %{state: atom(), ref: binary(), data: map() | nil}, map() | binary()}
               | {:error, term()}
 
-  @callback send_state_inquiry_request(%{money: Money.t(), ref: binary()}) ::
-              {:ok, {state :: atom(), data :: map()}} | {:error, error_code :: binary()}
+  @callback send_state_inquiry_request(ref :: binary()) ::
+              {:ok, %{state: atom(), ref: binary(), data: map() | nil}}
+              | {:error, term()}
 
   defmacro __using__(ipg) when is_atom(ipg) do
     quote do
@@ -28,12 +29,8 @@ defmodule Omc.Payments.PaymentProvider do
     provider_impl(ipg).callback(params, body)
   end
 
-  def not_found_response(ipg) do
-    provider_impl(ipg).not_found_response()
-  end
-
-  def send_state_inquiry_request(ipg, params = %{money: _, ref: _}) do
-    provider_impl(ipg).send_state_inquiry_request(params)
+  def send_state_inquiry_request(ipg, ref) when is_binary(ref) and is_atom(ipg) do
+    provider_impl(ipg).send_state_inquiry_request(ref)
   end
 
   defp provider_impl(ipg) when is_atom(ipg) do
