@@ -1,4 +1,5 @@
 defmodule Omc.PaymentFixtures do
+  alias Omc.Payments.PaymentRequest
   alias Omc.LedgersFixtures
   alias Omc.Payments
   alias Omc.PaymentProviderOxapayMock
@@ -11,7 +12,7 @@ defmodule Omc.PaymentFixtures do
 
       {:ok,
        attrs
-       |> Map.put(:data, %{some_data_key: "some_data_key_value"})
+       |> Map.put(:data, %{"some_data_key" => "some_data_key_value"})
        |> Map.put(:ref, ref |> Integer.to_string())
        |> Map.put(:url, "https://example.com/pay/" <> to_string(ref))
        |> Map.put(:type, :push)}
@@ -31,5 +32,23 @@ defmodule Omc.PaymentFixtures do
       )
 
     payment_request
+  end
+
+  def payment_state_by_callback_fixture(%PaymentRequest{} = payment_request, state)
+      when is_atom(state) do
+    PaymentProviderOxapayMock
+    |> expect(:callback, fn _params, _body ->
+      {:ok, %{state: state, ref: payment_request.ref, data: %{}}, :some_response}
+    end)
+
+    {:ok, :some_response} = Payments.callback(payment_request.ipg, %{}, nil)
+  end
+
+  def done_payment_request_fixture() do
+    pr = payment_request_fixture()
+    payment_state_by_callback_fixture(pr, :pending)
+    payment_state_by_callback_fixture(pr, :pending)
+    payment_state_by_callback_fixture(pr, :done)
+    pr
   end
 end

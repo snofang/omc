@@ -27,7 +27,8 @@ defmodule Omc.Payments.PaymentProviderOxapay do
         {:ok,
          attrs
          |> Map.put(:data, data)
-         |> Map.put(:ref, track_id |> Integer.to_string())
+         # |> Integer.to_string())
+         |> Map.put(:ref, track_id)
          |> Map.put(:url, pay_link)
          |> Map.put(:type, :push)}
 
@@ -54,7 +55,8 @@ defmodule Omc.Payments.PaymentProviderOxapay do
 
   @impl PaymentProvider
   def send_state_inquiry_request(ref) do
-    track_id = ref |> String.to_integer()
+    # |> String.to_integer()
+    track_id = ref
 
     post(
       "/inquiry",
@@ -92,6 +94,16 @@ defmodule Omc.Payments.PaymentProviderOxapay do
 
       "Failed" ->
         :failed
+    end
+  end
+
+  @impl PaymentProvider
+  def get_paid_money!(%{} = data, currency) do
+    if currency |> to_string() == data["currency"] do
+      data["payAmount"]
+      |> Money.parse!(currency)
+    else
+      raise "currency mismatch: requested currency: #{currency}, paid currency: #{data["currency"]}"
     end
   end
 end

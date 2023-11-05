@@ -15,6 +15,7 @@ defmodule Omc.LedgersFixtures do
       user_type: :telegram,
       user_id: unique_user_id(),
       context: :manual,
+      context_id: nil,
       money: Money.new(100),
       type: :credit
     })

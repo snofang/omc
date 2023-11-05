@@ -32,4 +32,8 @@ defmodule Omc.Common.Utils do
     |> NaiveDateTime.truncate(:second)
     |> NaiveDateTime.add(offset, unit)
   end
+
+  def default_currency() do
+    Application.get_env(:money, :default_currency)
+  end
 end

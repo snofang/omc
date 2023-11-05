@@ -1,9 +1,11 @@
 defmodule Omc.Payments do
   require Logger
+  alias Omc.Ledgers
   alias Omc.Payments.{PaymentRequest, PaymentState}
   alias Omc.Payments.PaymentProvider
   import Ecto.Query
   alias Omc.Repo
+  import Ecto.Query.API, only: [max: 1, ago: 2], warn: false
 
   def create_payment_request(ipg, %{user_id: user_id, user_type: user_type, money: money}) do
     %{
@@ -70,16 +72,72 @@ defmodule Omc.Payments do
     |> Repo.one()
   end
 
-  # def query_next_state(ref) when is_binary(ref) do
-  #   ref
-  #   |> get_payment_request()
-  # |> then(& &1.payment_states)
-  #   |> List.last()
-  #   |> then(& &1.state)
-  #   |> case do
-  #     :pending ->
-  #       
-  #   end
-  #   
-  # end
+  @doc """
+  Finds all payments which have got `:done` state within last `duration` in seconds.
+  """
+  @spec update_ledgers(integer()) :: :ok
+  def update_ledgers(duration) when is_integer(duration) do
+    Logger.info("-- update payments --")
+    duration
+    |> get_payments_with_last_done_state()
+    |> Enum.each(fn i ->
+      try do
+        update_ledger(i)
+      rescue
+        any_exception ->
+          Logger.info(~s(
+            Updating ledger by payment, failed
+            {payment_request, payment_state}:
+              #{inspect(i)}
+            reason: 
+              #{inspect(any_exception)}))
+      end
+    end)
+
+    :ok
+  end
+
+  @doc false
+  # Updates user's ledger with the paid amount. It first checks if this payment has already 
+  # affected or not. In case of already affected ledger, do nothing and returns success. 
+  @spec update_ledger({%PaymentRequest{}, %PaymentState{}}) ::
+          {:ok, :ledger_updated} | {:ok, :ledger_unchanged}
+  def update_ledger({pr, ps}) when ps.state == :done do
+    case Ledgers.get_ledger_tx_by_context(:payment, pr.id) do
+      nil ->
+        Ledgers.create_ledger_tx!(%{
+          user_id: pr.user_id,
+          user_type: pr.user_type,
+          context: :payment,
+          context_id: pr.id,
+          money: PaymentProvider.get_paid_money!(pr.ipg, ps.data, pr.money.currency),
+          type: :credit
+        })
+
+        {:ok, :ledger_updated}
+
+      _already_existing_ledger_tx ->
+        {:ok, :ledger_unchanged}
+    end
+  end
+
+  @doc false
+  def get_payments_with_last_done_state(duration) when is_integer(duration) do
+    last_done_payment_state =
+      from(ps in PaymentState,
+        where: ps.state == :done and ps.inserted_at > ago(^duration, "second"),
+        group_by: ps.payment_request_id,
+        select: %{id: max(ps.id), payment_request_id: ps.payment_request_id}
+      )
+
+    from(pr in PaymentRequest,
+      join: ldps in subquery(last_done_payment_state),
+      on: ldps.payment_request_id == pr.id,
+      join: ps in PaymentState,
+      on: ldps.id == ps.id,
+      order_by: [asc: pr.id],
+      select: {pr, ps}
+    )
+    |> Repo.all()
+  end
 end

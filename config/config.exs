@@ -29,7 +29,7 @@ config :omc, :ipgs,
     currencies: [:USD],
     module: Omc.Payments.PaymentProviderOxapay,
     base_url: "https://api.oxapay.com/merchants",
-    api_key: "api_key_example",
+    api_key: "sandbox",
     timeout: (Application.get_env(:omc, :acc_allocation_timeout, 30 * 60) / 60) |> round()
   ]
 

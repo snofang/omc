@@ -38,7 +38,7 @@ defmodule Omc.PaymentProviderOxapayTest do
            body: %{
              "result" => 100,
              "message" => "some success message",
-             "trackId" => 12345,
+             "trackId" => "12345",
              "payLink" => "https://example.com/pay_please"
            }
          }}
@@ -56,7 +56,7 @@ defmodule Omc.PaymentProviderOxapayTest do
                     "message" => "some success message",
                     "payLink" => "https://example.com/pay_please",
                     "result" => 100,
-                    "trackId" => 12345
+                    "trackId" => "12345"
                   },
                   ipg: :oxapay,
                   type: :push,
@@ -77,7 +77,7 @@ defmodule Omc.PaymentProviderOxapayTest do
            body: %{
              "result" => 101,
              "message" => "some error happend",
-             "trackId" => 12345,
+             "trackId" => "12345",
              "payLink" => "https://example.com/pay_please"
            }
          }}
@@ -205,7 +205,7 @@ defmodule Omc.PaymentProviderOxapayTest do
     end
 
     test "ok request", %{inq_url: inq_url, merchant: merchant} do
-      req_body_json = %{trackId: 12345, merchant: merchant} |> Jason.encode!()
+      req_body_json = %{trackId: "12345", merchant: merchant} |> Jason.encode!()
 
       TeslaMock
       |> expect(:call, fn %{method: :post, url: ^inq_url, body: ^req_body_json}, _opts ->
@@ -215,7 +215,7 @@ defmodule Omc.PaymentProviderOxapayTest do
            body: %{
              "result" => 100,
              "message" => "some success message",
-             "trackId" => 12345,
+             "trackId" => "12345",
              "status" => "Waiting"
            }
          }}
@@ -229,14 +229,14 @@ defmodule Omc.PaymentProviderOxapayTest do
                   data: %{
                     "result" => 100,
                     "message" => "some success message",
-                    "trackId" => 12345,
+                    "trackId" => "12345",
                     "status" => "Waiting"
                   }
                 }}
     end
 
     test "non 100 result code", %{inq_url: inq_url, merchant: merchant} do
-      req_body_json = %{trackId: 12345, merchant: merchant} |> Jason.encode!()
+      req_body_json = %{trackId: "12345", merchant: merchant} |> Jason.encode!()
 
       TeslaMock
       |> expect(:call, fn %{method: :post, url: ^inq_url, body: ^req_body_json}, _opts ->
@@ -259,7 +259,7 @@ defmodule Omc.PaymentProviderOxapayTest do
     end
 
     test "non 200 status code", %{inq_url: inq_url, merchant: merchant} do
-      req_body_json = %{trackId: 12345, merchant: merchant} |> Jason.encode!()
+      req_body_json = %{trackId: "12345", merchant: merchant} |> Jason.encode!()
 
       TeslaMock
       |> expect(:call, fn %{method: :post, url: ^inq_url, body: ^req_body_json}, _opts ->
@@ -268,6 +268,30 @@ defmodule Omc.PaymentProviderOxapayTest do
 
       assert PaymentProviderOxapay.send_state_inquiry_request("12345") ==
                {:error, :something_wrong}
+    end
+  end
+
+  describe "get_paid_money!/2" do
+    setup %{} do
+      {:ok, data} = Jason.decode(~s({
+          "status":"Paid",
+          "amount":"100",
+          "currency":"USD",
+          "payAmount":"95",
+          "payCurrency":"TRX",
+          "type":"payment"
+      }))
+      %{paid_data: data}
+    end
+
+    test "success case", %{paid_data: paid_data} do
+      assert Money.new(9500, :USD) == PaymentProviderOxapay.get_paid_money!(paid_data, :USD)
+    end
+
+    test "mismactch curreny causes a raise", %{paid_data: paid_data} do
+      assert_raise(RuntimeError, fn ->
+        PaymentProviderOxapay.get_paid_money!(paid_data, :EUR)
+      end)
     end
   end
 end

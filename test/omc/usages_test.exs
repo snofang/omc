@@ -84,6 +84,29 @@ defmodule Omc.UsagesTest do
       usage_state = Usages.get_usage_state(ledger)
       assert usage_state.changesets |> length() == 0
       assert Ledgers.get_ledger(ledger) |> then(& &1.credit) < 0
+      assert usage_state.usages |> length() == 1
+      assert usage_state.usages |> Enum.at(0) |> then(& &1.usage_items) |> length() == 2
+
+      usage_item1 =
+        assert usage_state.usages |> Enum.at(0) |> then(& &1.usage_items) |> Enum.at(0)
+
+      usage_item2 =
+        assert usage_state.usages |> Enum.at(0) |> then(& &1.usage_items) |> Enum.at(1)
+
+      [tx3, tx2, tx1] = Ledgers.get_ledger_txs(ledger)
+      assert tx3.context == :usage
+      assert tx3.context_id == usage_item2.id
+      assert tx3.amount == @initial_credit.amount/3 |> round()
+      assert tx3.type == :debit
+      
+      assert tx2.context == :usage
+      assert tx2.context_id == usage_item1.id
+      assert tx2.amount == @initial_credit.amount
+      assert tx2.type == :debit
+
+      assert tx1.context == :manual
+      assert tx1.amount == @initial_credit.amount
+      assert tx1.type == :credit
     end
 
     test "single user, four usages, full credit consumption, four persistance", %{

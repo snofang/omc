@@ -31,6 +31,6 @@ defmodule Omc.Repo.Migrations.CreateLedgersTables do
     end
 
     create index(:ledger_txs, [:ledger_id])
-    create index(:ledger_txs, [:context, :context_id])
+    create unique_index(:ledger_txs, [:context, :context_id])
   end
 end

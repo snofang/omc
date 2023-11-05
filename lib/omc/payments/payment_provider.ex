@@ -3,12 +3,15 @@ defmodule Omc.Payments.PaymentProvider do
               {:ok, map()} | {:error, error_code :: binary()}
 
   @callback callback(params :: map(), body :: map()) ::
-              {:ok, %{state: atom(), ref: binary(), data: map() | nil}, map() | binary()}
+              {:ok, state :: %{state: atom(), ref: binary(), data: map() | nil},
+               response :: map() | binary()}
               | {:error, term()}
 
   @callback send_state_inquiry_request(ref :: binary()) ::
               {:ok, %{state: atom(), ref: binary(), data: map() | nil}}
               | {:error, term()}
+
+  @callback get_paid_money!(data :: map(), currency :: atom()) :: Money.t()
 
   defmacro __using__(ipg) when is_atom(ipg) do
     quote do
@@ -31,6 +34,18 @@ defmodule Omc.Payments.PaymentProvider do
 
   def send_state_inquiry_request(ipg, ref) when is_binary(ref) and is_atom(ipg) do
     provider_impl(ipg).send_state_inquiry_request(ref)
+  end
+
+  @doc """
+  Extracts actual paid money, from the `data` optained in last `:done` state, received 
+  for a payment request via inquiry or callback.
+  The `currency` is the one internally registered in `PaymentRequest` and passed as
+  a check to verify if it is equal to the actual currency received.
+  """
+  @spec get_paid_money!(atom(), map(), atom()) :: Money.t()
+  def get_paid_money!(ipg, %{} = data, currency)
+      when is_atom(ipg) and is_atom(currency) do
+    provider_impl(ipg).get_paid_money!(data, currency)
   end
 
   defp provider_impl(ipg) when is_atom(ipg) do

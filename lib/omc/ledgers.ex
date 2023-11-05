@@ -1,4 +1,5 @@
 defmodule Omc.Ledgers do
+  alias Omc.Common.Utils
   alias Omc.Repo
   alias Omc.Ledgers.{Ledger, LedgerTx}
   import Ecto.Query, warn: false
@@ -28,7 +29,7 @@ defmodule Omc.Ledgers do
 
   @spec get_ledger(%{user_type: atom(), user_id: binary()}) :: Ledger.t() | nil
   def get_ledger(%{user_type: user_type, user_id: user_id}) do
-    get_ledger(%{user_type: user_type, user_id: user_id, currency: default_currency()})
+    get_ledger(%{user_type: user_type, user_id: user_id, currency: Utils.default_currency()})
   end
 
   defp create_ledger(attrs) do
@@ -38,13 +39,28 @@ defmodule Omc.Ledgers do
   end
 
   @doc """
-  Returns all users's txs in default currency.
+  Returns all users's txs in default/given currency.
+
+  ## Examples
+    Omc.Ledgers.get_ledger_txs(%{user_id: "123456", user_type: :telegram})
+    [%LedgerTx{...}]
+    
+    Omc.Ledgers.get_ledger_txs(%{user_id: "123456", user_type: :telegram, currency: :USD})
+    [%LedgerTx{...}]
   """
-  def get_ledger_txs(%{user_type: _, user_id: _} = attrs) do
+  @spec get_ledger_txs(map()) :: list(%LedgerTx{})
+  def get_ledger_txs(attrs)
+
+  def get_ledger_txs(%{user_type: user_type, user_id: _, currency: currency} = attrs)
+      when is_atom(user_type) and is_atom(currency) do
     attrs
-    |> Map.put(:currency, default_currency())
+    |> Map.put(:currency, currency)
     |> LedgerTx.ledger_tx_query()
     |> Repo.all()
+  end
+
+  def get_ledger_txs(%{user_type: _, user_id: _} = attrs) do
+    get_ledger_txs(attrs |> Map.put(:currency, Utils.default_currency()))
   end
 
   @doc """
@@ -147,7 +163,7 @@ defmodule Omc.Ledgers do
         %{
           ledger: _ledger,
           context: :usage,
-          context_id: _server_acc_user_id,
+          context_id: _,
           amount: _amount,
           type: :debit
         } = attrs
@@ -158,6 +174,7 @@ defmodule Omc.Ledgers do
   @spec ledger_update_changeset(%{
           ledger: Ledger.t(),
           context: :payment,
+          context_id: integer(),
           amount: integer(),
           type: :credit
         }) :: %{
@@ -168,11 +185,12 @@ defmodule Omc.Ledgers do
         %{
           ledger: _ledger,
           context: :payment,
+          context_id: _,
           amount: _amount,
           type: :credit
         } = attrs
       ) do
-    __ledger_update_changeset__(attrs |> Map.put(:context_id, nil))
+    __ledger_update_changeset__(attrs)
   end
 
   @spec ledger_update_changeset(%{
@@ -197,10 +215,7 @@ defmodule Omc.Ledgers do
 
   defp __ledger_update_changeset__(
          %{
-           ledger: ledger,
-           context: _context,
-           amount: _amount,
-           type: _credit_debit
+           ledger: ledger
          } = attrs
        ) do
     %{
@@ -209,7 +224,10 @@ defmodule Omc.Ledgers do
     }
   end
 
-  def default_currency() do
-    Application.get_env(:money, :default_currency)
+  # @spec get_ledger_tx_by_context(atom(), integer()) :: %LedgerTx{} | nil
+  def get_ledger_tx_by_context(context, context_id)
+      when is_atom(context) and is_integer(context_id) do
+    from(tx in LedgerTx, where: tx.context == ^context and tx.context_id == ^context_id)
+    |> Repo.one()
   end
 end

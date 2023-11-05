@@ -121,6 +121,8 @@ defmodule Omc.Usages do
       where:
         u.server_acc_user_id in ^(server_acc_users |> Enum.map(&Map.get(&1, :id))) and
           is_nil(u.ended_at),
+      order_by: [asc: u.id],
+      # TODO: IMPORTANT; to place explicit order by for usage_items
       preload: [usage_items: ^usage_items]
     )
     |> Repo.all()
