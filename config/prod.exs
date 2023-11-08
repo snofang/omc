@@ -29,10 +29,10 @@ config :omc, Omc.Scheduler,
     {"* * * * *",
      {Omc.ServerAccUsers, :cleanup_acc_allocations,
       [Application.get_env(:omc, :acc_allocation_timeout)]}},
-    
+
     # updating usages every hour
-    {"* 0 * * *", {Omc.Usages, :update_usages, []}}
-    
+    {"* 0 * * *", {Omc.Usages, :update_usages, []}},
+
     # runs every minutes and updates ledgers by payments, better to have passed the duration param
     # a little bit more that peroic calls and have overlap to not miss anything
     # the duration is in seconds

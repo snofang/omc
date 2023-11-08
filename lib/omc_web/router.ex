@@ -28,7 +28,7 @@ defmodule OmcWeb.Router do
 
   scope "/api/payment", OmcWeb do
     pipe_through(:api)
-    post "/:ipg", PaymentController, :callback
+    post("/:ipg", PaymentController, :callback)
   end
 
   # Other scopes may use custom stacks.
@@ -87,6 +87,9 @@ defmodule OmcWeb.Router do
       live("/server_accs/:id/edit", ServerAccLive.Index, :edit)
       live("/server_accs/:id", ServerAccLive.Show, :show)
       live("/server_accs/:id/show/edit", ServerAccLive.Show, :edit)
+
+      live("/payment_requests", PaymentRequestLive.Index, :index)
+      live("/payment_requests/:id", PaymentRequestLive.Show, :show)
 
       live("/users/settings", User.UserSettingsLive, :edit)
       live("/users/settings/confirm_email/:token", User.UserSettingsLive, :confirm_email)

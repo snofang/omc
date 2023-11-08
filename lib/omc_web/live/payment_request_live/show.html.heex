@@ -1,0 +1,32 @@
+<div class="mx-6 pt-5 pb-4">
+<.header>
+  Payment Request - <%= @payment_request.id %>
+  <:subtitle>Payment request detail information</:subtitle>
+  <:actions></:actions>
+</.header>
+
+<.list>
+  <:item title="id"><%= @payment_request.id %></:item>
+  <:item title="User Type"><%= @payment_request.user_type %></:item>
+  <:item title="User Id"><%= @payment_request.user_id %></:item>
+  <:item title="Money"><%= @payment_request.money %></:item>
+  <:item title="Reference"><%= @payment_request.ref %></:item>
+  <:item title="IPG"><%= @payment_request.ipg %></:item>
+  <:item title="Type"><%= @payment_request.type %></:item>
+  <:item title="Request URL"><%= @payment_request.url %></:item>
+  <:item title="Response Data"><%= inspect @payment_request.data %></:item>
+  <:item title="States">
+    
+  <.table
+    id="payment_states"
+    rows={@payment_request.payment_states}
+  >
+    <:col :let={ps} label="Datetime"><%= ps.inserted_at %></:col>
+    <:col :let={ps} label="State"><%= ps.state %></:col>
+    <:col :let={ps} label="Data"><%= inspect(ps.data) %></:col>
+  </.table>
+  </:item>
+</.list>
+
+<.back navigate={@navigate_back || ~p"/payment_requests"}>Back to payment_requests</.back>
+</div>

@@ -319,4 +319,38 @@ defmodule Omc.PaymentsTest do
              |> then(& &1.credit) == 1234
     end
   end
+
+  describe "list_payment_requests/1" do
+    test "limit and pagination and order" do
+      %{id: id1} = payment_request_fixture()
+      %{id: id2} = done_payment_request_fixture()
+      %{id: id3} = payment_request_fixture()
+
+      assert [%{id: ^id3}] = Payments.list_payment_requests(page: 1, limit: 1)
+      assert [%{id: ^id2}] = Payments.list_payment_requests(page: 2, limit: 1)
+      assert [%{id: ^id1}] = Payments.list_payment_requests(page: 3, limit: 1)
+    end
+
+    test "user_type filter" do
+      %{id: id1} = payment_request_fixture(:oxapay, %{user_type: :local})
+      %{id: _id2} = payment_request_fixture(:oxapay, %{user_type: :telegram})
+
+      assert [%{id: ^id1}] = Payments.list_payment_requests(user_type: :local)
+    end
+
+    test "user_id filter" do
+      %{id: id1} = payment_request_fixture(:oxapay, %{user_id: "12345"})
+      %{id: _id2} = payment_request_fixture(:oxapay, %{user_id: "67890"})
+
+      assert [%{id: ^id1}] = Payments.list_payment_requests(user_id: "234")
+    end
+
+    test "payment state filter" do
+      %{id: _id1} = payment_request_fixture()
+      %{id: id2} = done_payment_request_fixture()
+      %{id: _id3} = payment_request_fixture()
+
+      assert [%{id: ^id2}] = Payments.list_payment_requests(state: :done)
+    end
+  end
 end

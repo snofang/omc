@@ -1,0 +1,51 @@
+<div class="mx-6 pt-5 pb-4">
+  <.header>
+    Listing Payment Requests
+    <:actions></:actions>
+  </.header>
+
+  <.simple_form
+    :let={f}
+    for={@filter_form}
+    as={:filter}
+    id="filter_form"
+    phx-change="change-filter"
+  >
+    <.input
+      field={f[:user_type]}
+      type="select"
+      label="User Type"
+      prompt="Choose a User Type"
+      options={Ecto.Enum.values(Omc.Payments.PaymentRequest, :user_type)}
+    />
+    <.input field={f[:user_id]} type="text" label="User ID" />
+    <.input
+      field={f[:state]}
+      type="select"
+      label="State"
+      prompt="Choose a value"
+      options={Ecto.Enum.values(Omc.Payments.PaymentState, :state)}
+    />
+  </.simple_form>
+
+  <.table
+    id="payment_requests"
+    rows={@streams.payment_requests}
+    phx-page-loading
+    row_click={fn {_id, pr} -> JS.navigate(~p"/payment_requests/#{pr.id}?#{%{navigate_back: ~p"/payment_requests?#{@bindings}"}}") end}
+  >
+    <:col :let={{_id, pr}} label="Request Date"><%= pr.inserted_at %></:col>
+    <:col :let={{_id, pr}} label="User ID"><%= pr.user_id %></:col>
+    <:col :let={{_id, pr}} label="User Type"><%= pr.user_type %></:col>
+    <:col :let={{_id, pr}} label="Money"><%= pr.money %></:col>
+    <:col :let={{_id, pr}} label="IPG"><%= pr.ipg %></:col>
+    <:col :let={{_id, pr}} label="Reference"><%= pr.ref %></:col>
+    <:col :let={{_id, pr}} label="State"><%= pr.state %></:col>
+    <:action :let={{_id, payment_request}}>
+      <div class="sr-only">
+        <.link navigate={~p"/payment_requests/#{payment_request}"}>Show</.link>
+      </div>
+    </:action>
+  </.table>
+  <div id="infinite-scroll-marker" phx-hook="InfiniteScroll"></div>
+</div>

@@ -5,7 +5,7 @@ defmodule Omc.Payments do
   alias Omc.Payments.PaymentProvider
   import Ecto.Query
   alias Omc.Repo
-  import Ecto.Query.API, only: [max: 1, ago: 2], warn: false
+  import Ecto.Query.API, only: [max: 1, ago: 2, like: 2], warn: false
 
   def create_payment_request(ipg, %{user_id: user_id, user_type: user_type, money: money}) do
     %{
@@ -78,6 +78,7 @@ defmodule Omc.Payments do
   @spec update_ledgers(integer()) :: :ok
   def update_ledgers(duration) when is_integer(duration) do
     Logger.info("-- update payments --")
+
     duration
     |> get_payments_with_last_done_state()
     |> Enum.each(fn i ->
@@ -139,5 +140,85 @@ defmodule Omc.Payments do
       select: {pr, ps}
     )
     |> Repo.all()
+  end
+
+  @spec list_payment_requests(Keyword.t()) :: list(%PaymentRequest{})
+  def list_payment_requests(args) do
+    args = Keyword.validate!(args, page: 1, limit: 10, user_id: nil, user_type: nil, state: nil)
+
+    list_payment_requests_query()
+    |> list_payment_requests_where_user_type(args[:user_type])
+    |> list_payment_requests_where_user_id(args[:user_id])
+    |> list_payment_requests_where_state(args[:state])
+    |> offset((^args[:page] - 1) * ^args[:limit])
+    |> limit(^args[:limit])
+    |> order_by(desc: :id)
+    |> Repo.all()
+  end
+
+  defp list_payment_requests_where_user_type(query, user_type) when user_type == nil, do: query
+
+  defp list_payment_requests_where_user_type(query, user_type),
+    do: query |> where(user_type: ^user_type)
+
+  defp list_payment_requests_where_user_id(query, user_id) when user_id == nil, do: query
+
+  defp list_payment_requests_where_user_id(query, user_id),
+    do: query |> where([pr], like(pr.user_id, ^"%#{user_id}%"))
+
+  defp list_payment_requests_where_state(query, state) when state == nil, do: query
+
+  defp list_payment_requests_where_state(query, state),
+    do: query |> where([payment_state: ps], ps.state == ^state)
+
+  defp list_payment_requests_query() do
+    last_payment_state =
+      from(ps in PaymentState,
+        group_by: ps.payment_request_id,
+        select: %{id: max(ps.id), payment_request_id: ps.payment_request_id}
+      )
+
+    from(pr in PaymentRequest,
+      left_join: ls in subquery(last_payment_state),
+      on: ls.payment_request_id == pr.id,
+      left_join: ps in PaymentState,
+      as: :payment_state,
+      on: ps.id == ls.id,
+      select: %{pr | state: ps.state}
+    )
+  end
+
+  def get_payment_request!(id) do
+    PaymentRequest
+    |> where(id: ^id)
+    |> preload(:payment_states)
+    |> Repo.one!()
+  end
+
+  def create_payment_request_samples() do
+    1..100
+    |> Enum.each(fn _ ->
+      %{
+        user_id: Ecto.UUID.generate(),
+        user_type: :telegram,
+        money: Money.new(System.unique_integer()),
+        ipg: :oxapay
+      }
+      |> Map.put(:data, %{"some_data_key" => "some_data_key_value"})
+      |> Map.put(:ref, Ecto.UUID.generate())
+      |> Map.put(:url, "https://example.com/pay/")
+      |> Map.put(:type, :push)
+      |> PaymentRequest.create_changeset()
+      |> Repo.insert()
+      |> then(fn {:ok, pr} ->
+        %{payment_request_id: pr.id, state: :pending, data: %{some_data: "some_valye"}}
+        |> PaymentState.create_changeset()
+        |> Repo.insert()
+
+        %{payment_request_id: pr.id, state: :failed, data: %{some_data: "some_failed"}}
+        |> PaymentState.create_changeset()
+        |> Repo.insert()
+      end)
+    end)
   end
 end

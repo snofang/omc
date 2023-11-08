@@ -10,3 +10,5 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 Omc.Accounts.register_user(%{"email" => "admin@omc", "password" => "admin1234567"})
+
+Omc.Payments.create_payment_request()

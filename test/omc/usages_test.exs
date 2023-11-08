@@ -96,9 +96,9 @@ defmodule Omc.UsagesTest do
       [tx3, tx2, tx1] = Ledgers.get_ledger_txs(ledger)
       assert tx3.context == :usage
       assert tx3.context_id == usage_item2.id
-      assert tx3.amount == @initial_credit.amount/3 |> round()
+      assert tx3.amount == (@initial_credit.amount / 3) |> round()
       assert tx3.type == :debit
-      
+
       assert tx2.context == :usage
       assert tx2.context_id == usage_item1.id
       assert tx2.amount == @initial_credit.amount
