@@ -225,7 +225,6 @@ defmodule Omc.PaymentProviderOxapayTest do
                {:ok,
                 %{
                   state: :pending,
-                  ref: "12345",
                   data: %{
                     "result" => 100,
                     "message" => "some success message",

@@ -3,12 +3,12 @@ defmodule Omc.Payments.PaymentProvider do
               {:ok, map()} | {:error, error_code :: binary()}
 
   @callback callback(params :: map(), body :: map()) ::
-              {:ok, state :: %{state: atom(), ref: binary(), data: map() | nil},
+              {:ok, call_info :: %{state: atom(), ref: binary(), data: map()},
                response :: map() | binary()}
               | {:error, term()}
 
   @callback send_state_inquiry_request(ref :: binary()) ::
-              {:ok, %{state: atom(), ref: binary(), data: map() | nil}}
+              {:ok, call_info :: %{state: atom(), data: map()}}
               | {:error, term()}
 
   @callback get_paid_money!(data :: map(), currency :: atom()) :: Money.t()

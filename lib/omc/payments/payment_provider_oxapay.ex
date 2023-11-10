@@ -67,7 +67,7 @@ defmodule Omc.Payments.PaymentProviderOxapay do
     )
     |> case do
       {:ok, %{body: data = %{"result" => 100, "trackId" => ^track_id, "status" => status}}} ->
-        {:ok, %{state: get_internal_state(status), ref: ref, data: data}}
+        {:ok, %{state: get_internal_state(status), data: data}}
 
       res = {:ok, %{body: %{"result" => result, "message" => message}}} ->
         Logger.info("Calling oxapay inquiry for ref=#{ref} failed; response is: #{inspect(res)}")

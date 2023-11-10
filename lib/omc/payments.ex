@@ -54,6 +54,18 @@ defmodule Omc.Payments do
     end
   end
 
+  @spec send_state_inquiry_request(%PaymentRequest{}) :: {:ok, %PaymentState{}} | {:error, term()}
+  def send_state_inquiry_request(%PaymentRequest{} = pr) do
+    PaymentProvider.send_state_inquiry_request(pr.ipg, pr.ref)
+    |> case do
+      {:ok, state_attrs} ->
+        insert_payment_state(pr, state_attrs)
+
+      {:error, e} ->
+        {:error, e}
+    end
+  end
+
   defp insert_payment_state(payment_request, attrs) do
     attrs
     |> Map.put(:payment_request_id, payment_request.id)

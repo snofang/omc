@@ -353,4 +353,33 @@ defmodule Omc.PaymentsTest do
       assert [%{id: ^id2}] = Payments.list_payment_requests(state: :done)
     end
   end
+
+  describe "send_state_inquiry_request/1" do
+    setup %{} do
+      %{payment_request: payment_request_fixture()}
+    end
+
+    test "should create new PaymentState on success", %{payment_request: pr} do
+      PaymentProviderOxapayMock
+      |> expect(:send_state_inquiry_request, fn _ ->
+        {:ok, %{state: :pending, data: %{"res_key" => "res_value"}}}
+      end)
+
+      {:ok, payment_state} = Payments.send_state_inquiry_request(pr)
+      assert %{state: :pending, data: %{"res_key" => "res_value"}} = payment_state
+      assert payment_state.payment_request_id == pr.id
+    end
+
+    test "On error, no PaymentState is created", %{payment_request: pr} do
+      PaymentProviderOxapayMock
+      |> expect(:send_state_inquiry_request, fn _ ->
+        {:error, :some_special_error}
+      end)
+
+      {:error, :some_special_error} = Payments.send_state_inquiry_request(pr)
+
+      assert Payments.get_payment_request(pr.ref)
+             |> then(& &1.payment_states) == []
+    end
+  end
 end

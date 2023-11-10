@@ -1,9 +1,11 @@
 defmodule OmcWeb.PaymentRequestLiveTest do
+  alias Omc.PaymentProviderOxapayMock
   use OmcWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
   import Omc.PaymentFixtures
   import Omc.AccountsFixtures
+  import Mox
 
   defp create_payment_request(_) do
     user = user_fixture()
@@ -34,6 +36,44 @@ defmodule OmcWeb.PaymentRequestLiveTest do
         |> live(~p"/payment_requests/#{payment_request}")
 
       assert html =~ "Show Payment request"
+    end
+  end
+
+  describe "inquiry state" do
+    setup [:create_payment_request]
+
+    test "successful inquiry state", %{conn: conn, user: user, payment_request: pr} do
+      PaymentProviderOxapayMock
+      |> expect(:send_state_inquiry_request, fn _ ->
+        {:ok, %{state: :pending, data: %{"res_key" => "res_value"}}}
+      end)
+
+      {:ok, index_live, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/payment_requests")
+
+      assert index_live
+             |> element("#payment_requests-#{pr.id} a", "Inquiry State")
+             |> render_click() =~
+               "Got inquiry resoponse successfully."
+    end
+
+    test "failed inquiry state", %{conn: conn, user: user, payment_request: pr} do
+      PaymentProviderOxapayMock
+      |> expect(:send_state_inquiry_request, fn _ ->
+        {:error, %{"error" => "some_error"}}
+      end)
+
+      {:ok, index_live, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/payment_requests")
+
+      assert index_live
+             |> element("#payment_requests-#{pr.id} a", "Inquiry State")
+             |> render_click() =~
+               "Error status inquiry; cause: %{&quot;error&quot; =&gt; &quot;some_error&quot;}"
     end
   end
 end

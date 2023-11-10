@@ -35,8 +35,22 @@ defmodule OmcWeb.PaymentRequestLive.Index do
      |> assign(:page, page + 1)}
   end
 
+  @impl true
   def handle_event("change-filter", %{"filter" => params}, socket) do
     {:noreply, socket |> push_patch(to: ~p"/payment_requests?#{params_to_bindings(params)}")}
+  end
+
+  def handle_event("inquiry_state", %{"id" => id}, socket) do
+    {:noreply,
+     Payments.get_payment_request!(id)
+     |> Payments.send_state_inquiry_request()
+     |> case do
+       {:ok, _} ->
+         socket |> put_flash(:info, "Got inquiry resoponse successfully.")
+
+       {:error, error} ->
+         socket |> put_flash(:error, "Error status inquiry; cause: #{inspect(error)}")
+     end}
   end
 
   defp params_to_changeset(params) do
