@@ -30,6 +30,9 @@ defmodule OmcWeb.Nav do
         {PaymentRequestLive.Index, _} ->
           :payment_requests
 
+        {LedgerLive.Index, _} ->
+          :ledgers
+
         {_, _} ->
           nil
       end

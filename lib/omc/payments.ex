@@ -207,30 +207,30 @@ defmodule Omc.Payments do
     |> Repo.one!()
   end
 
-  def create_payment_request_samples() do
-    1..100
-    |> Enum.each(fn _ ->
-      %{
-        user_id: Ecto.UUID.generate(),
-        user_type: :telegram,
-        money: Money.new(System.unique_integer()),
-        ipg: :oxapay
-      }
-      |> Map.put(:data, %{"some_data_key" => "some_data_key_value"})
-      |> Map.put(:ref, Ecto.UUID.generate())
-      |> Map.put(:url, "https://example.com/pay/")
-      |> Map.put(:type, :push)
-      |> PaymentRequest.create_changeset()
-      |> Repo.insert()
-      |> then(fn {:ok, pr} ->
-        %{payment_request_id: pr.id, state: :pending, data: %{some_data: "some_valye"}}
-        |> PaymentState.create_changeset()
-        |> Repo.insert()
-
-        %{payment_request_id: pr.id, state: :failed, data: %{some_data: "some_failed"}}
-        |> PaymentState.create_changeset()
-        |> Repo.insert()
-      end)
-    end)
-  end
+  # def create_payment_request_samples() do
+  #   1..100
+  #   |> Enum.each(fn _ ->
+  #     %{
+  #       user_id: Ecto.UUID.generate(),
+  #       user_type: :telegram,
+  #       money: Money.new(System.unique_integer()),
+  #       ipg: :oxapay
+  #     }
+  #     |> Map.put(:data, %{"some_data_key" => "some_data_key_value"})
+  #     |> Map.put(:ref, Ecto.UUID.generate())
+  #     |> Map.put(:url, "https://example.com/pay/")
+  #     |> Map.put(:type, :push)
+  #     |> PaymentRequest.create_changeset()
+  #     |> Repo.insert()
+  #     |> then(fn {:ok, pr} ->
+  #       %{payment_request_id: pr.id, state: :pending, data: %{some_data: "some_valye"}}
+  #       |> PaymentState.create_changeset()
+  #       |> Repo.insert()
+  #
+  #       %{payment_request_id: pr.id, state: :failed, data: %{some_data: "some_failed"}}
+  #       |> PaymentState.create_changeset()
+  #       |> Repo.insert()
+  #     end)
+  #   end)
+  # end
 end

@@ -91,6 +91,10 @@ defmodule OmcWeb.Router do
       live("/payment_requests", PaymentRequestLive.Index, :index)
       live("/payment_requests/:id", PaymentRequestLive.Show, :show)
 
+      live("/ledgers", LedgerLive.Index, :index)
+      live("/ledgers/:id", LedgerLive.Show, :show)
+      # live("/ledgers/:id/new_tx", LedgerLive.Index, :new_tx)
+
       live("/users/settings", User.UserSettingsLive, :edit)
       live("/users/settings/confirm_email/:token", User.UserSettingsLive, :confirm_email)
     end

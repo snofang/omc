@@ -115,4 +115,38 @@ defmodule Omc.LedgersTest do
       assert %{amount: 600, type: :credit} = Enum.at(txs, 3)
     end
   end
+
+  describe "list_ledgers/1" do
+    test "limit, pagination, and order" do
+      %{ledger: %{id: id1}} = ledger_tx_fixture!()
+      %{ledger: %{id: id2}} = ledger_tx_fixture!()
+      %{ledger: %{id: id3}} = ledger_tx_fixture!()
+
+      assert [%{id: ^id3}] = Ledgers.list_ledgers(page: 1, limit: 1)
+      assert [%{id: ^id2}] = Ledgers.list_ledgers(page: 2, limit: 1)
+      assert [%{id: ^id1}] = Ledgers.list_ledgers(page: 3, limit: 1)
+    end
+
+    test "user_type filter" do
+      %{ledger: %{id: id1}} = ledger_tx_fixture!(%{user_type: :local})
+      %{ledger: %{id: _id2}} = ledger_tx_fixture!(%{user_type: :telegram})
+
+      assert [%{id: ^id1}] = Ledgers.list_ledgers(user_type: :local)
+    end
+
+    test "user_id filter" do
+      %{ledger: %{id: id1}} = ledger_tx_fixture!(%{user_id: "12345"})
+      %{ledger: %{id: _id2}} = ledger_tx_fixture!(%{user_id: "67890"})
+
+      assert [%{id: ^id1}] = Ledgers.list_ledgers(user_id: "234")
+    end
+
+    test "currency filter" do
+      %{ledger: %{id: _id1}} = ledger_tx_fixture!(%{money: Money.new(100, :USD)})
+      %{ledger: %{id: id2}} = ledger_tx_fixture!(%{money: Money.new(100, :EUR)})
+      %{ledger: %{id: _id3}} = ledger_tx_fixture!(%{money: Money.new(100, :USD)})
+
+      assert [%{id: ^id2}] = Ledgers.list_ledgers(currency: :EUR)
+    end
+  end
 end

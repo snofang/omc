@@ -62,6 +62,18 @@ defmodule OmcWeb.Layouts do
           /> Server Accounts
         </.link>
         <.link
+          navigate={~p"/ledgers"}
+          class={
+            "text-gray-700 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md #{if @active_tab == :ledgers, do: "bg-gray-200", else: "hover:bg-gray-50"}"
+          }
+          aria-current={if @active_tab == :ledgers, do: "true", else: "false"}
+        >
+          <.icon
+            name="hero-x-mark-solid"
+            class="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6"
+          /> Ledgers
+        </.link>
+        <.link
           navigate={~p"/payment_requests"}
           class={
             "text-gray-700 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md #{if @active_tab == :payment_requests, do: "bg-gray-200", else: "hover:bg-gray-50"}"

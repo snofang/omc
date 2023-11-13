@@ -230,4 +230,72 @@ defmodule Omc.Ledgers do
     from(tx in LedgerTx, where: tx.context == ^context and tx.context_id == ^context_id)
     |> Repo.one()
   end
+
+  @spec list_ledgers(Keyword.t()) :: list(%Ledger{})
+  def list_ledgers(args) do
+    args =
+      Keyword.validate!(args, page: 1, limit: 10, user_id: nil, user_type: nil, currency: nil)
+
+    Ledger
+    |> list_ledgers_where_user_type(args[:user_type])
+    |> list_ledgers_where_user_id(args[:user_id])
+    |> list_ledgers_where_currency(args[:currency])
+    |> offset(^((args[:page] - 1) * args[:limit]))
+    |> limit(^args[:limit])
+    |> order_by(desc: :id)
+    |> Repo.all()
+  end
+
+  defp list_ledgers_where_user_type(query, user_type) when user_type == nil, do: query
+
+  defp list_ledgers_where_user_type(query, user_type),
+    do: query |> where(user_type: ^user_type)
+
+  defp list_ledgers_where_user_id(query, user_id) when user_id == nil, do: query
+
+  defp list_ledgers_where_user_id(query, user_id),
+    do: query |> where([pr], like(pr.user_id, ^"%#{user_id}%"))
+
+  defp list_ledgers_where_currency(query, currency) when currency == nil, do: query
+
+  defp list_ledgers_where_currency(query, currency),
+    do: query |> where(currency: ^currency)
+
+  def get_ledger!(id) do
+    Ledger
+    |> Repo.get(id)
+  end
+
+  def get_ledger_txs_by_ledger_id(ledger_id) do
+    LedgerTx
+    |> where(ledger_id: ^ledger_id)
+    |> Repo.all()
+  end
+
+  # def create_sample_ledgers() do
+  #   1..200
+  #   |> Enum.each(fn _i ->
+  #     user_id = Ecto.UUID.generate()
+  #
+  #     %{
+  #       user_type: :local,
+  #       user_id: user_id,
+  #       context: :manual,
+  #       context_id: 0xF00000 + System.unique_integer([:positive, :monotonic]),
+  #       money: Money.new(100),
+  #       type: :credit
+  #     }
+  #     |> create_ledger_tx!()
+  #
+  #     %{
+  #       user_type: :local,
+  #       user_id: user_id,
+  #       context: :payment,
+  #       context_id: 0xF00000 + System.unique_integer([:positive, :monotonic]),
+  #       money: Money.new(100),
+  #       type: :credit
+  #     }
+  #     |> create_ledger_tx!()
+  #   end)
+  # end
 end

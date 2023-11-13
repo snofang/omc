@@ -1,0 +1,72 @@
+<div class="mx-6 pt-5 pb-4">
+  <.header>
+    Listing Payment Requests
+    <:actions></:actions>
+  </.header>
+
+  <.simple_form
+    :let={f}
+    for={@filter_form}
+    as={:filter}
+    id="filter_form"
+    phx-change="change-filter"
+  >
+    <.input
+      field={f[:user_type]}
+      type="select"
+      label="User Type"
+      prompt="Choose a User Type"
+      options={Ecto.Enum.values(Omc.Ledgers.Ledger, :user_type)}
+    />
+    <.input field={f[:user_id]} type="text" label="User ID" />
+    <.input
+      field={f[:currency]}
+      type="select"
+      label="Currency"
+      prompt="Choose a currency"
+      options={Ecto.Enum.values(Omc.Ledgers.Ledger, :currency)}
+    />
+  </.simple_form>
+
+  <.table
+    id="ledgers"
+    rows={@streams.ledgers}
+    row_click={
+      fn {_id, ledger} ->
+        JS.navigate(~p"/ledgers/#{ledger.id}?#{%{navigate_back: ~p"/ledgers?#{@bindings}"}}")
+      end
+    }
+  >
+    <:col :let={{_id, ledger}} label="User ID"><%= ledger.user_id %></:col>
+    <:col :let={{_id, ledger}} label="User Type"><%= ledger.user_type %></:col>
+    <:col :let={{_id, ledger}} label="Credit">
+      <%= Money.new(ledger.credit, ledger.currency) %>
+    </:col>
+    <:action :let={{_id, ledger}}>
+      <div class="sr-only">
+        <.link navigate={~p"/ledgers/#{ledger}"}>Show</.link>
+      </div>
+    </:action>
+    <:action :let={{_id, ledger}}>
+      <.link phx-click={Phoenix.LiveView.JS.push("new_tx", value: %{id: ledger.id})}>
+        New Tx
+      </.link>
+    </:action>
+  </.table>
+  <div id="infinite-scroll-marker" phx-hook="InfiniteScroll"></div>
+
+  <.modal
+    :if={@show_new_tx_modal}
+    id="new_tx_modal"
+    on_cancel={JS.patch(~p"/ledgers?#{@bindings}")}
+    show
+  >
+    <.live_component
+      module={OmcWeb.LedgerLive.FormComponent}
+      id={@ledger.id}
+      title={@page_title}
+      ledger={@ledger}
+      patch={~p"/ledgers?#{@bindings}"}
+    />
+  </.modal>
+</div>

@@ -15,9 +15,9 @@ config :omc,
 # money & currency
 # 
 config :money,
-  default_currency: :IRR
+  default_currency: :USD
 
-config :omc, supported_currencies: [:IRR]
+config :omc, supported_currencies: [:USD]
 config :omc, acc_allocation_timeout: 30 * 60
 
 #

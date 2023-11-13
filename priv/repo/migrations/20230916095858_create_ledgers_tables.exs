@@ -9,7 +9,7 @@ defmodule Omc.Repo.Migrations.CreateLedgersTables do
       add :user_id, :string, null: false
       add :currency, :string, null: false
       add :user_data, :map, default: %{}, null: false
-      add :credit, :integer, default: 0, null: false
+      add :credit, :bigint, default: 0, null: false
       add :description, :string
       add :lock_version, :integer, default: 1
       timestamps()
@@ -21,7 +21,7 @@ defmodule Omc.Repo.Migrations.CreateLedgersTables do
       add :ledger_id, references(:ledgers), null: false
       # Posible values: :credit, :debit
       add :type, :string, null: false
-      add :amount, :integer, null: false
+      add :amount, :bigint, null: false
       # To specify the source or cause of this; e.g. :manual, :usage, :payment, etc.
       add :context, :string, null: false
       # Nornally this should refer to a table(e.g. :payments, :ledger_accs, etc.),

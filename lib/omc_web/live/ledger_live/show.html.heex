@@ -1,0 +1,27 @@
+<div class="mx-6 pt-5 pb-4">
+  <.header>
+    Ledger - <%= @ledger.id %>
+    <:subtitle>Ledger detail information</:subtitle>
+    <:actions></:actions>
+  </.header>
+
+  <.list>
+    <:item title="id"><%= @ledger.id %></:item>
+    <:item title="User Type"><%= @ledger.user_type %></:item>
+    <:item title="User Id"><%= @ledger.user_id %></:item>
+    <:item title="Currency"><%= @ledger.currency %></:item>
+    <:item title="Credit"><%= @ledger.credit %></:item>
+    <:item title="Ledger Transactions">
+      <.table id="ledger_txs" rows={@ledger_txs}>
+        <:col :let={tx} label="Id"><%= tx.id %></:col>
+        <:col :let={tx} label="Type"><%= tx.type %></:col>
+        <:col :let={tx} label="Amount"><%= Money.new(tx.amount, @ledger.currency) %></:col>
+        <:col :let={tx} label="Context"><%= tx.context %></:col>
+        <:col :let={tx} label="Context Id"><%= tx.context_id %></:col>
+        <:col :let={tx} label="Date Time"><%= tx.inserted_at %></:col>
+      </.table>
+    </:item>
+  </.list>
+
+  <.back navigate={@navigate_back || ~p"/ledgers"}>Back to Ledgers</.back>
+</div>
