@@ -114,87 +114,91 @@ defmodule Omc.PaymentProviderOxapayTest do
 
   describe "callback/1" do
     setup %{} do
-      %{
-        data: %{
-          "status" => "",
-          "trackId" => "123456789",
-          "amount" => "100",
-          "currency" => "USDT",
-          "email" => "12341234123@telegram",
-          "date" => "1698107946",
-          "type" => "payment"
-        }
+      data = %{
+        "status" => "",
+        "trackId" => "123456789",
+        "amount" => "100",
+        "currency" => "USDT",
+        "email" => "12341234123@telegram",
+        "date" => "1698107946",
+        "type" => "payment"
       }
+
+      %{data: data}
     end
 
     test "paid callback", %{data: data} do
-      body = data |> Map.put("status", "Paid")
+      data = data |> Map.put("status", "Paid")
+      body = data |> Jason.encode!()
+      hmac = PaymentProviderOxapay.hmac(body)
 
-      assert {:ok, %{state: :done, ref: "123456789", data: ^body}, "OK"} =
-               PaymentProviderOxapay.callback(
-                 nil,
-                 body
-               )
+      assert {:ok, %{state: :done, ref: "123456789", data: ^data}, "OK"} =
+               PaymentProviderOxapay.callback(%{params: %{"hmac" => hmac}, body: body})
     end
 
     test "Expired callback", %{data: data} do
-      body = data |> Map.put("status", "Expired")
+      data = data |> Map.put("status", "Expired")
+      body = data |> Jason.encode!()
+      hmac = PaymentProviderOxapay.hmac(body)
 
-      assert {:ok, %{state: :failed, ref: "123456789", data: ^body}, "OK"} =
-               PaymentProviderOxapay.callback(
-                 nil,
-                 body
-               )
+      assert {:ok, %{state: :failed, ref: "123456789", data: ^data}, "OK"} =
+               PaymentProviderOxapay.callback(%{params: %{"hmac" => hmac}, body: body})
     end
 
     test "Failed callback", %{data: data} do
-      body = data |> Map.put("status", "Failed")
+      data = data |> Map.put("status", "Failed")
+      body = data |> Jason.encode!()
+      hmac = PaymentProviderOxapay.hmac(body)
 
-      assert {:ok, %{state: :failed, ref: "123456789", data: ^body}, "OK"} =
-               PaymentProviderOxapay.callback(
-                 nil,
-                 body
-               )
+      assert {:ok, %{state: :failed, ref: "123456789", data: ^data}, "OK"} =
+               PaymentProviderOxapay.callback(%{params: %{"hmac" => hmac}, body: body})
     end
 
     test "Confirming callback", %{data: data} do
-      body = data |> Map.put("status", "Confirming")
+      data = data |> Map.put("status", "Confirming")
+      body = data |> Jason.encode!()
+      hmac = PaymentProviderOxapay.hmac(body)
 
-      assert {:ok, %{state: :pending, ref: "123456789", data: ^body}, "OK"} =
-               PaymentProviderOxapay.callback(
-                 nil,
-                 body
-               )
+      assert {:ok, %{state: :pending, ref: "123456789", data: ^data}, "OK"} =
+               PaymentProviderOxapay.callback(%{params: %{"hmac" => hmac}, body: body})
     end
 
     test "Waiting callback", %{data: data} do
-      body = data |> Map.put("status", "Waiting")
+      data = data |> Map.put("status", "Waiting")
+      body = data |> Jason.encode!()
+      hmac = PaymentProviderOxapay.hmac(body)
 
-      assert {:ok, %{state: :pending, ref: "123456789", data: ^body}, "OK"} =
-               PaymentProviderOxapay.callback(
-                 nil,
-                 body
-               )
+      assert {:ok, %{state: :pending, ref: "123456789", data: ^data}, "OK"} =
+               PaymentProviderOxapay.callback(%{params: %{"hmac" => hmac}, body: body})
     end
 
     test "New callback", %{data: data} do
-      body = data |> Map.put("status", "New")
+      data = data |> Map.put("status", "New")
+      body = data |> Jason.encode!()
+      hmac = PaymentProviderOxapay.hmac(body)
 
-      assert {:ok, %{state: :pending, ref: "123456789", data: ^body}, "OK"} =
-               PaymentProviderOxapay.callback(
-                 nil,
-                 body
-               )
+      assert {:ok, %{state: :pending, ref: "123456789", data: ^data}, "OK"} =
+               PaymentProviderOxapay.callback(%{params: %{"hmac" => hmac}, body: body})
     end
 
     test "non valid status", %{data: data} do
-      body = data |> Map.put("status", "Others")
+      data = data |> Map.put("status", "Others")
+      body = data |> Jason.encode!()
+      hmac = PaymentProviderOxapay.hmac(body)
 
       assert {:error, "NOK"} =
-               PaymentProviderOxapay.callback(
-                 nil,
-                 body
-               )
+               PaymentProviderOxapay.callback(%{params: %{"hmac" => hmac}, body: body})
+    end
+
+    test "non valid hmac", %{data: data} do
+      data = data |> Map.put("status", "New")
+      body = data |> Jason.encode!()
+
+      assert {:error, "NOK"} =
+               PaymentProviderOxapay.callback(%{
+                 params: %{"hmac" => "some value"},
+                 body: body
+               })
     end
   end
 

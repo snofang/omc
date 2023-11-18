@@ -43,13 +43,20 @@ defmodule Omc.Payments.PaymentProviderOxapay do
   end
 
   @impl PaymentProvider
-  def callback(_params, data = %{"status" => status, "trackId" => ref})
+  def callback(%{params: %{"hmac" => hmac}, body: body}) do
+    if(hmac(body) == hmac) do
+      callback(Jason.decode!(body))
+    else
+      {:error, "NOK"}
+    end
+  end
+
+  def callback(data = %{"status" => status, "trackId" => ref})
       when status in ["Expired", "New", "Waiting", "Confirming", "Paid", "Failed"] do
     {:ok, %{state: get_internal_state(status), ref: ref, data: data}, "OK"}
   end
 
-  @impl PaymentProvider
-  def callback(_params, _data) do
+  def callback(_data) do
     {:error, "NOK"}
   end
 
@@ -105,5 +112,10 @@ defmodule Omc.Payments.PaymentProviderOxapay do
     else
       raise "currency mismatch: requested currency: #{currency}, paid currency: #{data["currency"]}"
     end
+  end
+
+  def hmac(data) when is_binary(data) do
+    :crypto.mac(:hmac, :sha512, Application.get_env(:omc, :ipgs)[:oxapay][:api_key], data)
+    |> :binary.encode_hex()
   end
 end

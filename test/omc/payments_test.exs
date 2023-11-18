@@ -111,7 +111,7 @@ defmodule Omc.PaymentsTest do
       payment_request: payment_request
     } do
       PaymentProviderOxapayMock
-      |> expect(:callback, fn _params, _body ->
+      |> expect(:callback, fn _data ->
         {:ok,
          %{
            state: :pending,
@@ -120,7 +120,7 @@ defmodule Omc.PaymentsTest do
          }, "OK"}
       end)
 
-      {:ok, "OK"} = Payments.callback(:oxapay, nil, nil)
+      {:ok, "OK"} = Payments.callback(:oxapay, nil)
       payment_request = Payments.get_payment_request(payment_request.ref)
       assert payment_request.payment_states |> length() == 1
 
@@ -132,7 +132,7 @@ defmodule Omc.PaymentsTest do
 
     test "callback having not exising ref" do
       PaymentProviderOxapayMock
-      |> expect(:callback, fn _params, _body ->
+      |> expect(:callback, fn _data ->
         {:ok,
          %{
            state: :pending,
@@ -141,14 +141,14 @@ defmodule Omc.PaymentsTest do
          }, nil}
       end)
 
-      assert {:error, :not_found} = Payments.callback(:oxapay, nil, nil)
+      assert {:error, :not_found} = Payments.callback(:oxapay, nil)
     end
 
     test "reapeating callback causing same state inserts each of them", %{
       payment_request: payment_request
     } do
       PaymentProviderOxapayMock
-      |> expect(:callback, 2, fn _params, _body ->
+      |> expect(:callback, 2, fn _data ->
         {:ok,
          %{
            state: :pending,
@@ -158,7 +158,7 @@ defmodule Omc.PaymentsTest do
       end)
 
       # first callback
-      {:ok, nil} = Payments.callback(:oxapay, nil, nil)
+      {:ok, nil} = Payments.callback(:oxapay, nil)
       payment_request = Payments.get_payment_request(payment_request.ref)
       assert payment_request.payment_states |> length() == 1
 
@@ -167,7 +167,7 @@ defmodule Omc.PaymentsTest do
              } = payment_request.payment_states |> List.first()
 
       # second one
-      {:ok, nil} = Payments.callback(:oxapay, nil, nil)
+      {:ok, nil} = Payments.callback(:oxapay, nil)
       payment_request = Payments.get_payment_request(payment_request.ref)
       assert payment_request.payment_states |> length() == 2
 

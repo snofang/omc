@@ -37,11 +37,11 @@ defmodule Omc.PaymentFixtures do
   def payment_state_by_callback_fixture(%PaymentRequest{} = payment_request, state)
       when is_atom(state) do
     PaymentProviderOxapayMock
-    |> expect(:callback, fn _params, _body ->
+    |> expect(:callback, fn _data ->
       {:ok, %{state: state, ref: payment_request.ref, data: %{}}, :some_response}
     end)
 
-    {:ok, :some_response} = Payments.callback(payment_request.ipg, %{}, nil)
+    {:ok, :some_response} = Payments.callback(payment_request.ipg, %{})
   end
 
   def done_payment_request_fixture() do

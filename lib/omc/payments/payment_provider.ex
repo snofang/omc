@@ -2,7 +2,7 @@ defmodule Omc.Payments.PaymentProvider do
   @callback send_payment_request(map()) ::
               {:ok, map()} | {:error, error_code :: binary()}
 
-  @callback callback(params :: map(), body :: map()) ::
+  @callback callback(data :: binary()) ::
               {:ok, call_info :: %{state: atom(), ref: binary(), data: map()},
                response :: map() | binary()}
               | {:error, term()}
@@ -28,8 +28,8 @@ defmodule Omc.Payments.PaymentProvider do
     provider_impl(ipg).send_payment_request(attrs)
   end
 
-  def callback(ipg, params, body) do
-    provider_impl(ipg).callback(params, body)
+  def callback(ipg, data) do
+    provider_impl(ipg).callback(data)
   end
 
   def send_state_inquiry_request(ipg, ref) when is_binary(ref) and is_atom(ipg) do

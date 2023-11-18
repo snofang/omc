@@ -35,9 +35,9 @@ defmodule Omc.Payments do
     
   returns response used to be returned as the web api requestd callback.
   """
-  @spec callback(atom(), map(), map() | nil) :: {:ok, term()} | {:error, term()}
-  def callback(ipg, params, body) do
-    case PaymentProvider.callback(ipg, params, body) do
+  @spec callback(atom(), map()) :: {:ok, term()} | {:error, term()}
+  def callback(ipg, data) do
+    case PaymentProvider.callback(ipg, data) do
       {:ok, state_attrs = %{ref: ref, state: _state, data: _date}, res} ->
         get_payment_request(ref)
         |> case do
