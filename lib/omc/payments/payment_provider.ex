@@ -18,7 +18,12 @@ defmodule Omc.Payments.PaymentProvider do
       @behaviour Omc.Payments.PaymentProvider
       def api_key(), do: Application.get_env(:omc, :ipgs)[unquote(ipg)][:api_key]
       def timeout(), do: Application.get_env(:omc, :ipgs)[unquote(ipg)][:timeout]
-      def callback_url(), do: OmcWeb.Endpoint.url() <> "/api/payment/" <> to_string(unquote(ipg))
+
+      def callback_url(),
+        do:
+          (Application.get_env(:omc, :ipgs)[:callback_base_url] ||
+             OmcWeb.Endpoint.url()) <> "/api/payment/" <> to_string(unquote(ipg))
+
       def return_url(), do: Application.get_env(:omc, :ipgs)[:return_url]
       def base_url(), do: Application.get_env(:omc, :ipgs)[unquote(ipg)][:base_url]
     end

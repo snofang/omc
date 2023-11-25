@@ -44,7 +44,7 @@ defmodule Omc.Payments.PaymentProviderOxapay do
 
   @impl PaymentProvider
   def callback(%{params: %{"hmac" => hmac}, body: body}) do
-    if(hmac(body) == hmac) do
+    if(hmac(body) == hmac |> String.downcase()) do
       callback(Jason.decode!(body))
     else
       {:error, "NOK"}
@@ -117,5 +117,6 @@ defmodule Omc.Payments.PaymentProviderOxapay do
   def hmac(data) when is_binary(data) do
     :crypto.mac(:hmac, :sha512, Application.get_env(:omc, :ipgs)[:oxapay][:api_key], data)
     |> :binary.encode_hex()
+    |> String.downcase()
   end
 end

@@ -25,6 +25,8 @@ config :omc, acc_allocation_timeout: 30 * 60
 # 
 config :omc, :ipgs,
   return_url: "https://t.me/your_fantastic_bot",
+  # Except it's set, the default endpoint url will be used.
+  callback_base_url: nil,
   oxapay: [
     currencies: [:USD],
     module: Omc.Payments.PaymentProviderOxapay,
@@ -46,9 +48,14 @@ config :omc, Omc.Scheduler,
 # Telegram
 #
 config :omc, :telegram,
-  enabled: false,
+  enabled: true,
   token: "this should be provided via system environment variable",
-  max_bot_concurrency: 1_000
+  max_bot_concurrency: 1_000,
+  api_impl: Omc.Telegram.TelegramApiImpl,
+  host: "telegram.example.com"
+
+config :telegram,
+  webserver: Telegram.WebServer.Cowboy
 
 config :tesla, adapter: {Tesla.Adapter.Hackney, [recv_timeout: 40_000]}
 

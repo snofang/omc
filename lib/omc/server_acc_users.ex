@@ -8,13 +8,32 @@ defmodule Omc.ServerAccUsers do
   @doc """
   Returns all `ServerAccUser`s which are in use.
   """
-  def get_server_acc_users_in_use(%{user_type: user_type, user_id: user_id}) do
+  def get_server_acc_users_in_use(user = %{user_type: _, user_id: _}) do
+    server_acc_users_in_use_query(user)
+    |> Repo.all()
+  end
+
+  defp server_acc_users_in_use_query(%{user_type: user_type, user_id: user_id}) do
     from(sau in ServerAccUser,
       where:
         sau.user_type == ^user_type and
           sau.user_id == ^user_id and
           not is_nil(sau.started_at) and
           is_nil(sau.ended_at)
+    )
+  end
+
+  @doc """
+  Returns all in use server accs.
+  """
+  @spec list_active_accs(%{user_type: atom(), user_id: binary()}) :: [
+          %{sa_id: integer(), sa_name: binary, sau_id: integer()}
+        ]
+  def list_active_accs(user = %{user_type: _, user_id: _}) do
+    from(sau in server_acc_users_in_use_query(user),
+      join: sa in ServerAcc,
+      on: sa.id == sau.server_acc_id,
+      select: %{sa_id: sa.id, sa_name: sa.name, sau_id: sau.id}
     )
     |> Repo.all()
   end

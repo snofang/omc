@@ -20,7 +20,10 @@ if System.get_env("PHX_SERVER") do
   config :omc, OmcWeb.Endpoint, server: true
 end
 
-config :omc, :telegram, token: System.get_env("OMC_TELEGRAM_TOKEN")
+config :omc, :telegram, 
+  token: System.get_env("OMC_TELEGRAM_TOKEN"),
+  host: System.get_env("OMC_TELEGRAM_HOST")
+
 
 if config_env() == :prod do
   database_url =
@@ -54,7 +57,7 @@ if config_env() == :prod do
   port = String.to_integer(System.get_env("PORT") || "4000")
 
   config :omc, OmcWeb.Endpoint,
-    url: [host: host, port: 443, scheme: "https"],
+    url: [host: host, port: 443, scheme: "https"] |> IO.inspect(label: "---- this is URL ----"),
     http: [
       # Enable IPv6 and bind on all interfaces.
       # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.

@@ -29,7 +29,8 @@ defmodule Omc.Application do
       # Start Telegram bot 
       |> add_if(
         Application.get_env(:omc, :telegram)[:enabled],
-        {Telegram.Poller, bots: [{Omc.TelegramBot, telegram_bot_args()}]}
+        {Telegram.Webhook,
+         config: telegram_webhook_config(), bots: [{Omc.TelegramBot, telegram_bot_args()}]}
       )
 
     # See https://hexdocs.pm/elixir/Supervisor.html
@@ -50,6 +51,14 @@ defmodule Omc.Application do
     [
       token: Application.get_env(:omc, :telegram)[:token],
       max_bot_concurrency: Application.get_env(:omc, :telegram)[:max_bot_concurrency]
+    ]
+  end
+
+  defp telegram_webhook_config() do
+    [
+      host: Application.get_env(:omc, :telegram)[:host],
+      port: 443,
+      local_port: 4_001
     ]
   end
 

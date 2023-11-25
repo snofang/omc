@@ -1,5 +1,12 @@
 import Config
 
+#
+# ipgs
+# 
+config :omc, :ipgs,
+  # Except it's set, the default endpoint url will be used.
+  callback_base_url: System.get_env("OMC_BASE_URL")
+  
 # Configure your database
 # config :omc, Omc.Repo,
 #   database: Path.expand("../omc_dev.db", Path.dirname(__ENV__.file)),
