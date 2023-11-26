@@ -278,9 +278,9 @@ defmodule Omc.PaymentProviderOxapayTest do
     setup %{} do
       {:ok, data} = Jason.decode(~s({
           "status":"Paid",
-          "amount":"100",
+          "amount":"95",
           "currency":"USD",
-          "payAmount":"95",
+          "payAmount":"1234",
           "payCurrency":"TRX",
           "type":"payment"
       }))

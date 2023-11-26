@@ -107,7 +107,7 @@ defmodule Omc.Payments.PaymentProviderOxapay do
   @impl PaymentProvider
   def get_paid_money!(%{} = data, currency) do
     if currency |> to_string() == data["currency"] do
-      data["payAmount"]
+      data["amount"]
       |> Money.parse!(currency)
     else
       raise "currency mismatch: requested currency: #{currency}, paid currency: #{data["currency"]}"
