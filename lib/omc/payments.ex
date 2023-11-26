@@ -1,4 +1,5 @@
 defmodule Omc.Payments do
+  use GenServer
   require Logger
   alias Omc.Ledgers
   alias Omc.Payments.{PaymentRequest, PaymentState}
@@ -44,8 +45,9 @@ defmodule Omc.Payments do
           nil ->
             {:error, :not_found}
 
-          request ->
-            {:ok, _state} = insert_payment_state(request, state_attrs)
+          pr ->
+            {:ok, ps} = insert_payment_state(pr, state_attrs)
+            if ps.state == :done, do: update_ledger(pr, ps)
             {:ok, res}
         end
 
@@ -59,7 +61,9 @@ defmodule Omc.Payments do
     PaymentProvider.send_state_inquiry_request(pr.ipg, pr.ref)
     |> case do
       {:ok, state_attrs} ->
-        insert_payment_state(pr, state_attrs)
+        {:ok, ps} = insert_payment_state(pr, state_attrs)
+        if ps.state == :done, do: update_ledger(pr, ps)
+        {:ok, ps}
 
       {:error, e} ->
         {:error, e}
@@ -84,38 +88,38 @@ defmodule Omc.Payments do
     |> Repo.one()
   end
 
-  @doc """
-  Finds all payments which have got `:done` state within last `duration` in seconds.
-  """
-  @spec update_ledgers(integer()) :: :ok
-  def update_ledgers(duration) when is_integer(duration) do
-    Logger.info("-- update payments --")
-
-    duration
-    |> get_payments_with_last_done_state()
-    |> Enum.each(fn i ->
-      try do
-        update_ledger(i)
-      rescue
-        any_exception ->
-          Logger.info(~s(
-            Updating ledger by payment, failed
-            {payment_request, payment_state}:
-              #{inspect(i)}
-            reason: 
-              #{inspect(any_exception)}))
-      end
-    end)
-
-    :ok
-  end
+  # @doc """
+  # Finds all payments which have got `:done` state within last `duration` in seconds.
+  # """
+  # @spec update_ledgers(integer()) :: :ok
+  # def update_ledgers(duration) when is_integer(duration) do
+  #   Logger.info("-- update payments --")
+  #
+  #   duration
+  #   |> get_payments_with_last_done_state()
+  #   |> Enum.each(fn i ->
+  #     try do
+  #       update_ledger(i)
+  #     rescue
+  #       any_exception ->
+  #         Logger.info(~s(
+  #           Updating ledger by payment, failed
+  #           {payment_request, payment_state}:
+  #             #{inspect(i)}
+  #           reason: 
+  #             #{inspect(any_exception)}))
+  #     end
+  #   end)
+  #
+  #   :ok
+  # end
 
   @doc false
   # Updates user's ledger with the paid amount. It first checks if this payment has already 
-  # affected or not. In case of already affected ledger, do nothing and returns success. 
-  @spec update_ledger({%PaymentRequest{}, %PaymentState{}}) ::
+  # caused ledger change or not. In case of already affected ledger, do nothing and returns success. 
+  @spec __update_ledger__!({%PaymentRequest{}, %PaymentState{}}) ::
           {:ok, :ledger_updated} | {:ok, :ledger_unchanged}
-  def update_ledger({pr, ps}) when ps.state == :done do
+  def __update_ledger__!({pr, ps}) when ps.state == :done do
     case Ledgers.get_ledger_tx_by_context(:payment, pr.id) do
       nil ->
         Ledgers.create_ledger_tx!(%{
@@ -205,6 +209,24 @@ defmodule Omc.Payments do
     |> where(id: ^id)
     |> preload(:payment_states)
     |> Repo.one!()
+  end
+
+  def start_link(init_args) do
+    GenServer.start_link(__MODULE__, init_args, name: __MODULE__)
+  end
+
+  def init(init_args) do
+    {:ok, init_args}
+  end
+
+  def handle_call({:update_ledger, pr_ps}, _from, state) do
+    {:reply, __update_ledger__!(pr_ps), state}
+  end
+
+  @spec update_ledger(%PaymentRequest{}, %PaymentState{}) ::
+          {:ok, :ledger_updated} | {:ok, :ledger_unchanged}
+  def update_ledger(payment_request, payment_state) when payment_state.state == :done do
+    GenServer.call(__MODULE__, {:update_ledger, {payment_request, payment_state}})
   end
 
   # def create_payment_request_samples() do

@@ -144,7 +144,7 @@ defmodule Omc.PaymentsTest do
       assert {:error, :not_found} = Payments.callback(:oxapay, nil)
     end
 
-    test "reapeating callback causing same state inserts each of them", %{
+    test "reapeating callback causing same state inserts for each of them", %{
       payment_request: payment_request
     } do
       PaymentProviderOxapayMock
@@ -174,6 +174,61 @@ defmodule Omc.PaymentsTest do
       assert %PaymentState{
                state: :pending
              } = payment_request.payment_states |> Enum.at(1)
+    end
+
+    test ":done callback should update ledger", %{payment_request: pr} do
+      PaymentProviderOxapayMock
+      |> expect(:callback, fn _data ->
+        {:ok,
+         %{
+           state: :done,
+           ref: pr.ref,
+           data: %{"data_field" => "data_field_value"}
+         }, "OK"}
+      end)
+      |> expect(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
+      |> allow(self(), Process.whereis(Payments))
+
+      {:ok, "OK"} = Payments.callback(:oxapay, nil)
+
+      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
+             |> then(& &1.credit) == 1234
+    end
+
+    test "already affected ledger should not updated by repetitive :done callbacks", %{
+      payment_request: pr
+    } do
+      PaymentProviderOxapayMock
+      |> expect(:callback, 2, fn _data ->
+        {:ok,
+         %{
+           state: :done,
+           ref: pr.ref,
+           data: %{"data_field" => "data_field_value"}
+         }, "OK"}
+      end)
+      |> expect(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
+      |> allow(self(), Process.whereis(Payments))
+
+      # first :done callback
+      {:ok, "OK"} = Payments.callback(:oxapay, nil)
+
+      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
+             |> then(& &1.credit) == 1234
+
+      assert Payments.get_payment_request(pr.ref)
+             |> then(& &1.payment_states)
+             |> length() == 1
+
+      # second :done callback
+      {:ok, "OK"} = Payments.callback(:oxapay, nil)
+
+      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
+             |> then(& &1.credit) == 1234
+
+      assert Payments.get_payment_request(pr.ref)
+             |> then(& &1.payment_states)
+             |> length() == 2
     end
   end
 
@@ -236,90 +291,119 @@ defmodule Omc.PaymentsTest do
     end
   end
 
-  describe "update_ledger/2" do
-    setup %{} do
-      %{payment_request: done_payment_request_fixture()}
-    end
+  # describe "update_ledger/2" do
+  #   setup %{} do
+  #     %{payment_request: done_payment_request_fixture()}
+  #   end
+  #
+  #   test "should update user's ledger, by received actual amount" do
+  #     PaymentProviderOxapayMock
+  #     |> expect(:get_paid_money!, fn _, _ -> Money.new(1234, Utils.default_currency()) end)
+  #
+  #     [{pr, ps}] = Payments.get_payments_with_last_done_state(1)
+  #     {:ok, :ledger_updated} = Payments.update_ledger(pr, ps)
+  #
+  #     assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
+  #            |> then(& &1.credit) == 1234
+  #   end
+  #
+  #   test "already used done payments should be ignored" do
+  #     PaymentProviderOxapayMock
+  #     |> expect(:get_paid_money!, fn _, _ -> Money.new(1234, Utils.default_currency()) end)
+  #
+  #     [{pr, ps}] = Payments.get_payments_with_last_done_state(1)
+  #     {:ok, :ledger_updated} = Payments.update_ledger(pr, ps)
+  #     {:ok, :ledger_unchanged} = Payments.update_ledger(pr, ps)
+  #
+  #     assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
+  #            |> then(& &1.credit) == 1234
+  #   end
+  # end
 
-    test "should update user's ledger, by received actual amount" do
-      PaymentProviderOxapayMock
-      |> expect(:get_paid_money!, fn _, _ -> Money.new(1234, Utils.default_currency()) end)
+  # describe "update_ledger/2" do
+  #   setup %{} do
+  #     %{payment_request: done_payment_request_fixture()}
+  #   end
+  #
+  #   test "should update user's ledger, by received actual amount" do
+  #     PaymentProviderOxapayMock
+  #     |> expect(:get_paid_money!, fn _, _ -> Money.new(1234, Utils.default_currency()) end)
+  #
+  #     [{pr, ps}] = Payments.get_payments_with_last_done_state(1)
+  #     {:ok, :ledger_updated} = Payments.update_ledger(pr, ps)
+  #
+  #     assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
+  #            |> then(& &1.credit) == 1234
+  #   end
+  #
+  #   test "already used done payments should be ignored" do
+  #     PaymentProviderOxapayMock
+  #     |> expect(:get_paid_money!, fn _, _ -> Money.new(1234, Utils.default_currency()) end)
+  #
+  #     [{pr, ps}] = Payments.get_payments_with_last_done_state(1)
+  #     {:ok, :ledger_updated} = Payments.update_ledger(pr, ps)
+  #     {:ok, :ledger_unchanged} = Payments.update_ledger(pr, ps)
+  #
+  #     assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
+  #            |> then(& &1.credit) == 1234
+  #   end
+  # end
 
-      [{pr, ps}] = Payments.get_payments_with_last_done_state(1)
-      {:ok, :ledger_updated} = Payments.update_ledger({pr, ps})
-
-      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
-             |> then(& &1.credit) == 1234
-    end
-
-    test "already used done payments should be ignored" do
-      PaymentProviderOxapayMock
-      |> expect(:get_paid_money!, fn _, _ -> Money.new(1234, Utils.default_currency()) end)
-
-      [{pr, ps}] = Payments.get_payments_with_last_done_state(1)
-      {:ok, :ledger_updated} = Payments.update_ledger({pr, ps})
-      {:ok, :ledger_unchanged} = Payments.update_ledger({pr, ps})
-
-      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
-             |> then(& &1.credit) == 1234
-    end
-  end
-
-  describe "update_ledgers/0" do
-    test "should update all ledgers related to last done payment within specified duration" do
-      PaymentProviderOxapayMock
-      |> expect(:get_paid_money!, 2, fn _, _ -> Money.new(1234, Utils.default_currency()) end)
-
-      pr1 = done_payment_request_fixture()
-      pr2 = done_payment_request_fixture()
-      Payments.update_ledgers(1)
-
-      assert Ledgers.get_ledger(%{user_type: pr1.user_type, user_id: pr1.user_id})
-             |> then(& &1.credit) == 1234
-
-      assert Ledgers.get_ledger(%{user_type: pr2.user_type, user_id: pr2.user_id})
-             |> then(& &1.credit) == 1234
-    end
-
-    test "already update ones are being ignored" do
-      PaymentProviderOxapayMock
-      |> expect(:get_paid_money!, 3, fn _, _ -> Money.new(1234, Utils.default_currency()) end)
-
-      pr1 = done_payment_request_fixture()
-      pr2 = done_payment_request_fixture()
-
-      Payments.get_payments_with_last_done_state(5) |> List.first() |> Payments.update_ledger()
-      Payments.update_ledgers(5)
-
-      assert Ledgers.get_ledger(%{user_type: pr1.user_type, user_id: pr1.user_id})
-             |> then(& &1.credit) == 1234
-
-      assert Ledgers.get_ledger(%{user_type: pr2.user_type, user_id: pr2.user_id})
-             |> then(& &1.credit) == 1234
-    end
-
-    test "in case of any exception the other ones should updated" do
-      PaymentProviderOxapayMock
-      |> expect(:get_paid_money!, 1, fn _, _ -> Money.new(1234, Utils.default_currency()) end)
-      |> expect(:get_paid_money!, 1, fn _, _ -> raise "some error" end)
-      |> expect(:get_paid_money!, 1, fn _, _ -> Money.new(1234, Utils.default_currency()) end)
-
-      pr1 = done_payment_request_fixture()
-      pr2 = done_payment_request_fixture()
-      pr3 = done_payment_request_fixture()
-
-      Payments.update_ledgers(5)
-
-      assert Ledgers.get_ledger(%{user_type: pr1.user_type, user_id: pr1.user_id})
-             |> then(& &1.credit) == 1234
-
-      assert Ledgers.get_ledger(%{user_type: pr2.user_type, user_id: pr2.user_id}) == nil
-
-      assert Ledgers.get_ledger(%{user_type: pr3.user_type, user_id: pr3.user_id})
-             |> then(& &1.credit) == 1234
-    end
-  end
-
+  # describe "update_ledgers/0" do
+  #   test "should update all ledgers related to last done payment within specified duration" do
+  #     PaymentProviderOxapayMock
+  #     |> expect(:get_paid_money!, 2, fn _, _ -> Money.new(1234, Utils.default_currency()) end)
+  #
+  #     pr1 = done_payment_request_fixture()
+  #     pr2 = done_payment_request_fixture()
+  #     Payments.update_ledgers(1)
+  #
+  #     assert Ledgers.get_ledger(%{user_type: pr1.user_type, user_id: pr1.user_id})
+  #            |> then(& &1.credit) == 1234
+  #
+  #     assert Ledgers.get_ledger(%{user_type: pr2.user_type, user_id: pr2.user_id})
+  #            |> then(& &1.credit) == 1234
+  #   end
+  #
+  #   test "already update ones are being ignored" do
+  #     PaymentProviderOxapayMock
+  #     |> expect(:get_paid_money!, 3, fn _, _ -> Money.new(1234, Utils.default_currency()) end)
+  #
+  #     pr1 = done_payment_request_fixture()
+  #     pr2 = done_payment_request_fixture()
+  #
+  #     Payments.get_payments_with_last_done_state(5) |> List.first() |> Payments.update_ledger()
+  #     Payments.update_ledgers(5)
+  #
+  #     assert Ledgers.get_ledger(%{user_type: pr1.user_type, user_id: pr1.user_id})
+  #            |> then(& &1.credit) == 1234
+  #
+  #     assert Ledgers.get_ledger(%{user_type: pr2.user_type, user_id: pr2.user_id})
+  #            |> then(& &1.credit) == 1234
+  #   end
+  #
+  #   test "in case of any exception the other ones should updated" do
+  #     PaymentProviderOxapayMock
+  #     |> expect(:get_paid_money!, 1, fn _, _ -> Money.new(1234, Utils.default_currency()) end)
+  #     |> expect(:get_paid_money!, 1, fn _, _ -> raise "some error" end)
+  #     |> expect(:get_paid_money!, 1, fn _, _ -> Money.new(1234, Utils.default_currency()) end)
+  #
+  #     pr1 = done_payment_request_fixture()
+  #     pr2 = done_payment_request_fixture()
+  #     pr3 = done_payment_request_fixture()
+  #
+  #     Payments.update_ledgers(5)
+  #
+  #     assert Ledgers.get_ledger(%{user_type: pr1.user_type, user_id: pr1.user_id})
+  #            |> then(& &1.credit) == 1234
+  #
+  #     assert Ledgers.get_ledger(%{user_type: pr2.user_type, user_id: pr2.user_id}) == nil
+  #
+  #     assert Ledgers.get_ledger(%{user_type: pr3.user_type, user_id: pr3.user_id})
+  #            |> then(& &1.credit) == 1234
+  #   end
+  # end
+  #
   describe "list_payment_requests/1" do
     test "limit and pagination and order" do
       %{id: id1} = payment_request_fixture()
@@ -380,6 +464,67 @@ defmodule Omc.PaymentsTest do
 
       assert Payments.get_payment_request(pr.ref)
              |> then(& &1.payment_states) == []
+    end
+
+    test "On done state, ledger should be updated", %{payment_request: pr} do
+      PaymentProviderOxapayMock
+      |> expect(:send_state_inquiry_request, fn _ ->
+        {:ok, %{state: :done, data: %{"res_key" => "res_value"}}}
+      end)
+      |> expect(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
+      |> allow(self(), Process.whereis(Payments))
+
+      {:ok, payment_state} = Payments.send_state_inquiry_request(pr)
+      assert %{state: :done, data: %{"res_key" => "res_value"}} = payment_state
+
+      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
+             |> then(& &1.credit) == 1234
+    end
+
+    test "already affected ledger should not updated by repetitive :done callbacks", %{
+      payment_request: pr
+    } do
+      PaymentProviderOxapayMock
+      |> expect(:send_state_inquiry_request, 2, fn _ ->
+        {:ok, %{state: :done, data: %{"res_key" => "res_value"}}}
+      end)
+      |> expect(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
+      |> allow(self(), Process.whereis(Payments))
+
+      # first inquiry 
+      {:ok, _} = Payments.send_state_inquiry_request(pr)
+
+      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
+             |> then(& &1.credit) == 1234
+
+      # second inquiry 
+      {:ok, _} = Payments.send_state_inquiry_request(pr)
+
+      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
+             |> then(& &1.credit) == 1234
+    end
+
+    test "On non done state, ledger should not updated", %{payment_request: pr} do
+      # before any inquiry 
+      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id}) == nil
+
+      # pending state
+      PaymentProviderOxapayMock
+      |> expect(:send_state_inquiry_request, fn _ ->
+        {:ok, %{state: :pending, data: %{"res_key" => "res_value"}}}
+      end)
+
+      {:ok, _} = Payments.send_state_inquiry_request(pr)
+      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id}) == nil
+
+      # failed state
+      PaymentProviderOxapayMock
+      |> expect(:send_state_inquiry_request, fn _ ->
+        {:ok, %{state: :failed, data: %{"res_key" => "res_value"}}}
+      end)
+
+      {:ok, _} = Payments.send_state_inquiry_request(pr)
+      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id}) == nil
     end
   end
 end

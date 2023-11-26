@@ -24,7 +24,8 @@ defmodule Omc.Application do
         # Start ServerTaskManager
         Omc.Servers.ServerTaskManager,
         # Scheduler
-        Omc.Scheduler
+        Omc.Scheduler,
+        Omc.Payments
       ]
       # Start Telegram bot 
       |> add_if(

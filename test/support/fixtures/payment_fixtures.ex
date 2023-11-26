@@ -40,6 +40,8 @@ defmodule Omc.PaymentFixtures do
     |> expect(:callback, fn _data ->
       {:ok, %{state: state, ref: payment_request.ref, data: %{}}, :some_response}
     end)
+    |> expect(:get_paid_money!, fn _data, _currency -> payment_request.money end)
+    |> allow(self(), Process.whereis(Omc.Payments))
 
     {:ok, :some_response} = Payments.callback(payment_request.ipg, %{})
   end

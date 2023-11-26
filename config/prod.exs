@@ -33,8 +33,4 @@ config :omc, Omc.Scheduler,
     # updating usages every hour
     {"* 0 * * *", {Omc.Usages, :update_usages, []}},
 
-    # runs every minutes and updates ledgers by payments, better to have passed the duration param
-    # a little bit more that peroic calls and have overlap to not miss anything
-    # the duration is in seconds
-    {"* * * * *", {Omc.Payments, :update_ledgers, [65]}}
   ]
