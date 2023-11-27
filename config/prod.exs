@@ -31,6 +31,5 @@ config :omc, Omc.Scheduler,
       [Application.get_env(:omc, :acc_allocation_timeout)]}},
 
     # updating usages every hour
-    {"* 0 * * *", {Omc.Usages, :update_usages, []}},
-
+    {"* 0 * * *", {Omc.Usages, :update_usages, []}}
   ]

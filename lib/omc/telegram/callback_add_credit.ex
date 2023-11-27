@@ -36,7 +36,8 @@ defmodule Omc.Telegram.CallbackAddCredit do
   defp last_payment_requests(%{user_id: user_id, user_type: user_type}) do
     Payments.list_payment_requests(page: 1, limit: 10, user_id: user_id, user_type: user_type)
     |> Enum.reduce("", fn item, acc ->
-      acc <> "#{if(acc != "", do: "\n")}- _#{item.money}, #{item.state || "'new'"},  [Pay Link](#{item.url})_"
+      acc <>
+        "#{if(acc != "", do: "\n")}- _#{item.money}, #{item.state || "'new'"},  [Pay Link](#{item.url})_"
     end)
   end
 

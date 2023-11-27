@@ -20,10 +20,9 @@ if System.get_env("PHX_SERVER") do
   config :omc, OmcWeb.Endpoint, server: true
 end
 
-config :omc, :telegram, 
+config :omc, :telegram,
   token: System.get_env("OMC_TELEGRAM_TOKEN"),
   host: System.get_env("OMC_TELEGRAM_HOST")
-
 
 if config_env() == :prod do
   database_url =

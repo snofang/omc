@@ -57,6 +57,7 @@ defmodule Omc.Telegram.TelegramApiImpl do
     |> then(fn {list, _} -> list end)
     |> Enum.reverse()
     |> Enum.join("```")
+
     # |> Enum.reduce("", &(&1 <> &2))
   end
 
@@ -64,7 +65,7 @@ defmodule Omc.Telegram.TelegramApiImpl do
   def escapte_text_token(text_token) do
     String.replace(
       text_token,
-      ["|", "-", "~", ",", ">", "#", "+", "=", "{", "}", ".", "!"],
+      ["-", "~", ",", ">", "#", "+", "=", "{", "}", ".", "!"],
       &"\\#{&1}"
     )
   end

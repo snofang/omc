@@ -4,7 +4,7 @@ defmodule OmcWeb.RawBodyReader do
   end
 
   def call(conn, _opts) do
-    case conn.path_info  do
+    case conn.path_info do
       ["api", "payment" | _rest] ->
         # Note: the callbck request are very small and doesn't need to be considered as multi-chunked.
         # TODO: But for completeness and larger requests, it should support multi-chunked mode too.
