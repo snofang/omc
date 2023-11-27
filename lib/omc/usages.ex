@@ -233,6 +233,7 @@ defmodule Omc.Usages do
       select: usage,
       limit: ^limit,
       offset: ^((page - 1) * limit),
+      order_by: [asc: usage.id],
       preload: :usage_items
     )
     |> Repo.all()
