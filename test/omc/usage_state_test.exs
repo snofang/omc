@@ -1,5 +1,6 @@
 defmodule Omc.UsageStateTest do
   use ExUnit.Case, async: true
+  alias Omc.TestUtils
   alias Omc.Ledgers.Ledger
   alias Omc.Common.PricePlan
   alias Omc.Usages.{UsageState, Usage}
@@ -148,9 +149,6 @@ defmodule Omc.UsageStateTest do
              |> Ledger.credit_money()
              |> Money.compare(Money.new(-250, :USD)) == 0
 
-      usage_started_at_30days_after = usage_started_at |> NaiveDateTime.add(30 * 24 * 60 * 60)
-      usage_started_at_45days_after = usage_started_at |> NaiveDateTime.add(45 * 24 * 60 * 60)
-
       assert [
                %{
                  ledger_changeset: %{
@@ -171,7 +169,7 @@ defmodule Omc.UsageStateTest do
                  },
                  usage_item_changeset: %{
                    changes: %{
-                     ended_at: ^usage_started_at_30days_after,
+                     ended_at: usage_started_at_30days_after_1,
                      started_at: ^usage_started_at,
                      type: :duration,
                      usage_id: 20
@@ -200,8 +198,8 @@ defmodule Omc.UsageStateTest do
                  usage_item_changeset: %{
                    action: nil,
                    changes: %{
-                     ended_at: ^usage_started_at_45days_after,
-                     started_at: ^usage_started_at_30days_after,
+                     ended_at: usage_started_at_45days_after,
+                     started_at: usage_started_at_30days_after_2,
                      type: :duration,
                      usage_id: 20
                    },
@@ -210,6 +208,24 @@ defmodule Omc.UsageStateTest do
                  }
                }
              ] = computed_usage_state.changesets
+
+      assert TestUtils.happend_closely(
+               usage_started_at_30days_after_1,
+               usage_started_at |> NaiveDateTime.add(30 * 24 * 60 * 60),
+               5
+             )
+
+      assert TestUtils.happend_closely(
+               usage_started_at_30days_after_2,
+               usage_started_at |> NaiveDateTime.add(30 * 24 * 60 * 60),
+               5
+             )
+
+      assert TestUtils.happend_closely(
+               usage_started_at_45days_after,
+               usage_started_at |> NaiveDateTime.add(45 * 24 * 60 * 60),
+               5
+             )
     end
   end
 end

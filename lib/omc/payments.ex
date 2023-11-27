@@ -117,9 +117,9 @@ defmodule Omc.Payments do
   @doc false
   # Updates user's ledger with the paid amount. It first checks if this payment has already 
   # caused ledger change or not. In case of already affected ledger, do nothing and returns success. 
-  @spec __update_ledger__!({%PaymentRequest{}, %PaymentState{}}) ::
-          {:ok, :ledger_updated} | {:ok, :ledger_unchanged}
-  def __update_ledger__!({pr, ps}) when ps.state == :done do
+  @spec __update_ledger__({%PaymentRequest{}, %PaymentState{}}) ::
+          :ledger_updated | :ledger_unchanged
+  def __update_ledger__({pr, ps}) when ps.state == :done do
     case Ledgers.get_ledger_tx_by_context(:payment, pr.id) do
       nil ->
         Ledgers.create_ledger_tx!(%{
@@ -131,10 +131,10 @@ defmodule Omc.Payments do
           type: :credit
         })
 
-        {:ok, :ledger_updated}
+        :ledger_updated
 
       _already_existing_ledger_tx ->
-        {:ok, :ledger_unchanged}
+        :ledger_unchanged
     end
   end
 
@@ -220,7 +220,7 @@ defmodule Omc.Payments do
   end
 
   def handle_call({:update_ledger, pr_ps}, _from, state) do
-    {:reply, __update_ledger__!(pr_ps), state}
+    {:reply, __update_ledger__(pr_ps), state}
   end
 
   @spec update_ledger(%PaymentRequest{}, %PaymentState{}) ::

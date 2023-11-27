@@ -6,7 +6,7 @@ defmodule Omc.PaymentsTest do
   alias Omc.Payments
   alias Omc.Payments.PaymentRequest
   alias Omc.PaymentProviderOxapayMock
-  use Omc.DataCase, async: true
+  use Omc.DataCase, async: false
   import Mox
   import Omc.PaymentFixtures
 
