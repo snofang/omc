@@ -19,15 +19,8 @@ defmodule Omc.Servers do
       [%Server{}, ...]
 
   """
-  def list_servers do
+  def list_servers() do
     Repo.all(Server)
-    |> Enum.map(&Server.put_price/1)
-  end
-
-  def list_servers(user_id) do
-    Server
-    |> where(user_id: ^user_id)
-    |> Repo.all()
     |> Enum.map(&Server.put_price/1)
   end
 

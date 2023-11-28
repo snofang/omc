@@ -11,7 +11,7 @@ defmodule OmcWeb.ServerLive.Index do
      stream(
        socket,
        :servers,
-       Servers.list_servers(socket.assigns.current_user.id)
+       Servers.list_servers()
      )}
   end
 

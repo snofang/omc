@@ -80,10 +80,7 @@ defmodule OmcWeb.ServerLive.FormComponent do
   end
 
   defp save_server(socket, :new, server_params) do
-    case Servers.create_server(
-           server_params
-           |> Map.put("user_id", to_string(socket.assigns.current_user.id))
-         ) do
+    case Servers.create_server(server_params) do
       {:ok, server} ->
         notify_parent({:saved, server})
 

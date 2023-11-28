@@ -12,7 +12,6 @@ defmodule Omc.Servers.Server do
     field :price, :string, virtual: true
     embeds_many :price_plans, PricePlan, on_replace: :delete
     field :status, Ecto.Enum, values: [:active, :deactive]
-    field :user_id, :id
     has_many :server_accs, Omc.Servers.ServerAcc
 
     timestamps()
@@ -21,8 +20,8 @@ defmodule Omc.Servers.Server do
   @doc false
   def changeset(server, attrs) do
     server
-    |> cast(attrs, [:name, :status, :price, :max_accs, :description, :user_id])
-    |> validate_required([:name, :status, :user_id, :price, :max_accs])
+    |> cast(attrs, [:name, :status, :price, :max_accs, :description])
+    |> validate_required([:name, :status, :price, :max_accs])
     # |> cast_embed(:price_plans, required: true)
     |> validate_format(:price, ~r/^\d*(\.\d{1,2})?$/)
     |> put_price_change()

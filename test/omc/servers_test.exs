@@ -6,31 +6,26 @@ defmodule Omc.ServersTest do
   alias Omc.Servers.ServerAcc
 
   import Omc.ServersFixtures
-  import Omc.AccountsFixtures
 
   describe "servers" do
     @invalid_attrs %{description: nil, max_accs: nil, name: nil, price: nil, status: nil}
-    setup %{} do
-      %{user: user_fixture()}
-    end
 
-    test "list_servers/0 returns all servers", %{user: user} do
-      server = server_fixture(%{user_id: user.id})
+    test "list_servers/0 returns all servers" do
+      server = server_fixture()
       assert Servers.list_servers() == [server]
     end
 
-    test "get_server!/1 returns the server with given id", %{user: user} do
-      server = server_fixture(%{user_id: user.id})
+    test "get_server!/1 returns the server with given id" do
+      server = server_fixture()
       assert Servers.get_server!(server.id) == server
     end
 
-    test "create_server/1 with valid data creates a server", %{user: user} do
+    test "create_server/1 with valid data creates a server" do
       valid_attrs = %{
         description: "some description",
         max_accs: 42,
         name: "some.name",
-        price: "120.99",
-        user_id: user.id
+        price: "120.99"
       }
 
       assert {:ok, %Server{} = server} = Servers.create_server(valid_attrs)
@@ -45,8 +40,8 @@ defmodule Omc.ServersTest do
       assert {:error, %Ecto.Changeset{}} = Servers.create_server(@invalid_attrs)
     end
 
-    test "create_server/1 with invalid price returns error changeset", %{user: user} do
-      valid_attrs = server_valid_attrs() |> Map.put(:user_id, user.id)
+    test "create_server/1 with invalid price returns error changeset" do
+      valid_attrs = server_valid_attrs()
 
       assert {:error, %{errors: [price: _]}} =
                Servers.create_server(valid_attrs |> Map.put(:price, nil))
@@ -59,8 +54,7 @@ defmodule Omc.ServersTest do
     end
 
     test "update_server/2 with valid data updates the server" do
-      user = user_fixture()
-      server = server_fixture(%{user_id: user.id})
+      server = server_fixture()
 
       update_attrs = %{
         description: "some updated description",
@@ -79,39 +73,34 @@ defmodule Omc.ServersTest do
     end
 
     test "update_server/2 with invalid data returns error changeset" do
-      user = user_fixture()
-      server = server_fixture(%{user_id: user.id})
+      server = server_fixture()
       assert {:error, %Ecto.Changeset{}} = Servers.update_server(server, @invalid_attrs)
       assert server == Servers.get_server!(server.id)
     end
 
     test "delete_server/1 deletes the server having no acc" do
-      user = user_fixture()
-      server = server_fixture(%{user_id: user.id})
+      server = server_fixture()
       assert {:ok, %Server{}} = Servers.delete_server(server)
       assert_raise Ecto.NoResultsError, fn -> Servers.get_server!(server.id) end
     end
 
     test "delete_server/1 fails to deletes the server having acc(s)" do
-      user = user_fixture()
-      server = server_fixture(%{user_id: user.id})
+      server = server_fixture()
       server_acc_fixture(%{server_id: server.id})
       assert {:error, changeset} = Servers.delete_server(server)
       assert changeset.errors |> length() > 0
     end
 
     test "change_server/1 returns a server changeset" do
-      user = user_fixture()
-      server = server_fixture(%{user_id: user.id})
+      server = server_fixture()
       assert %Ecto.Changeset{} = Servers.change_server(server)
     end
   end
 
   defp create_server_acc(_) do
-    user = user_fixture()
-    server = server_fixture(%{user_id: user.id})
+    server = server_fixture()
     server_acc = server_acc_fixture(%{server_id: server.id})
-    %{user: user, server: server, server_acc: server_acc}
+    %{server: server, server_acc: server_acc}
   end
 
   describe "server_accs" do
@@ -194,8 +183,8 @@ defmodule Omc.ServersTest do
       assert %Ecto.Changeset{} = Servers.change_server_acc(server_acc)
     end
 
-    test "server_acc name should be unique within a server", %{user: user} do
-      server_common_attrs = %{user_id: user.id, max_accs: 110, price: "50"}
+    test "server_acc name should be unique within a server" do
+      server_common_attrs = %{max_accs: 110, price: "50"}
 
       {:ok, server1} =
         server_common_attrs
