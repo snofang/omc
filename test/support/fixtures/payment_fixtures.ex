@@ -7,7 +7,7 @@ defmodule Omc.PaymentFixtures do
 
   def payment_request_fixture(ipg \\ :oxapay, attrs \\ %{}) when is_atom(ipg) do
     PaymentProviderOxapayMock
-    |> expect(:send_payment_request, fn attrs = %{ipg: _, money: _, user_type: _, user_id: _} ->
+    |> stub(:send_payment_request, fn attrs = %{ipg: _, money: _, user_type: _, user_id: _} ->
       ref = System.unique_integer([:positive])
 
       {:ok,
@@ -19,7 +19,7 @@ defmodule Omc.PaymentFixtures do
     end)
 
     Omc.TeslaMock
-    |> expect(:call, fn _env, _opts -> %{} end)
+    |> stub(:call, fn _env, _opts -> %{} end)
 
     {:ok, payment_request} =
       Payments.create_payment_request(
@@ -37,10 +37,10 @@ defmodule Omc.PaymentFixtures do
   def payment_state_by_callback_fixture(%PaymentRequest{} = payment_request, state)
       when is_atom(state) do
     PaymentProviderOxapayMock
-    |> expect(:callback, fn _data ->
+    |> stub(:callback, fn _data ->
       {:ok, %{state: state, ref: payment_request.ref, data: %{}}, :some_response}
     end)
-    |> expect(:get_paid_money!, fn _data, _currency -> payment_request.money end)
+    |> stub(:get_paid_money!, fn _data, _currency -> payment_request.money end)
     |> allow(self(), Process.whereis(Omc.Payments))
 
     {:ok, :some_response} = Payments.callback(payment_request.ipg, %{})

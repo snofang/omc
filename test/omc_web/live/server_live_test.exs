@@ -6,19 +6,17 @@ defmodule OmcWeb.ServerLiveTest do
   import Omc.AccountsFixtures
 
   @create_attrs %{
-    description: "some description",
-    max_accs: 42,
+    tag: "src-dest",
     name: "some.name",
     price: "120.5"
   }
   @update_attrs %{
-    description: "some updated description",
-    max_accs: 43,
+    tag: "src-dest2",
     name: "some.updated.name",
     price: "456.7",
     status: :deactive
   }
-  @invalid_attrs %{description: nil, max_accs: nil, name: nil, price: nil}
+  @invalid_attrs %{tag: nil, name: nil, price: nil}
 
   defp create_server(_) do
     user = user_fixture()
@@ -37,7 +35,7 @@ defmodule OmcWeb.ServerLiveTest do
         |> live(~p"/servers")
 
       assert html =~ "Listing Servers"
-      assert html =~ server.description
+      assert html =~ server.tag
     end
 
     test "saves new server", %{conn: conn, user: user} do
@@ -63,7 +61,7 @@ defmodule OmcWeb.ServerLiveTest do
 
       html = render(index_live)
       assert html =~ "Server created successfully"
-      assert html =~ "some description"
+      assert html =~ "src-dest"
     end
 
     test "updates server in listing",
@@ -90,7 +88,7 @@ defmodule OmcWeb.ServerLiveTest do
 
       html = render(index_live)
       assert html =~ "Server updated successfully"
-      assert html =~ "some updated description"
+      assert html =~ "src-dest2"
     end
 
     test "deletes server in listing",
@@ -116,7 +114,7 @@ defmodule OmcWeb.ServerLiveTest do
         |> live(~p"/servers/#{server}")
 
       assert html =~ "Show Server"
-      assert html =~ server.description
+      assert html =~ server.tag
     end
 
     test "updates server within modal",
@@ -143,7 +141,7 @@ defmodule OmcWeb.ServerLiveTest do
 
       html = render(show_live)
       assert html =~ "Server updated successfully"
-      assert html =~ "some updated description"
+      assert html =~ "src-dest2"
     end
   end
 end

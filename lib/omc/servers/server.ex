@@ -5,8 +5,7 @@ defmodule Omc.Servers.Server do
   alias Omc.Common.PricePlan
 
   schema "servers" do
-    field :description, :string
-    field :max_accs, :integer
+    field :tag, :string
     field :name, :string
     # TODO: To remove this after adding multiple price support 
     field :price, :string, virtual: true
@@ -18,12 +17,14 @@ defmodule Omc.Servers.Server do
   end
 
   @doc false
-  def changeset(server, attrs) do
+  def changeset(server, attrs, params \\ %{}) do
     server
-    |> cast(attrs, [:name, :status, :price, :max_accs, :description])
-    |> validate_required([:name, :status, :price, :max_accs])
+    |> cast(attrs, [:name, :status, :price, :tag])
+    |> change(params)
+    |> validate_required([:name, :status, :price, :tag])
     # |> cast_embed(:price_plans, required: true)
     |> validate_format(:price, ~r/^\d*(\.\d{1,2})?$/)
+    |> validate_format(:tag, ~r/^[a-zA-Z0-9]+\-[a-zA-Z0-9]+$/)
     |> put_price_change()
     |> unique_constraint(:name)
     |> validate_format(:name, name_format())
@@ -31,7 +32,7 @@ defmodule Omc.Servers.Server do
   end
 
   def name_format() do
-    ~r/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/
+    ~r/^([a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])*\.)*[A-Za-z0-9]([A-Za-z0-9\-]*[A-Za-z0-9])*$/
   end
 
   # TODO: to remove this after adding muti-currency support

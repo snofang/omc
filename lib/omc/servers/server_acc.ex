@@ -25,9 +25,10 @@ defmodule Omc.Servers.ServerAcc do
   end
 
   @doc false
-  def changeset(server_acc, attrs) do
+  def changeset(server_acc, attrs, params \\ %{}) do
     server_acc
     |> cast(attrs, [:name, :status, :description, :server_id])
+    |> change(params)
     |> validate_required([:name, :status, :server_id])
     |> validate_format(:name, ~r/^[\w]+[\w\-]*[\w]+$/)
     |> validate_status()

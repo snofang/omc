@@ -14,8 +14,7 @@ defmodule Omc.ServersFixtures do
 
   def server_valid_attrs() do
     %{
-      description: "some description",
-      max_accs: 42,
+      tag: "some-tag",
       name: unique_server_name(),
       price: "120.5"
     }
@@ -41,8 +40,7 @@ defmodule Omc.ServersFixtures do
       attrs
       |> Enum.into(%{
         description: "some description",
-        name: unique_server_acc_name(),
-        status: :active
+        name: unique_server_acc_name()
       })
       |> Omc.Servers.create_server_acc()
 

@@ -20,7 +20,7 @@ defmodule Omc.PaymentsTest do
       user_type: user_type
     } do
       PaymentProviderOxapayMock
-      |> expect(:send_payment_request, fn attrs ->
+      |> stub(:send_payment_request, fn attrs ->
         {:ok,
          attrs
          |> Map.put(:data, %{a: 1})
@@ -55,7 +55,7 @@ defmodule Omc.PaymentsTest do
       user_type: user_type
     } do
       PaymentProviderOxapayMock
-      |> expect(:send_payment_request, fn %{} ->
+      |> stub(:send_payment_request, fn %{} ->
         {:error, :some_reason}
       end)
 
@@ -72,7 +72,7 @@ defmodule Omc.PaymentsTest do
       user_type: user_type
     } do
       PaymentProviderOxapayMock
-      |> expect(:send_payment_request, 2, fn attrs ->
+      |> stub(:send_payment_request, fn attrs ->
         {:ok,
          attrs
          |> Map.put(:data, %{a: 1})
@@ -111,7 +111,7 @@ defmodule Omc.PaymentsTest do
       payment_request: payment_request
     } do
       PaymentProviderOxapayMock
-      |> expect(:callback, fn _data ->
+      |> stub(:callback, fn _data ->
         {:ok,
          %{
            state: :pending,
@@ -132,7 +132,7 @@ defmodule Omc.PaymentsTest do
 
     test "callback having not exising ref" do
       PaymentProviderOxapayMock
-      |> expect(:callback, fn _data ->
+      |> stub(:callback, fn _data ->
         {:ok,
          %{
            state: :pending,
@@ -148,7 +148,7 @@ defmodule Omc.PaymentsTest do
       payment_request: payment_request
     } do
       PaymentProviderOxapayMock
-      |> expect(:callback, 2, fn _data ->
+      |> stub(:callback, fn _data ->
         {:ok,
          %{
            state: :pending,
@@ -178,7 +178,7 @@ defmodule Omc.PaymentsTest do
 
     test ":done callback should update ledger", %{payment_request: pr} do
       PaymentProviderOxapayMock
-      |> expect(:callback, fn _data ->
+      |> stub(:callback, fn _data ->
         {:ok,
          %{
            state: :done,
@@ -186,7 +186,7 @@ defmodule Omc.PaymentsTest do
            data: %{"data_field" => "data_field_value"}
          }, "OK"}
       end)
-      |> expect(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
+      |> stub(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
       |> allow(self(), Process.whereis(Payments))
 
       {:ok, "OK"} = Payments.callback(:oxapay, nil)
@@ -199,7 +199,7 @@ defmodule Omc.PaymentsTest do
       payment_request: pr
     } do
       PaymentProviderOxapayMock
-      |> expect(:callback, 2, fn _data ->
+      |> stub(:callback, fn _data ->
         {:ok,
          %{
            state: :done,
@@ -207,7 +207,7 @@ defmodule Omc.PaymentsTest do
            data: %{"data_field" => "data_field_value"}
          }, "OK"}
       end)
-      |> expect(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
+      |> stub(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
       |> allow(self(), Process.whereis(Payments))
 
       # first :done callback
@@ -445,7 +445,7 @@ defmodule Omc.PaymentsTest do
 
     test "should create new PaymentState on success", %{payment_request: pr} do
       PaymentProviderOxapayMock
-      |> expect(:send_state_inquiry_request, fn _ ->
+      |> stub(:send_state_inquiry_request, fn _ ->
         {:ok, %{state: :pending, data: %{"res_key" => "res_value"}}}
       end)
 
@@ -456,7 +456,7 @@ defmodule Omc.PaymentsTest do
 
     test "On error, no PaymentState is created", %{payment_request: pr} do
       PaymentProviderOxapayMock
-      |> expect(:send_state_inquiry_request, fn _ ->
+      |> stub(:send_state_inquiry_request, fn _ ->
         {:error, :some_special_error}
       end)
 
@@ -468,10 +468,10 @@ defmodule Omc.PaymentsTest do
 
     test "On done state, ledger should be updated", %{payment_request: pr} do
       PaymentProviderOxapayMock
-      |> expect(:send_state_inquiry_request, fn _ ->
+      |> stub(:send_state_inquiry_request, fn _ ->
         {:ok, %{state: :done, data: %{"res_key" => "res_value"}}}
       end)
-      |> expect(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
+      |> stub(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
       |> allow(self(), Process.whereis(Payments))
 
       {:ok, payment_state} = Payments.send_state_inquiry_request(pr)
@@ -485,10 +485,10 @@ defmodule Omc.PaymentsTest do
       payment_request: pr
     } do
       PaymentProviderOxapayMock
-      |> expect(:send_state_inquiry_request, 2, fn _ ->
+      |> stub(:send_state_inquiry_request, fn _ ->
         {:ok, %{state: :done, data: %{"res_key" => "res_value"}}}
       end)
-      |> expect(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
+      |> stub(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
       |> allow(self(), Process.whereis(Payments))
 
       # first inquiry 
@@ -510,7 +510,7 @@ defmodule Omc.PaymentsTest do
 
       # pending state
       PaymentProviderOxapayMock
-      |> expect(:send_state_inquiry_request, fn _ ->
+      |> stub(:send_state_inquiry_request, fn _ ->
         {:ok, %{state: :pending, data: %{"res_key" => "res_value"}}}
       end)
 
@@ -519,7 +519,7 @@ defmodule Omc.PaymentsTest do
 
       # failed state
       PaymentProviderOxapayMock
-      |> expect(:send_state_inquiry_request, fn _ ->
+      |> stub(:send_state_inquiry_request, fn _ ->
         {:ok, %{state: :failed, data: %{"res_key" => "res_value"}}}
       end)
 

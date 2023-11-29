@@ -8,7 +8,6 @@ defmodule Omc.Servers do
   alias Phoenix.PubSub
   alias Omc.Servers.{Server, ServerOps}
   alias Omc.Repo
-  alias Omc.Common.Utils
 
   @doc """
   Returns the list of servers.
@@ -54,10 +53,7 @@ defmodule Omc.Servers do
   """
   def create_server(attrs \\ %{}) do
     %Server{}
-    |> Server.changeset(
-      attrs
-      |> Utils.put_attr_safe!(:status, :active)
-    )
+    |> Server.changeset(attrs, %{status: :active})
     |> Repo.insert()
   end
 
@@ -176,10 +172,7 @@ defmodule Omc.Servers do
   """
   def create_server_acc(attrs \\ %{}) do
     %ServerAcc{}
-    |> ServerAcc.changeset(
-      attrs
-      |> Omc.Common.Utils.put_attr_safe!(:status, :active_pending)
-    )
+    |> ServerAcc.changeset(attrs, %{status: :active_pending})
     |> Repo.insert()
   end
 

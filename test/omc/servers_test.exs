@@ -8,7 +8,7 @@ defmodule Omc.ServersTest do
   import Omc.ServersFixtures
 
   describe "servers" do
-    @invalid_attrs %{description: nil, max_accs: nil, name: nil, price: nil, status: nil}
+    @invalid_attrs %{tag: nil, name: nil, price: nil, status: nil}
 
     test "list_servers/0 returns all servers" do
       server = server_fixture()
@@ -22,15 +22,13 @@ defmodule Omc.ServersTest do
 
     test "create_server/1 with valid data creates a server" do
       valid_attrs = %{
-        description: "some description",
-        max_accs: 42,
+        tag: "tag-123",
         name: "some.name",
         price: "120.99"
       }
 
       assert {:ok, %Server{} = server} = Servers.create_server(valid_attrs)
-      assert server.description == "some description"
-      assert server.max_accs == 42
+      assert server.tag == "tag-123"
       assert server.name == "some.name"
       assert server.price == "120.99"
       assert server.status == :active
@@ -53,20 +51,37 @@ defmodule Omc.ServersTest do
                Servers.create_server(valid_attrs |> Map.put(:price, "123.123"))
     end
 
+    test "create_server/1 with invalid tag returns error changeset" do
+      valid_attrs = server_valid_attrs()
+
+      assert {:error, %{errors: [tag: _]}} =
+               Servers.create_server(valid_attrs |> Map.put(:tag, nil))
+
+      assert {:error, %{errors: [tag: _]}} =
+               Servers.create_server(valid_attrs |> Map.put(:tag, "aaaa-bbbb-cccc"))
+
+      assert {:error, %{errors: [tag: _]}} =
+               Servers.create_server(valid_attrs |> Map.put(:tag, "aaa.bbb"))
+
+      assert {:error, %{errors: [tag: _]}} =
+               Servers.create_server(valid_attrs |> Map.put(:tag, "aaa_bbb"))
+
+      assert {:error, %{errors: [tag: _]}} =
+               Servers.create_server(valid_attrs |> Map.put(:tag, "-aaa-bbb"))
+    end
+
     test "update_server/2 with valid data updates the server" do
       server = server_fixture()
 
       update_attrs = %{
-        description: "some updated description",
-        max_accs: 43,
+        tag: "tag-updated123",
         name: "some.updated.name",
         price: "456.7",
         status: :deactive
       }
 
       assert {:ok, %Server{} = server} = Servers.update_server(server, update_attrs)
-      assert server.description == "some updated description"
-      assert server.max_accs == 43
+      assert server.tag == "tag-updated123"
       assert server.name == "some.updated.name"
       assert server.price == "456.7"
       assert server.status == :deactive
@@ -184,7 +199,7 @@ defmodule Omc.ServersTest do
     end
 
     test "server_acc name should be unique within a server" do
-      server_common_attrs = %{max_accs: 110, price: "50"}
+      server_common_attrs = %{tag: "from-to", price: "50"}
 
       {:ok, server1} =
         server_common_attrs

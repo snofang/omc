@@ -6,12 +6,13 @@ defmodule Omc.Repo.Migrations.CreateServersTables do
       add :name, :string, null: false
       add :status, :string, null: false
       add :price_plans, :map, null: false
-      add :max_accs, :integer, null: false
-      add :description, :string
+      add :tag, :string, null: false
       timestamps()
     end
 
     create unique_index(:servers, [:name])
+    create index(:servers, [:price_plans], using: :gin)
+    create index(:servers, [:tag])
 
     create table(:server_accs) do
       add :name, :string, null: false
