@@ -145,4 +145,69 @@ defmodule Omc.ServerAccUserTest do
       assert TestUtils.happend_now_or_a_second_later(sau.ended_at)
     end
   end
+
+  describe "list_server_tags_with_free_accs_count/0" do
+    test "server having active acc should listed", %{server: server} do
+      tag = server.tag
+      assert [%{tag: ^tag, count: 1}] = ServerAccUsers.list_server_tags_with_free_accs_count()
+    end
+
+    test "server without active acc should not listed", %{server: server} do
+      server_fixture()
+      tag = server.tag
+      assert [%{tag: ^tag, count: 1}] = ServerAccUsers.list_server_tags_with_free_accs_count()
+    end
+
+    test "servers having same price and tag should grouped", %{server: server} do
+      server2 = server_fixture()
+
+      server_acc_fixture(%{server_id: server2.id})
+      |> then(fn acc -> activate_server_acc(server2, acc) end)
+
+      tag = server.tag
+      assert [%{tag: ^tag, count: 2}] = ServerAccUsers.list_server_tags_with_free_accs_count()
+    end
+
+    test "servers having same price but different tags, grouped separately", %{server: server} do
+      server2 = server_fixture(%{tag: "here-there"})
+
+      server_acc_fixture(%{server_id: server2.id})
+      |> then(fn acc -> activate_server_acc(server2, acc) end)
+
+      server_acc_fixture(%{server_id: server2.id})
+      |> then(fn acc -> activate_server_acc(server2, acc) end)
+
+      list = ServerAccUsers.list_server_tags_with_free_accs_count()
+      assert list |> length() == 2
+
+      assert list
+             |> Enum.find(fn %{tag: tag, count: count} -> tag == server.tag and count == 1 end)
+
+      assert list
+             |> Enum.find(fn %{tag: tag, count: count} -> tag == "here-there" and count == 2 end)
+    end
+
+    test "servers having same tag but different prices, grouped separately", %{server: server} do
+      server2 = server_fixture(%{price: "123456.00"})
+
+      server_acc_fixture(%{server_id: server2.id})
+      |> then(fn acc -> activate_server_acc(server2, acc) end)
+
+      server_acc_fixture(%{server_id: server2.id})
+      |> then(fn acc -> activate_server_acc(server2, acc) end)
+
+      list = ServerAccUsers.list_server_tags_with_free_accs_count()
+      assert list |> length() == 2
+
+      assert list
+             |> Enum.find(fn %{tag: tag, price_plans: price_plans, count: count} ->
+               tag == server.tag and count == 1 and price_plans == server.price_plans
+             end)
+
+      assert list
+             |> Enum.find(fn %{tag: tag, price_plans: price_plans, count: count} ->
+               tag == server2.tag and count == 2 and price_plans == server2.price_plans
+             end)
+    end
+  end
 end

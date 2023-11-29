@@ -4,6 +4,7 @@ defmodule Omc.ServerAccUsers do
   alias Omc.Repo
   alias Omc.Servers.{Server, ServerAcc, ServerAccUser}
   import Ecto.Query, warn: false
+  import Ecto.Query.API, only: [count: 1], warn: false
 
   @doc """
   Returns all `ServerAccUser`s which are in use.
@@ -96,20 +97,32 @@ defmodule Omc.ServerAccUsers do
 
   @doc false
   def first_available_server_and_acc() do
-    query =
-      from(server in Server,
-        where: server.status == :active,
-        join: server_acc in ServerAcc,
-        on: server.id == server_acc.server_id,
-        where: server_acc.status == :active,
-        left_join: server_acc_user in ServerAccUser,
-        on: server_acc.id == server_acc_user.server_acc_id,
-        where: is_nil(server_acc_user.id),
-        select: %{server: server, server_acc: server_acc},
-        limit: 1
-      )
+    from([s, sa, sau] in available_server_acc_query(),
+      select: %{server: s, server_acc: sa},
+      limit: 1
+    )
+    |> Repo.one()
+  end
 
-    Repo.one(query)
+  @spec list_server_tags_with_free_accs_count() :: [%{tag: binary(), count: integer()}]
+  def list_server_tags_with_free_accs_count() do
+    from([s, sa, sau] in available_server_acc_query(),
+      group_by: [s.tag, s.price_plans],
+      select: %{tag: s.tag, price_plans: s.price_plans, count: count(sa.id)}
+    )
+    |> Repo.all()
+  end
+
+  defp available_server_acc_query() do
+    from(server in Server,
+      where: server.status == :active,
+      join: server_acc in ServerAcc,
+      on: server.id == server_acc.server_id,
+      where: server_acc.status == :active,
+      left_join: server_acc_user in ServerAccUser,
+      on: server_acc.id == server_acc_user.server_acc_id,
+      where: is_nil(server_acc_user.id)
+    )
   end
 
   @doc false

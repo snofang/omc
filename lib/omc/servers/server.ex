@@ -5,13 +5,13 @@ defmodule Omc.Servers.Server do
   alias Omc.Common.PricePlan
 
   schema "servers" do
-    field :tag, :string
-    field :name, :string
+    field(:tag, :string)
+    field(:name, :string)
     # TODO: To remove this after adding multiple price support 
-    field :price, :string, virtual: true
-    embeds_many :price_plans, PricePlan, on_replace: :delete
-    field :status, Ecto.Enum, values: [:active, :deactive]
-    has_many :server_accs, Omc.Servers.ServerAcc
+    field(:price, :string, virtual: true)
+    embeds_many(:price_plans, PricePlan, on_replace: :delete)
+    field(:status, Ecto.Enum, values: [:active, :deactive])
+    has_many(:server_accs, Omc.Servers.ServerAcc)
 
     timestamps()
   end
@@ -44,6 +44,7 @@ defmodule Omc.Servers.Server do
           changeset
           |> put_embed(:price_plans, [
             %PricePlan{
+              id: 1,
               name: "default",
               duration: 30 * 24 * 60 * 60,
               prices: [money]
@@ -69,11 +70,16 @@ defmodule Omc.Servers.Server do
     Map.put(
       server,
       :price,
-      server.price_plans
-      |> List.first()
-      |> then(fn price_plan -> price_plan.prices end)
-      |> List.first()
-      |> then(fn money -> Decimal.new(money.amount) |> Decimal.div(100) |> to_string() end)
+      default_price(server)
+      |> then(fn money -> money |> Money.to_decimal() |> Decimal.to_string() end)
     )
+  end
+
+  @spec default_price(%__MODULE__{}) :: Money.t()
+  def default_price(server) do
+    server.price_plans
+    |> List.first()
+    |> then(fn price_plan -> price_plan.prices end)
+    |> List.first()
   end
 end

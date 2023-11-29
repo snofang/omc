@@ -16,7 +16,7 @@ defmodule Omc.ServersFixtures do
     %{
       tag: "some-tag",
       name: unique_server_name(),
-      price: "120.5"
+      price: "120.50"
     }
   end
 

@@ -1,5 +1,7 @@
 defmodule Omc.Common.PricePlan do
   use Ecto.Schema
+  @primary_key {:id, :id, autogenerate: false}
+
   import Ecto.Schema
   import Ecto.Changeset
 
