@@ -1,5 +1,6 @@
 defmodule OmcWeb.ServerLive.Index do
   require Logger
+  alias Omc.PricePlans
   use OmcWeb, :live_view
 
   alias Omc.Servers
@@ -8,10 +9,14 @@ defmodule OmcWeb.ServerLive.Index do
   @impl true
   def mount(_params, _session, socket) do
     {:ok,
-     stream(
-       socket,
-       :servers,
-       Servers.list_servers()
+     socket
+     |> stream(:servers, Servers.list_servers())
+     |> assign(
+       :price_plans,
+       PricePlans.list_price_plans()
+       |> Enum.map(fn pp ->
+         {pp.name <> (pp.prices |> List.first() |> Money.to_string()), pp.id}
+       end)
      )}
   end
 

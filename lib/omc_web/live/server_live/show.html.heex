@@ -17,7 +17,7 @@
       <%= @server.status %>
     </:item>
     <:item title="Price">
-      <%= @server.price %>
+      <%= inspect @server.price_plan %>
     </:item>
     <:item title="Tag">
       <%= @server.tag %>
@@ -38,6 +38,7 @@
       title={@page_title}
       action={@live_action}
       server={@server}
+      price_plans={@price_plans}
       patch={~p"/servers/#{@server}"}
     />
   </.modal>

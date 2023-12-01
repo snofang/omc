@@ -3,6 +3,10 @@ defmodule Omc.TestUtils do
     happend_closely(NaiveDateTime.utc_now(), naive_datetime)
   end
 
+  def happend_closely(nil, nil) do
+    true
+  end
+
   def happend_closely(naive_datatime1, naive_datetime2, duration_allowance \\ 1) do
     naive_datatime1
     |> NaiveDateTime.diff(naive_datetime2)

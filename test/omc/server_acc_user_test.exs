@@ -159,17 +159,20 @@ defmodule Omc.ServerAccUserTest do
     end
 
     test "servers having same price and tag should grouped", %{server: server} do
-      server2 = server_fixture()
+      price_plan = server.price_plan
+      server2 = server_fixture(%{price_plan_id: price_plan.id})
 
       server_acc_fixture(%{server_id: server2.id})
       |> then(fn acc -> activate_server_acc(server2, acc) end)
 
       tag = server.tag
-      assert [%{tag: ^tag, count: 2}] = ServerAccUsers.list_server_tags_with_free_accs_count()
+
+      assert [%{tag: ^tag, price_plan: ^price_plan, count: 2}] =
+               ServerAccUsers.list_server_tags_with_free_accs_count()
     end
 
     test "servers having same price but different tags, grouped separately", %{server: server} do
-      server2 = server_fixture(%{tag: "here-there"})
+      server2 = server_fixture(%{tag: "here-there", price_plan_id: server.price_plan.id})
 
       server_acc_fixture(%{server_id: server2.id})
       |> then(fn acc -> activate_server_acc(server2, acc) end)
@@ -188,7 +191,7 @@ defmodule Omc.ServerAccUserTest do
     end
 
     test "servers having same tag but different prices, grouped separately", %{server: server} do
-      server2 = server_fixture(%{price: "123456.00"})
+      server2 = server_fixture()
 
       server_acc_fixture(%{server_id: server2.id})
       |> then(fn acc -> activate_server_acc(server2, acc) end)
@@ -200,13 +203,13 @@ defmodule Omc.ServerAccUserTest do
       assert list |> length() == 2
 
       assert list
-             |> Enum.find(fn %{tag: tag, price_plans: price_plans, count: count} ->
-               tag == server.tag and count == 1 and price_plans == server.price_plans
+             |> Enum.find(fn %{tag: tag, price_plan: price_plan, count: count} ->
+               tag == server.tag and count == 1 and price_plan == server.price_plan
              end)
 
       assert list
-             |> Enum.find(fn %{tag: tag, price_plans: price_plans, count: count} ->
-               tag == server2.tag and count == 2 and price_plans == server2.price_plans
+             |> Enum.find(fn %{tag: tag, price_plan: price_plan, count: count} ->
+               tag == server2.tag and count == 2 and price_plan == server2.price_plan
              end)
     end
   end

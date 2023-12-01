@@ -9,7 +9,10 @@ defmodule Omc.Telegram.CallbackAccount do
         {:error, "Not enough credit"}
 
       nil ->
-        {:ok, "", args |> Map.put(:accs, ServerAccUsers.list_active_accs(user))}
+        {:ok, "",
+         args
+         |> Map.put(:accs, ServerAccUsers.list_active_accs(user))
+         |> Map.put(:servers, ServerAccUsers.list_server_tags_with_free_accs_count())}
     end
   end
 
@@ -27,7 +30,7 @@ defmodule Omc.Telegram.CallbackAccount do
   end
 
   @impl true
-  def get_markup(%{accs: accs}) do
+  def get_markup(%{accs: accs, servers: _servers}) do
     accs
     |> active_acc_markup()
     |> then(
@@ -35,19 +38,38 @@ defmodule Omc.Telegram.CallbackAccount do
     )
   end
 
+  # TODO: It is needed to have a price plan reference, so that it would be possible to let
+  # a user to refer to it while creating/buying
+  # defp servers_markup(servers) do
+  #   servers
+  #   |> Enum.reduce([[]], fn %{tag: tag, price_plans: price_plans, count: count}, result ->
+  #     case result |> List.first() do
+  #       [] ->
+  #         [[markup_item(tag, "Account-new_#{sau_id}")]]
+  #
+  #       [item | []] ->
+  #         result
+  #         |> List.replace_at(0, [markup_item(sa_name, "usage_#{sau_id}") | [item]])
+  #
+  #       _ ->
+  #         [[markup_item(sa_name, "usage_#{sau_id}")] | result]
+  #     end
+  #   end)
+  # end
+
   defp active_acc_markup(active_accs) do
     active_accs
-    |> Enum.reduce([[]], fn %{sa_name: sa_name, sa_id: _sa_id, sau_id: sau_id}, acc ->
-      case acc |> List.first() do
+    |> Enum.reduce([[]], fn %{sa_name: sa_name, sa_id: _sa_id, sau_id: sau_id}, result ->
+      case result |> List.first() do
         [] ->
           [[markup_item(sa_name, "usage_#{sau_id}")]]
 
         [item | []] ->
-          acc
+          result
           |> List.replace_at(0, [markup_item(sa_name, "usage_#{sau_id}") | [item]])
 
         _ ->
-          [[markup_item(sa_name, "usage_#{sau_id}")] | acc]
+          [[markup_item(sa_name, "usage_#{sau_id}")] | result]
       end
     end)
   end

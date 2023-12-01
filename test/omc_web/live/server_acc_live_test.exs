@@ -8,28 +8,14 @@ defmodule OmcWeb.ServerAccLiveTest do
   @create_attrs %{description: "some description", name: "some-name"}
   @invalid_attrs %{description: nil, name: nil}
 
-  defp create_server_acc(_) do
+  setup %{} do
     user = user_fixture()
     server = server_fixture(%{user_id: user.id})
     server_acc = server_acc_fixture(%{server_id: server.id})
     %{user: user, server: server, server_acc: server_acc}
   end
 
-  defp new_acc_click(index_live) do
-    index_live
-    |> element(~s{a[href="/server_accs/new"]})
-    |> render_click()
-  end
-
-  defp select_server_change(index_live, server_id) do
-    index_live
-    |> form("#filter_form", filter: %{server_id: server_id})
-    |> render_change()
-  end
-
   describe "Index" do
-    setup [:create_server_acc]
-
     test "lists all server_accs",
          %{conn: conn, user: user} do
       {:ok, _index_live, html} =
@@ -121,8 +107,6 @@ defmodule OmcWeb.ServerAccLiveTest do
   end
 
   describe "Show" do
-    setup [:create_server_acc]
-
     test "displays server_acc",
          %{conn: conn, user: user, server_acc: server_acc} do
       {:ok, _show_live, html} =
@@ -133,5 +117,17 @@ defmodule OmcWeb.ServerAccLiveTest do
       assert html =~ "Show Server acc"
       assert html =~ server_acc.description
     end
+  end
+
+  defp new_acc_click(index_live) do
+    index_live
+    |> element(~s{a[href="/server_accs/new"]})
+    |> render_click()
+  end
+
+  defp select_server_change(index_live, server_id) do
+    index_live
+    |> form("#filter_form", filter: %{server_id: server_id})
+    |> render_change()
   end
 end

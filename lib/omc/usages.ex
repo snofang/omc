@@ -123,7 +123,8 @@ defmodule Omc.Usages do
           is_nil(u.ended_at),
       order_by: [asc: u.id],
       # TODO: IMPORTANT; to place explicit order by for usage_items
-      preload: [usage_items: ^usage_items]
+      preload: [usage_items: ^usage_items],
+      preload: [:price_plan]
     )
     |> Repo.all()
   end
@@ -150,7 +151,7 @@ defmodule Omc.Usages do
     %{
       server_acc_user_id: sau.id,
       started_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
-      price_plan: Servers.get_default_server_price_plan(sau.server_acc_id)
+      price_plan_id: Servers.get_default_server_price_plan(sau.server_acc_id) |> then(& &1.id)
     }
     |> Usage.create_changeset()
     |> Repo.insert()
@@ -245,10 +246,12 @@ defmodule Omc.Usages do
   def get_active_expired_usages(page \\ 1, limit \\ 10) when page > 0 and limit > 0 do
     # TODO: to investigate the gin index effectiveness for this 
     from(u in Usage,
-      where: is_nil(u.ended_at) and u.started_at <= ago(u.price_plan["duration"], "second"),
+      join: pp in assoc(u, :price_plan),
+      where: is_nil(u.ended_at) and u.started_at <= ago(pp.duration, "second"),
       limit: ^limit,
       offset: ^((page - 1) * limit),
-      preload: :usage_items
+      preload: :usage_items,
+      preload: [price_plan: pp]
     )
     |> Repo.all()
   end

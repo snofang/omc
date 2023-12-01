@@ -9,7 +9,7 @@ defmodule Omc.Usages.UsageState do
   alias Omc.Ledgers
   alias Omc.Usages.{Usage, UsageItem}
   alias Omc.Ledgers.Ledger
-  alias Omc.Common.PricePlan
+  alias Omc.Servers.PricePlan
 
   # Minimum duration in seconds which is considered in usage calculations
   @minimum_duration 60 * 60

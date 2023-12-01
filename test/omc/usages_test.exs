@@ -462,7 +462,7 @@ defmodule Omc.UsagesTest do
              |> (& &1.credit).() < @initial_credit.amount
 
       # same usage result from ending as the one got from usage_state
-      assert new_usage |> Map.put(:usage_items, []) == usage_state.usages |> List.first()
+      assert_usages_equal(new_usage, usage_state.usages |> List.first())
 
       # different id; realy new one creted 
       assert new_usage.id != usage.id
@@ -548,8 +548,8 @@ defmodule Omc.UsagesTest do
 
       usage_state1 = Usages.get_usage_state(ledger1)
 
-      assert get_in(usage_state1.usages, [Access.at(0)]) |> Map.replace(:usage_items, []) ==
-               no_change_usage
+      # no change usage
+      assert_usages_equal(get_in(usage_state1.usages, [Access.at(0)]), no_change_usage)
 
       assert get_in(usage_state1.usages, [Access.at(1), Access.key(:started_at)])
              |> TestUtils.happend_now_or_a_second_later()
@@ -569,5 +569,12 @@ defmodule Omc.UsagesTest do
       ledger: ledger,
       usage: usage
     }
+  end
+
+  defp assert_usages_equal(us1, us2) do
+    assert TestUtils.happend_closely(us1.started_at, us2.started_at)
+    assert TestUtils.happend_closely(us1.ended_at, us2.ended_at)
+    assert us1.price_plan_id == us2.price_plan_id
+    assert us1.server_acc_user_id == us2.server_acc_user_id
   end
 end

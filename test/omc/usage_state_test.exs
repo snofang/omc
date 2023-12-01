@@ -2,7 +2,7 @@ defmodule Omc.UsageStateTest do
   use ExUnit.Case, async: true
   alias Omc.TestUtils
   alias Omc.Ledgers.Ledger
-  alias Omc.Common.PricePlan
+  alias Omc.Servers.PricePlan
   alias Omc.Usages.{UsageState, Usage}
   alias Omc.Common.Utils
   @price_plan_duration 30 * 24 * 60 * 60

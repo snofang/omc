@@ -19,8 +19,9 @@ defmodule Omc.Servers do
 
   """
   def list_servers() do
-    Repo.all(Server)
-    |> Enum.map(&Server.put_price/1)
+    Server
+    |> preload(:price_plan)
+    |> Repo.all()
   end
 
   @doc """
@@ -37,7 +38,12 @@ defmodule Omc.Servers do
       ** (Ecto.NoResultsError)
 
   """
-  def get_server!(id), do: Repo.get!(Server, id) |> Server.put_price()
+  def get_server!(id) do
+    Server
+    |> where(id: ^id)
+    |> preload(:price_plan)
+    |> Repo.one!()
+  end
 
   @doc """
   Creates a server.
@@ -319,7 +325,6 @@ defmodule Omc.Servers do
     server_acc_id
     |> get_server_acc!()
     |> then(fn sa -> get_server!(sa.server_id) end)
-    |> then(fn s -> s.price_plans end)
-    |> List.first()
+    |> then(& &1.price_plan)
   end
 end

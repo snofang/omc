@@ -1,4 +1,5 @@
 defmodule Omc.ServerAccUsers do
+  alias Omc.PricePlans
   alias Omc.Ledgers
   alias Omc.Servers
   alias Omc.Repo
@@ -104,13 +105,15 @@ defmodule Omc.ServerAccUsers do
     |> Repo.one()
   end
 
+  # TODO: to optimise this; currently being done via 2 queries 
   @spec list_server_tags_with_free_accs_count() :: [%{tag: binary(), count: integer()}]
   def list_server_tags_with_free_accs_count() do
     from([s, sa, sau] in available_server_acc_query(),
-      group_by: [s.tag, s.price_plans],
-      select: %{tag: s.tag, price_plans: s.price_plans, count: count(sa.id)}
+      group_by: [s.tag, s.price_plan_id],
+      select: %{tag: s.tag, price_plan_id: s.price_plan_id, count: count(sa.id)}
     )
     |> Repo.all()
+    |> Enum.map(&Map.put(&1, :price_plan, PricePlans.get_price_plan!(&1.price_plan_id)))
   end
 
   defp available_server_acc_query() do

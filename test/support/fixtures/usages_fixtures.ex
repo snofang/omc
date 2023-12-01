@@ -1,14 +1,17 @@
 defmodule Omc.UsagesFixtures do
   import Omc.LedgersFixtures
+  alias Omc.PricePlans
   alias Omc.ServerAccUsers
   alias Omc.Usages
   alias Omc.ServersFixtures
+  alias Omc.Servers.Server
 
+  @spec server_fixture(Money.t()) :: %Server{}
   def server_fixture(server_price) do
+    {:ok, price_plan} = PricePlans.create_price_plan(server_price)
+
     server =
-      ServersFixtures.server_fixture(%{
-        price: server_price |> Money.to_decimal() |> to_string()
-      })
+      ServersFixtures.server_fixture(%{price_plan: price_plan, price_plan_id: price_plan.id})
 
     server
   end
@@ -43,5 +46,6 @@ defmodule Omc.UsagesFixtures do
       |> Omc.Repo.update()
 
     usage_updated
+    |> Omc.Repo.preload([:price_plan])
   end
 end

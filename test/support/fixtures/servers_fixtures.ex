@@ -3,6 +3,7 @@ defmodule Omc.ServersFixtures do
   This module defines test helpers for creating
   entities via the `Omc.Servers` context.
   """
+  alias Omc.PricePlans
   alias Omc.Servers
   alias Omc.Servers.{ServerOps}
 
@@ -13,10 +14,13 @@ defmodule Omc.ServersFixtures do
   def unique_server_acc_name, do: "somename#{System.unique_integer([:positive])}"
 
   def server_valid_attrs() do
+    {:ok, price_plan} = PricePlans.create_price_plan(Money.new(12050))
+
     %{
       tag: "some-tag",
       name: unique_server_name(),
-      price: "120.50"
+      price_plan_id: price_plan.id,
+      price_plan: price_plan
     }
   end
 
@@ -29,7 +33,8 @@ defmodule Omc.ServersFixtures do
       |> Enum.into(server_valid_attrs())
       |> Omc.Servers.create_server()
 
-    server
+    # refetching server to get price plan filled
+    Servers.get_server!(server.id)
   end
 
   @doc """

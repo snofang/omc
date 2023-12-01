@@ -19,9 +19,6 @@
     <:col :let={{_id, server}} label="Status">
       <%= server.status %>
     </:col>
-    <:col :let={{_id, server}} label="Price">
-      <%= server.price %>
-    </:col>
     <:col :let={{_id, server}} label="Tag">
       <%= server.tag %>
     </:col>
@@ -53,6 +50,7 @@
       title={@page_title}
       action={@live_action}
       server={@server}
+      price_plans={@price_plans}
       patch={~p"/servers"}
     />
   </.modal>

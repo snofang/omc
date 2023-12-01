@@ -29,7 +29,13 @@ defmodule OmcWeb.ServerLive.FormComponent do
           prompt="Choose a value"
           options={Ecto.Enum.values(Omc.Servers.Server, :status)}
         />
-        <.input field={@form[:price]} type="number" label="Price" step="any" />
+        <.input
+          field={@form[:price_plan_id]}
+          type="select"
+          label="Price"
+          prompt="Choose a value"
+          options={@price_plans}
+        />
         <.input field={@form[:tag]} type="text" label="Tag" />
         <:actions>
           <.button phx-disable-with="Saving...">Save Server</.button>

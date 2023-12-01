@@ -2,16 +2,25 @@ defmodule Omc.Repo.Migrations.CreateServersTables do
   use Ecto.Migration
 
   def change do
+    create table(:price_plans) do
+      add :name, :string, null: false
+      add :duration, :integer, null: false
+      add :prices, :map, null: false
+      add :max_volume, :integer, null: true
+      add :extra_volume_prices, :map, null: true
+      timestamps(updated_at: false)
+    end
+    
     create table(:servers) do
       add :name, :string, null: false
       add :status, :string, null: false
-      add :price_plans, :map, null: false
+      add :price_plan_id, references(:price_plans, on_delete: :nothing), null: false
       add :tag, :string, null: false
       timestamps()
     end
 
     create unique_index(:servers, [:name])
-    create index(:servers, [:price_plans], using: :gin)
+    create index(:servers, [:price_plan_id])
     create index(:servers, [:tag])
 
     create table(:server_accs) do

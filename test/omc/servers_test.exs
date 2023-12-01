@@ -1,4 +1,5 @@
 defmodule Omc.ServersTest do
+  alias Omc.PricePlans
   use Omc.DataCase, async: true
 
   alias Omc.Servers
@@ -8,7 +9,7 @@ defmodule Omc.ServersTest do
   import Omc.ServersFixtures
 
   describe "servers" do
-    @invalid_attrs %{tag: nil, name: nil, price: nil, status: nil}
+    @invalid_attrs %{tag: nil, name: nil, price_plan_id: nil, status: nil}
 
     test "list_servers/0 returns all servers" do
       server = server_fixture()
@@ -21,16 +22,13 @@ defmodule Omc.ServersTest do
     end
 
     test "create_server/1 with valid data creates a server" do
-      valid_attrs = %{
-        tag: "tag-123",
-        name: "some.name",
-        price: "120.99"
-      }
+      valid_attrs = server_valid_attrs()
+      {:ok, server} = Servers.create_server(valid_attrs)
+      server = Servers.get_server!(server.id)
 
-      assert {:ok, %Server{} = server} = Servers.create_server(valid_attrs)
-      assert server.tag == "tag-123"
-      assert server.name == "some.name"
-      assert server.price == "120.99"
+      assert server.tag == valid_attrs.tag
+      assert server.name == valid_attrs.name
+      assert server.price_plan == valid_attrs.price_plan
       assert server.status == :active
     end
 
@@ -38,17 +36,11 @@ defmodule Omc.ServersTest do
       assert {:error, %Ecto.Changeset{}} = Servers.create_server(@invalid_attrs)
     end
 
-    test "create_server/1 with invalid price returns error changeset" do
-      valid_attrs = server_valid_attrs()
-
-      assert {:error, %{errors: [price: _]}} =
-               Servers.create_server(valid_attrs |> Map.put(:price, nil))
-
-      assert {:error, %{errors: [price: _]}} =
-               Servers.create_server(valid_attrs |> Map.put(:price, "a23"))
-
-      assert {:error, %{errors: [price: _]}} =
-               Servers.create_server(valid_attrs |> Map.put(:price, "123.123"))
+    test "create_server/1 without price_plan_id should fail" do
+      assert {:error, %{errors: [price_plan_id: _]}} =
+               server_valid_attrs()
+               |> Map.drop([:price_plan_id])
+               |> Servers.create_server()
     end
 
     test "create_server/1 with invalid tag returns error changeset" do
@@ -72,18 +64,20 @@ defmodule Omc.ServersTest do
 
     test "update_server/2 with valid data updates the server" do
       server = server_fixture()
+      {:ok, new_price_plan} = PricePlans.create_price_plan(Money.new(1100))
 
       update_attrs = %{
         tag: "tag-updated123",
         name: "some.updated.name",
-        price: "456.7",
+        price_plan_id: new_price_plan.id,
         status: :deactive
       }
 
-      assert {:ok, %Server{} = server} = Servers.update_server(server, update_attrs)
+      {:ok, server} = Servers.update_server(server, update_attrs)
+
       assert server.tag == "tag-updated123"
       assert server.name == "some.updated.name"
-      assert server.price == "456.7"
+      assert server.price_plan_id == new_price_plan.id
       assert server.status == :deactive
     end
 
@@ -112,14 +106,13 @@ defmodule Omc.ServersTest do
     end
   end
 
-  defp create_server_acc(_) do
-    server = server_fixture()
-    server_acc = server_acc_fixture(%{server_id: server.id})
-    %{server: server, server_acc: server_acc}
-  end
-
   describe "server_accs" do
-    setup [:create_server_acc]
+    setup %{} do
+      server = server_fixture()
+      server_acc = server_acc_fixture(%{server_id: server.id})
+      %{server: server, server_acc: server_acc}
+    end
+
     @invalid_attrs %{description: nil, name: nil, status: nil}
 
     test "list_server_accs/0 returns all server_accs",
@@ -198,27 +191,17 @@ defmodule Omc.ServersTest do
       assert %Ecto.Changeset{} = Servers.change_server_acc(server_acc)
     end
 
-    test "server_acc name should be unique within a server" do
-      server_common_attrs = %{tag: "from-to", price: "50"}
-
-      {:ok, server1} =
-        server_common_attrs
-        |> Map.merge(%{name: unique_server_name()})
-        |> Omc.Servers.create_server()
-
+    test "server_acc name should be unique within a server", %{server: server1} do
+      # not possible to add same named acc to the same server
       {:ok, server1_acc1} =
         Omc.Servers.create_server_acc(%{server_id: server1.id, name: unique_server_acc_name()})
 
-      # not possible to add same named acc to the same server
       assert {:error, _} =
                Omc.Servers.create_server_acc(%{server_id: server1.id, name: server1_acc1.name})
 
-      {:ok, server2} =
-        server_common_attrs
-        |> Map.merge(%{server_id: server1.id, name: unique_server_name()})
-        |> Omc.Servers.create_server()
-
       # while it is possible to add same named acc to the different server
+      server2 = server_fixture()
+
       assert {:ok, _} =
                Omc.Servers.create_server_acc(%{server_id: server2.id, name: server1_acc1.name})
     end

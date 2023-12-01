@@ -1,4 +1,5 @@
 defmodule OmcWeb.ServerLiveTest do
+  alias Omc.PricePlans
   use OmcWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
@@ -7,26 +8,23 @@ defmodule OmcWeb.ServerLiveTest do
 
   @create_attrs %{
     tag: "src-dest",
-    name: "some.name",
-    price: "120.5"
+    name: "some.name"
   }
   @update_attrs %{
     tag: "src-dest2",
     name: "some.updated.name",
-    price: "456.7",
     status: :deactive
   }
-  @invalid_attrs %{tag: nil, name: nil, price: nil}
+  @invalid_attrs %{tag: nil, name: nil, price_plan_id: nil}
 
-  defp create_server(_) do
+  setup %{} do
     user = user_fixture()
     server = server_fixture(%{user_id: user.id})
-    %{user: user, server: server}
+    {:ok, price_plan} = PricePlans.create_price_plan(Money.new(12345))
+    %{user: user, server: server, price_plan: price_plan}
   end
 
   describe "Index" do
-    setup [:create_server]
-
     test "lists all servers",
          %{conn: conn, user: user, server: server} do
       {:ok, _index_live, html} =
@@ -38,7 +36,7 @@ defmodule OmcWeb.ServerLiveTest do
       assert html =~ server.tag
     end
 
-    test "saves new server", %{conn: conn, user: user} do
+    test "saves new server", %{conn: conn, user: user, price_plan: price_plan} do
       {:ok, index_live, _html} =
         conn
         |> log_in_user(user)
@@ -54,7 +52,9 @@ defmodule OmcWeb.ServerLiveTest do
              |> render_change() =~ "can&#39;t be blank"
 
       assert index_live
-             |> form("#server-form", server: @create_attrs)
+             |> form("#server-form",
+               server: @create_attrs |> Map.put(:price_plan_id, price_plan.id)
+             )
              |> render_submit()
 
       assert_patch(index_live, ~p"/servers")
@@ -81,7 +81,9 @@ defmodule OmcWeb.ServerLiveTest do
              |> render_change() =~ "can&#39;t be blank"
 
       assert index_live
-             |> form("#server-form", server: @update_attrs)
+             |> form("#server-form",
+               server: @update_attrs |> Map.put(:price_plan_id, server.price_plan_id)
+             )
              |> render_submit()
 
       assert_patch(index_live, ~p"/servers")
@@ -104,8 +106,6 @@ defmodule OmcWeb.ServerLiveTest do
   end
 
   describe "Show" do
-    setup [:create_server]
-
     test "displays server",
          %{conn: conn, user: user, server: server} do
       {:ok, _show_live, html} =
@@ -134,7 +134,9 @@ defmodule OmcWeb.ServerLiveTest do
              |> render_change() =~ "can&#39;t be blank"
 
       assert show_live
-             |> form("#server-form", server: @update_attrs)
+             |> form("#server-form",
+               server: @update_attrs |> Map.put(:price_plan_id, server.price_plan_id)
+             )
              |> render_submit()
 
       assert_patch(show_live, ~p"/servers/#{server}")
