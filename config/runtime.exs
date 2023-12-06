@@ -56,7 +56,7 @@ if config_env() == :prod do
   port = String.to_integer(System.get_env("PORT") || "4000")
 
   config :omc, OmcWeb.Endpoint,
-    url: [host: host, port: 443, scheme: "https"] |> IO.inspect(label: "---- this is URL ----"),
+    url: [host: host, port: 443, scheme: "https"],
     http: [
       # Enable IPv6 and bind on all interfaces.
       # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.

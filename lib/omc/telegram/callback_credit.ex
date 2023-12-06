@@ -7,16 +7,16 @@ defmodule Omc.Telegram.CallbackCredit do
   def do_process(args = %{user: user, callback_args: callback_args}) do
     case callback_args do
       [] ->
-        {:ok, "", args}
+        {:ok, args |> Map.put_new(:message, "")}
 
       [amount | []] ->
         Payments.create_payment_request(:oxapay, user |> Map.put(:money, Money.parse!(amount)))
         |> case do
           {:ok, _} ->
-            {:ok, "Successfully created payment request.", args}
+            {:ok, args |> Map.put(:message, "Successfully created payment request.")}
 
           {:error, _} ->
-            {:error, "Failed creating payment request!"}
+            {:error, args |> Map.put(:message, "Failed creating payment request!")}
         end
     end
   end

@@ -14,7 +14,7 @@ defmodule Omc.Telegram.TelegramUtils do
       (params |> Enum.map(&encode_callback_data_param/1) |> Enum.join(@callback_params_separator))
   end
 
-  @spec decode_callback_data(binary()) :: {callback :: binary(), params :: [binary()]}
+  @spec decode_callback_data(binary()) :: {callback :: binary(), args :: [binary()]}
   def decode_callback_data(callback_data) do
     case String.split(callback_data, Regex.compile!("(?<!\\\\)#{@callback_separator}")) do
       [callback | [params_encoded]] ->
@@ -86,5 +86,13 @@ defmodule Omc.Telegram.TelegramUtils do
           ]
       end
     end)
+  end
+
+  def handle_callback(callback, args) do
+    apply(
+      String.to_existing_atom("Elixir.Omc.Telegram.Callback#{callback |> String.capitalize()}"),
+      :handle,
+      [args]
+    )
   end
 end

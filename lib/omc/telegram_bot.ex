@@ -17,7 +17,6 @@ defmodule Omc.TelegramBot do
                 CallbackMain.get_text(%{}),
                 CallbackMain.get_markup(%{})
               )
-              |> IO.inspect()
           else
             {:ok, _} =
               TelegramApi.send_message(token, chat_id, "Please use */start* command.", [[]])
@@ -34,19 +33,13 @@ defmodule Omc.TelegramBot do
           {callback, args} = data |> TelegramUtils.decode_callback_data()
 
           {:ok, _} =
-            apply(
-              String.to_existing_atom(
-                "Elixir.Omc.Telegram.Callback#{callback |> String.capitalize()}"
-              ),
-              :handle,
-              [
-                token,
-                callback_query_id,
-                chat_id,
-                message_id,
-                args
-              ]
-            )
+            TelegramUtils.handle_callback(callback, %{
+              token: token,
+              callback_query_id: callback_query_id,
+              chat_id: chat_id,
+              message_id: message_id,
+              callback_args: args
+            })
 
         _ ->
           Logger.debug("Unknown message:\n\n```\n#{inspect(update, pretty: true)}\n```")

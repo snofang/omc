@@ -104,10 +104,12 @@ defmodule Omc.ServerAccUsers do
     * `:server_tag` 
     * `:price_plan_id`
   """
-  @spec first_available_server_and_acc(options :: Keyword.t()) :: %{
-          server: %Server{},
-          server_acc: %ServerAcc{}
-        }
+  @spec first_available_server_and_acc(options :: Keyword.t()) ::
+          %{
+            server: %Server{},
+            server_acc: %ServerAcc{}
+          }
+          | nil
   def first_available_server_and_acc(args \\ []) do
     args = Keyword.validate!(args, server_tag: nil, price_plan_id: nil)
 

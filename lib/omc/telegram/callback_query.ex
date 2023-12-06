@@ -1,4 +1,6 @@
 defmodule Omc.Telegram.CallbackQuery do
+  alias Omc.Telegram.TelegramUtils
+
   defmacro __using__(_args) do
     quote do
       @behaviour Omc.Telegram.CallbackQuery
@@ -7,25 +9,30 @@ defmodule Omc.Telegram.CallbackQuery do
       alias TableRex.Table
       require Logger
 
-      @spec handle(
-              token :: binary(),
-              callback_query_id :: binary(),
-              chat_id :: binary(),
-              message_id :: integer(),
-              callback_args :: [binary()]
-            ) :: {:ok, :done} | {:error, term()}
-      def handle(token, callback_query_id, chat_id, message_id, callback_args) do
+      @spec handle(%{
+              token: binary(),
+              callback_query_id: binary(),
+              chat_id: binary(),
+              message_id: integer(),
+              callback_args: [binary()]
+            }) :: {:ok, :done} | {:error, term()}
+      def handle(
+            args = %{
+              token: token,
+              callback_query_id: callback_query_id,
+              chat_id: chat_id,
+              message_id: message_id,
+              callback_args: callback_args
+            }
+          ) do
         try do
-          args = %{
-            user: %{user_type: :telegram, user_id: chat_id |> to_string()},
-            callback_args: callback_args,
-            token: token,
-            chat_id: chat_id,
-            message_id: message_id
-          }
+          args = args |> Map.put(:user, %{user_type: :telegram, user_id: chat_id |> to_string()})
 
           case do_process(args) do
-            {:ok, message, args} ->
+            {:redirect, callback, args} ->
+              TelegramUtils.handle_callback(callback, args)
+
+            {:ok, args} ->
               {:ok, _} =
                 TelegramApi.edit_message_text(
                   token,
@@ -41,9 +48,9 @@ defmodule Omc.Telegram.CallbackQuery do
                 get_markup(args)
               )
 
-              TelegramApi.answer_callback(token, callback_query_id, message)
+              TelegramApi.answer_callback(token, callback_query_id, args[:message])
 
-            {:error, message} ->
+            {:error, %{message: message}} ->
               TelegramApi.answer_callback(token, callback_query_id, message)
           end
 
@@ -60,10 +67,13 @@ defmodule Omc.Telegram.CallbackQuery do
       def do_process(args) do
         case :erlang.phash2(1, 1) do
           0 ->
-            {:ok, "", args}
+            {:ok, args |> Map.put(:message, "")}
 
           1 ->
-            {:error, "should not happen!"}
+            {:error, %{message: "should not happen!"}}
+
+          2 ->
+            {:redirect, "no_where", %{message: "should not happen!"}}
         end
       end
 
@@ -77,8 +87,9 @@ defmodule Omc.Telegram.CallbackQuery do
   end
 
   @callback do_process(args :: map()) ::
-              {:ok, success_message :: binary(), data :: map()}
-              | {:error, error_message :: binary()}
+              {:ok, args :: map()}
+              | {:redirect, callback :: binary(), args :: map()}
+              | {:error, args :: map()}
   @callback get_text(args :: map()) :: binary()
   @callback get_markup(args :: map()) :: [[map()]]
 end
