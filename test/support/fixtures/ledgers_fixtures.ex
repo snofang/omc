@@ -10,6 +10,10 @@ defmodule Omc.LedgersFixtures do
     |> Integer.to_string()
   end
 
+  def unique_user_attrs do
+    %{user_type: :telegram, user_id: unique_user_id()}
+  end
+
   def valid_ledger_tx_attrubutes(attrs \\ %{}) do
     Enum.into(attrs, %{
       user_type: :telegram,

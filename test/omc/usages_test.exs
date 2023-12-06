@@ -1,4 +1,6 @@
 defmodule Omc.UsagesTest do
+  alias Omc.ServersFixtures
+  alias Omc.LedgersFixtures
   alias Omc.Servers
   alias Omc.ServerAccUsers
   alias Omc.TestUtils
@@ -556,6 +558,61 @@ defmodule Omc.UsagesTest do
 
       assert get_in(usage_state1.usages, [Access.at(1), Access.key(:server_acc_user_id)]) ==
                renew_usage.server_acc_user_id
+    end
+  end
+
+  describe "start_usage/1" do
+    # server = server_fixture(@server_price)
+    # ledger = ledger_fixture(@initial_credit)
+    # server_acc = ServersFixtures.server_acc_fixture(%{server_id: server.id})
+    # ServersFixtures.activate_server_acc(server, server_acc)
+    test "without credit - failed_value: :no_credit}" do
+      server = server_fixture(@server_price)
+      server_acc = ServersFixtures.server_acc_fixture(%{server_id: server.id})
+      ServersFixtures.activate_server_acc(server, server_acc)
+      user = LedgersFixtures.unique_user_attrs()
+      assert Usages.start_usage(user) == {:error, :no_credit}
+    end
+
+    test "without available acc - failed_value: :no_server_acc_available" do
+      server_fixture(@server_price)
+      user = LedgersFixtures.unique_user_attrs()
+      assert Usages.start_usage(user) == {:error, :no_server_acc_available}
+    end
+
+    test "success case should create server_acc_user & usage" do
+      %{price_plan_id: price_plan_id} = server = server_fixture(@server_price)
+
+      %{id: server_acc_id} =
+        server_acc = ServersFixtures.server_acc_fixture(%{server_id: server.id})
+
+      ServersFixtures.activate_server_acc(server, server_acc)
+      %{user_id: user_id, user_type: user_type} = user = LedgersFixtures.unique_user_attrs()
+      ledger_fixture(@initial_credit, user)
+
+      {:ok,
+       %{
+         server_acc_user: %Omc.Servers.ServerAccUser{
+           id: sau_id,
+           user_type: ^user_type,
+           user_id: ^user_id,
+           server_acc_id: ^server_acc_id,
+           allocated_at: sau_allocated_at,
+           started_at: sau_started_at,
+           ended_at: nil
+         },
+         usage: %Omc.Usages.Usage{
+           server_acc_user_id: usage_sau_id,
+           price_plan_id: ^price_plan_id,
+           started_at: usage_started_at,
+           ended_at: nil
+         }
+       }} = Usages.start_usage(user)
+
+      assert TestUtils.happend_now_or_a_second_later(sau_allocated_at)
+      assert TestUtils.happend_now_or_a_second_later(sau_started_at)
+      assert TestUtils.happend_now_or_a_second_later(usage_started_at)
+      assert sau_id == usage_sau_id
     end
   end
 

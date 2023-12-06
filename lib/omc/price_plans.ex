@@ -5,7 +5,7 @@ defmodule Omc.PricePlans do
 
   @doc """
   Create a new `PricePlan`.
-  ## Oprions:
+  ## Options:
     * `:name` - specifies plan's name. default value is `default`.
     * `:duration` - duration subject of price in seconds. default is 30 days.
   """

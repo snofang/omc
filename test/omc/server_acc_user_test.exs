@@ -1,4 +1,6 @@
 defmodule Omc.ServerAccUserTest do
+  alias Omc.PricePlans
+  alias Ecto.StaleEntryError
   alias Omc.TestUtils
   use Omc.DataCase, async: true
   alias Omc.ServerAccUsers
@@ -128,6 +130,19 @@ defmodule Omc.ServerAccUserTest do
       assert TestUtils.happend_now_or_a_second_later(started_at)
     end
 
+    test "starting already started sau should prevented",
+         %{server_acc_user: sau} do
+      assert {:error, :no_credit} = ServerAccUsers.start_server_acc_user(sau)
+      # adding some credit
+      ledger_tx_fixture!(%{user_id: sau.user_id, user_type: sau.user_type})
+      {:ok, started_sau} = ServerAccUsers.start_server_acc_user(sau)
+      assert_raise StaleEntryError, fn -> ServerAccUsers.start_server_acc_user(sau) end
+
+      assert_raise FunctionClauseError, fn ->
+        ServerAccUsers.start_server_acc_user(started_sau)
+      end
+    end
+
     test "it should not be possible to end server_acc_user if not started",
          %{server_acc_user: sau} do
       {:error, :server_acc_user, _, _} = ServerAccUsers.end_server_acc_user(sau)
@@ -211,6 +226,85 @@ defmodule Omc.ServerAccUserTest do
              |> Enum.find(fn %{tag: tag, price_plan: price_plan, count: count} ->
                tag == server2.tag and count == 2 and price_plan == server2.price_plan
              end)
+    end
+  end
+
+  describe "first_available_server_and_acc/1" do
+    test "one server, one active acc, no filter", %{
+      server: %{id: server_id},
+      server_acc: %{id: server_acc_id}
+    } do
+      assert %{server: %{id: ^server_id}, server_acc: %{id: ^server_acc_id}} =
+               ServerAccUsers.first_available_server_and_acc()
+    end
+
+    test "not activated acc should not be returned" do
+      server1 = server_fixture(%{tag: "server1-tag"})
+      _server_acc1 = server_acc_fixture(%{server_id: server1.id})
+      assert ServerAccUsers.first_available_server_and_acc(server_tag: "server1-tag") == nil
+    end
+
+    test "different server tags", %{
+      server: %{tag: server_tag},
+      server_acc: %{id: server_acc_id}
+    } do
+      assert %{server: _server, server_acc: %{id: ^server_acc_id}} =
+               ServerAccUsers.first_available_server_and_acc(server_tag: server_tag)
+
+      %{id: server1_id} = server1 = server_fixture(%{tag: "server1-tag"})
+      %{id: server_acc1_id} = server_acc1 = server_acc_fixture(%{server_id: server1_id})
+      activate_server_acc(server1, server_acc1)
+
+      assert %{server: %{id: ^server1_id}, server_acc: %{id: ^server_acc1_id}} =
+               ServerAccUsers.first_available_server_and_acc(server_tag: "server1-tag")
+    end
+
+    test "same server tags, different price plans", %{
+      server: %{id: server_id, tag: server_tag, price_plan_id: price_plan_id},
+      server_acc: %{id: server_acc_id}
+    } do
+      {:ok, %{id: price_plan_id2}} = PricePlans.create_price_plan(Money.new(1234))
+      %{id: server1_id} = server1 = server_fixture(%{price_plan_id: price_plan_id2})
+      %{id: server_acc1_id} = server_acc1 = server_acc_fixture(%{server_id: server1_id})
+      activate_server_acc(server1, server_acc1)
+
+      assert %{server: %{id: ^server1_id}, server_acc: %{id: ^server_acc1_id}} =
+               ServerAccUsers.first_available_server_and_acc(price_plan_id: price_plan_id2)
+
+      assert %{server: %{id: ^server1_id}, server_acc: %{id: ^server_acc1_id}} =
+               ServerAccUsers.first_available_server_and_acc(
+                 price_plan_id: price_plan_id2,
+                 server_tag: server_tag
+               )
+
+      assert %{server: %{id: ^server_id}, server_acc: %{id: ^server_acc_id}} =
+               ServerAccUsers.first_available_server_and_acc(
+                 price_plan_id: price_plan_id,
+                 server_tag: server_tag
+               )
+    end
+  end
+
+  describe "get_server_accs_in_use/1" do
+    setup %{user_attrs: user_attrs} do
+      ledger_tx_fixture!(user_attrs)
+      {:ok, server_acc_user} = ServerAccUsers.allocate_new_server_acc_user(user_attrs)
+      %{server_acc_user: server_acc_user}
+    end
+
+    test "no in-use server_acc", %{user_attrs: user} do
+      assert [] = ServerAccUsers.get_server_accs_in_use(user)
+    end
+
+    test "one server_acc in use", %{
+      user_attrs: user,
+      server_acc_user: sau = %{id: sau_id},
+      server_acc: %{id: sa_id, name: sa_name}
+    } do
+      ServerAccUsers.start_server_acc_user(sau)
+
+      assert [%{sa_id: ^sa_id, sa_name: ^sa_name, sau_id: ^sau_id}] =
+               ServerAccUsers.get_server_accs_in_use(user)
     end
   end
 end

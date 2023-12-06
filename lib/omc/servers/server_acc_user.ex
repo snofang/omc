@@ -34,7 +34,7 @@ defmodule Omc.Servers.ServerAccUser do
   @doc """
   Starts acc usage by setting `started_at`.
   """
-  def start_changeset(data) do
+  def start_changeset(data) when data.started_at == nil do
     data
     |> change(%{started_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)})
     |> optimistic_lock(:lock_version)

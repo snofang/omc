@@ -5,6 +5,7 @@ defmodule Omc.Telegram.CallbackQuery do
       alias Omc.Telegram.TelegramApi
       alias Omc.Telegram.TelegramUtils
       alias TableRex.Table
+      require Logger
 
       @spec handle(
               token :: binary(),
@@ -17,7 +18,7 @@ defmodule Omc.Telegram.CallbackQuery do
         try do
           args = %{
             user: %{user_type: :telegram, user_id: chat_id |> to_string()},
-            callback_args: if(callback_args, do: callback_args |> String.split("_"), else: nil),
+            callback_args: callback_args,
             token: token,
             chat_id: chat_id,
             message_id: message_id
@@ -49,6 +50,7 @@ defmodule Omc.Telegram.CallbackQuery do
           {:ok, :done}
         rescue
           error ->
+            Logger.error(Exception.format(:error, error, __STACKTRACE__))
             TelegramApi.answer_callback(token, callback_query_id, "Oops!")
             {:error, error}
         end
@@ -58,7 +60,7 @@ defmodule Omc.Telegram.CallbackQuery do
       def do_process(args) do
         case :erlang.phash2(1, 1) do
           0 ->
-            {:ok, nil, args}
+            {:ok, "", args}
 
           1 ->
             {:error, "should not happen!"}

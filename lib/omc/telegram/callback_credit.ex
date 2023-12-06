@@ -6,7 +6,7 @@ defmodule Omc.Telegram.CallbackCredit do
   @impl true
   def do_process(args = %{user: user, callback_args: callback_args}) do
     case callback_args do
-      nil ->
+      [] ->
         {:ok, "", args}
 
       [amount | []] ->

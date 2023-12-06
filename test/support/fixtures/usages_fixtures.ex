@@ -1,7 +1,6 @@
 defmodule Omc.UsagesFixtures do
   import Omc.LedgersFixtures
   alias Omc.PricePlans
-  alias Omc.ServerAccUsers
   alias Omc.Usages
   alias Omc.ServersFixtures
   alias Omc.Servers.Server
@@ -16,8 +15,9 @@ defmodule Omc.UsagesFixtures do
     server
   end
 
-  def ledger_fixture(ledger_initial_credit) do
-    user_attrs = %{user_type: :telegram, user_id: unique_user_id()}
+  def ledger_fixture(ledger_initial_credit, user_attrs \\ nil) do
+    user_attrs =
+      if user_attrs, do: user_attrs, else: %{user_type: :telegram, user_id: unique_user_id()}
 
     %{ledger: ledger, ledger_tx: _ledger_tx} =
       ledger_tx_fixture!(
@@ -33,8 +33,8 @@ defmodule Omc.UsagesFixtures do
       ) do
     server_acc = ServersFixtures.server_acc_fixture(%{server_id: server.id})
     ServersFixtures.activate_server_acc(server, server_acc)
-    {:ok, sau} = ServerAccUsers.allocate_server_acc_user(user_attrs)
-    %{usage: usage, server_acc_user: _sau} = Usages.start_usage!(sau)
+    # {:ok, sau} = ServerAccUsers.allocate_server_acc_user(user_attrs)
+    {:ok, %{usage: usage, server_acc_user: _sau}} = Usages.start_usage(user_attrs)
 
     usage
   end

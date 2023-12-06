@@ -132,19 +132,43 @@ defmodule Omc.Usages do
   @doc """
   Creates a new `Usage` `started_at` now and following on, it'll be possible to calculate `sau` usages.
   """
-  @spec start_usage!(%ServerAccUser{}) :: %{usage: %Usage{}, server_acc_user: %ServerAccUser{}}
-  def start_usage!(%ServerAccUser{} = sau) do
-    {:ok, %{sau_started: sau_started, usage_started: usage_started}} =
-      Ecto.Multi.new()
-      |> Ecto.Multi.run(:sau_started, fn _repo, _changes ->
-        ServerAccUsers.start_server_acc_user(sau)
-      end)
-      |> Ecto.Multi.run(:usage_started, fn _repo, %{sau_started: sau_started} ->
-        create_usage(sau_started)
-      end)
-      |> Repo.transaction()
+  @spec start_usage(%ServerAccUser{}) ::
+          {:ok, %{usage: %Usage{}, server_acc_user: %ServerAccUser{}}} | {:error, term()}
+  def start_usage(%ServerAccUser{} = sau) do
+    case Ecto.Multi.new()
+         |> Ecto.Multi.run(:server_acc_user, fn _repo, _changes ->
+           ServerAccUsers.start_server_acc_user(sau)
+         end)
+         |> Ecto.Multi.run(:usage, fn _repo, %{server_acc_user: sau} ->
+           create_usage(sau)
+         end)
+         |> Repo.transaction() do
+      {:error, _failed_operation, failed_value, _changes_so_far} -> {:error, failed_value}
+      other -> other
+    end
+  end
 
-    %{usage: usage_started |> Repo.preload(:usage_items), server_acc_user: sau_started}
+  @doc """
+  Finds any available `ServerAcc` and starts a `Usage` for given `user`
+  ## Options
+    * `:server_tag`
+    * `:price_plan_id`
+  """
+  def start_usage(
+        user = %{user_id: _, user_type: _},
+        opts \\ []
+      ) do
+    case Ecto.Multi.new()
+         |> Ecto.Multi.run(:allocate_sau, fn _repo, _changes ->
+           ServerAccUsers.allocate_new_server_acc_user(user, opts)
+         end)
+         |> Ecto.Multi.run(:start_usage, fn _repo, %{allocate_sau: sau} ->
+           start_usage(sau)
+         end)
+         |> Repo.transaction() do
+      {:ok, %{start_usage: start_usage}} -> {:ok, start_usage}
+      {:error, _failed_operation, failed_value, _changes_so_far} -> {:error, failed_value}
+    end
   end
 
   defp create_usage(%ServerAccUser{} = sau) do
@@ -181,7 +205,7 @@ defmodule Omc.Usages do
     # Computing UsageState just for one usage
     usage_state =
       %UsageState{
-        usages: [usage],
+        usages: [usage |> Repo.preload([:usage_items])],
         ledgers: Ledgers.get_ledgers(ServerAccUser.user_attrs(sau))
       }
       |> UsageState.compute()

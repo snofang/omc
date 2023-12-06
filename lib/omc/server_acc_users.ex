@@ -15,6 +15,21 @@ defmodule Omc.ServerAccUsers do
     |> Repo.all()
   end
 
+  @doc """
+  Returns all in use `ServerAcc`.
+  """
+  @spec get_server_accs_in_use(%{user_type: atom(), user_id: binary()}) :: [
+          %{sa_id: integer(), sa_name: binary, sau_id: integer()}
+        ]
+  def get_server_accs_in_use(user = %{user_type: _, user_id: _}) do
+    from(sau in server_acc_users_in_use_query(user),
+      join: sa in ServerAcc,
+      on: sa.id == sau.server_acc_id,
+      select: %{sa_id: sa.id, sa_name: sa.name, sau_id: sau.id}
+    )
+    |> Repo.all()
+  end
+
   defp server_acc_users_in_use_query(%{user_type: user_type, user_id: user_id}) do
     from(sau in ServerAccUser,
       where:
@@ -25,36 +40,22 @@ defmodule Omc.ServerAccUsers do
     )
   end
 
-  @doc """
-  Returns all in use server accs.
-  """
-  @spec list_active_accs(%{user_type: atom(), user_id: binary()}) :: [
-          %{sa_id: integer(), sa_name: binary, sau_id: integer()}
-        ]
-  def list_active_accs(user = %{user_type: _, user_id: _}) do
-    from(sau in server_acc_users_in_use_query(user),
-      join: sa in ServerAcc,
-      on: sa.id == sau.server_acc_id,
-      select: %{sa_id: sa.id, sa_name: sa.name, sau_id: sau.id}
-    )
-    |> Repo.all()
-  end
-
   # Allocates a `ServerAcc` to a user by creating a record of `ServerAccUser` in db and 
   # setting its `allocated_at` to the current `NaiveDateTime`.
   # This is triggered on any request for an acc for a given user. This is temporary 
   # and serves as mechanism to reserve an acc(before final activation which happens in `start` operation).
   # Actually a naive cart implementation it is.
   @doc false
-  @spec allocate_new_server_acc_user(%{user_type: atom(), user_id: binary()}) ::
+  @spec allocate_new_server_acc_user(%{user_type: atom(), user_id: binary()}, opts :: Keyword.t()) ::
           {:ok, ServerAccUser.t()} | {:error, :no_server_acc_available} | {:error, any()}
-  def allocate_new_server_acc_user(%{user_type: _, user_id: _} = user_attrs) do
-    case first_available_server_and_acc() do
+  def allocate_new_server_acc_user(%{user_type: _, user_id: _} = user_attrs, opts \\ []) do
+    case first_available_server_and_acc(opts) do
       nil ->
         {:error, :no_server_acc_available}
 
       attrs = %{server: _server, server_acc: _server_acc} ->
         case create_server_acc_user(attrs |> Map.merge(user_attrs)) do
+          # TODO: this does not have test; better to use GenServer instead 
           {:error, %{errors: [{:server_acc_id, {"has already been taken", _}}]}} ->
             allocate_new_server_acc_user(user_attrs)
 
@@ -96,12 +97,39 @@ defmodule Omc.ServerAccUsers do
     |> Repo.insert()
   end
 
-  @doc false
-  def first_available_server_and_acc() do
-    from([s, sa, sau] in available_server_acc_query(),
-      select: %{server: s, server_acc: sa},
-      limit: 1
-    )
+  @doc """
+  Returns first available(unallocated, unused) `Server` and `ServerAcc` tuple. 
+
+  ## Options
+    * `:server_tag` 
+    * `:price_plan_id`
+  """
+  @spec first_available_server_and_acc(options :: Keyword.t()) :: %{
+          server: %Server{},
+          server_acc: %ServerAcc{}
+        }
+  def first_available_server_and_acc(args \\ []) do
+    args = Keyword.validate!(args, server_tag: nil, price_plan_id: nil)
+
+    available_server_acc_query()
+    |> select([s, sa, sau], %{server: s, server_acc: sa})
+    # server_tag
+    |> then(fn q ->
+      if args[:server_tag] do
+        q |> where([s, sa, sau], s.tag == ^args[:server_tag])
+      else
+        q
+      end
+    end)
+    # server_plan_id
+    |> then(fn q ->
+      if args[:price_plan_id] do
+        q |> where([s, sa, sau], s.price_plan_id == ^args[:price_plan_id])
+      else
+        q
+      end
+    end)
+    |> limit(1)
     |> Repo.one()
   end
 

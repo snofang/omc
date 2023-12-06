@@ -14,12 +14,12 @@ defmodule Omc.Telegram.CallbackMain do
   def get_markup(_args) do
     [
       [
-        %{text: "Account(s)", callback_data: "Account"},
-        %{text: "Credit", callback_data: "Credit"}
+        %{text: "Account(s)", callback_data: "accounts"},
+        %{text: "Credit", callback_data: "credit"}
       ],
       [
-        %{text: "Billings", callback_data: "Billing"},
-        %{text: "Help", callback_data: "Help"}
+        %{text: "Billings", callback_data: "billing"},
+        %{text: "Help", callback_data: "help"}
       ]
     ]
   end

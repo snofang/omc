@@ -10,7 +10,7 @@ defmodule Omc.Repo.Migrations.CreateServersTables do
       add :extra_volume_prices, :map, null: true
       timestamps(updated_at: false)
     end
-    
+
     create table(:servers) do
       add :name, :string, null: false
       add :status, :string, null: false

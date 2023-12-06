@@ -1,4 +1,5 @@
 defmodule Omc.TelegramBot do
+  alias Omc.Telegram.TelegramUtils
   alias Omc.Telegram.TelegramApi
   alias Omc.Telegram.CallbackMain
   use Telegram.Bot
@@ -30,26 +31,32 @@ defmodule Omc.TelegramBot do
             "message" => %{"message_id" => message_id, "chat" => %{"id" => chat_id}}
           }
         } ->
-          [m | args] = data |> String.split("-")
+          {callback, args} = data |> TelegramUtils.decode_callback_data()
 
           {:ok, _} =
-            apply(String.to_existing_atom("Elixir.Omc.Telegram.Callback#{m}"), :handle, [
-              token,
-              callback_query_id,
-              chat_id,
-              message_id,
-              args |> List.first()
-            ])
+            apply(
+              String.to_existing_atom(
+                "Elixir.Omc.Telegram.Callback#{callback |> String.capitalize()}"
+              ),
+              :handle,
+              [
+                token,
+                callback_query_id,
+                chat_id,
+                message_id,
+                args
+              ]
+            )
 
         _ ->
           Logger.debug("Unknown message:\n\n```\n#{inspect(update, pretty: true)}\n```")
       end
     rescue
       error ->
-        if(update["message"]["chat"]["id"]) do
+        if(update["callback_query"]["message"]["chat"]["id"]) do
           TelegramApi.send_message(
             token,
-            update["message"]["chat"]["id"],
+            update["callback_query"]["message"]["chat"]["id"],
             "Sorry! Some problem happened.\nWe'll be back soon.\nIn the meanwhile please try /start again.",
             [[]]
           )
@@ -60,7 +67,7 @@ defmodule Omc.TelegramBot do
         Update Message:
           #{inspect(update, pretty: true)}
         Error: 
-          #{inspect(error, pretty: true)}
+          #{Exception.format(:error, error, __STACKTRACE__)}
         """)
     end
   end
