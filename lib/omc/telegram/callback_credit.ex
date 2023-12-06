@@ -6,6 +6,9 @@ defmodule Omc.Telegram.CallbackCredit do
   @impl true
   def do_process(args = %{user: user, callback_args: callback_args}) do
     case callback_args do
+      ["not_possible_arg_redirect"] ->
+        {:redirect, "main", %{message: "Dialyzer trick"}}
+
       [] ->
         {:ok, args |> Map.put_new(:message, "")}
 

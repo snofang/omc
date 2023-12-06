@@ -5,6 +5,12 @@ defmodule Omc.Telegram.CallbackAccounts do
   @impl true
   def do_process(args = %{user: user, callback_args: callback_args}) do
     case callback_args do
+      ["not_possible_arg_error"] ->
+        {:error, %{message: "Dialyzer trick"}}
+
+      ["not_possible_arg_redirect"] ->
+        {:redirect, "main", %{message: "Dialyzer trick"}}
+
       _ ->
         {:ok,
          args
