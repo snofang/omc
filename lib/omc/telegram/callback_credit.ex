@@ -26,7 +26,7 @@ defmodule Omc.Telegram.CallbackCredit do
 
   @impl true
   def get_text(%{user: user}) do
-    usage_state = Usages.get_usage_state(user)
+    usage_state = Usages.get_user_usage_state(user)
 
     ~s"""
     __*Your Credit\\(s\\).*__

@@ -17,6 +17,8 @@ config :omc, :ipgs,
     api_key: "api_key_example"
   ]
 
+config :omc, :telegram, enabled: false
+
 config :tesla, Omc.Payments.PaymentProviderOxapay, adapter: Omc.TeslaMock
 
 # Configure your database

@@ -2,7 +2,6 @@ defmodule Omc.Usages do
   require Logger
   alias Ecto.Repo
   alias Omc.Servers
-  alias Omc.Usages.UsageItem
   alias Omc.ServerAccUsers
   alias Omc.Servers.ServerAccUser
   alias Omc.Ledgers
@@ -14,11 +13,26 @@ defmodule Omc.Usages do
   @doc """
   Returns current usage state (without persisting anything) in terms of current computed last `UsageState`
   """
-  @spec get_usage_state(%{user_type: atom(), user_id: binary()}) :: UsageState.t()
-  def get_usage_state(%{user_type: _user_type, user_id: _user_id} = attrs) do
+  @spec get_user_usage_state(%{user_type: atom(), user_id: binary()}) :: %UsageState{}
+  def get_user_usage_state(%{user_type: _user_type, user_id: _user_id} = attrs) do
     %UsageState{
-      usages: list_active_usages(attrs),
+      usages: get_active_usages(attrs),
       ledgers: Ledgers.get_ledgers(attrs)
+    }
+    |> UsageState.compute()
+  end
+
+  # TODO: add some tests for this function(currently just tested via end_usage_only/1)
+  @doc """
+  Gets current usage state (without persisting anything) of specified active `server_acc_user_id`.
+  """
+  @spec get_acc_usage_state(server_acc_user_id :: integer()) :: %UsageState{}
+  def get_acc_usage_state(server_acc_user_id) do
+    sau = ServerAccUsers.get_server_acc_user(server_acc_user_id)
+
+    %UsageState{
+      usages: [get_active_usage_by_sau_id(sau.id)],
+      ledgers: Ledgers.get_ledgers(ServerAccUser.user_attrs(sau))
     }
     |> UsageState.compute()
   end
@@ -53,7 +67,7 @@ defmodule Omc.Usages do
     (users = get_active_users(page, batch_size))
     |> Enum.each(fn user_attrs ->
       user_attrs
-      |> get_usage_state()
+      |> get_user_usage_state()
       |> persist_usage_state!()
     end)
 
@@ -102,31 +116,32 @@ defmodule Omc.Usages do
     |> Repo.transaction()
   end
 
-  # def restart_usage(%ServerAccUser{} = sau) do
-  #   Ecto.Multi.new()
-  #   |> Ecto.Multi.run(:server_acc_user_end, fn _repo, _changes ->
-  #     ServerAccUsers.end_server_acc_user()
-  #   end)
-  #
-  #   # |> Ecto.Multi.run(:server_acc_user_start, fn _repo, _changes ->)
-  # end
-
-  # TODO: Optimize via inner query to fetch only the last usage item
-  defp list_active_usages(%{user_type: _, user_id: _} = attrs) do
-    server_acc_users = ServerAccUsers.get_server_acc_users_in_use(attrs)
-
-    usage_items = from(ui in UsageItem, order_by: [asc: ui.id])
-
-    from(u in Usage,
-      where:
-        u.server_acc_user_id in ^(server_acc_users |> Enum.map(&Map.get(&1, :id))) and
-          is_nil(u.ended_at),
-      order_by: [asc: u.id],
-      # TODO: IMPORTANT; to place explicit order by for usage_items
-      preload: [usage_items: ^usage_items],
-      preload: [:price_plan]
+  defp get_active_usages(%{user_type: user_type, user_id: user_id}) do
+    from(u in usages_query(),
+      join: sau in ServerAccUser,
+      on: sau.id == u.server_acc_user_id,
+      where: sau.user_type == ^user_type and sau.user_id == ^user_id,
+      where: is_nil(u.ended_at)
     )
     |> Repo.all()
+  end
+
+  defp usages_query() do
+    from(u in Usage,
+      join: pp in assoc(u, :price_plan),
+      left_join: ui in assoc(u, :usage_items),
+      order_by: [asc: u.id, asc: ui.id],
+      preload: [usage_items: ui],
+      preload: [price_plan: pp]
+    )
+  end
+
+  defp get_active_usage_by_sau_id(sau_id) do
+    from(u in usages_query(),
+      where: u.server_acc_user_id == ^sau_id,
+      where: is_nil(u.ended_at)
+    )
+    |> Repo.one()
   end
 
   @doc """
@@ -201,14 +216,7 @@ defmodule Omc.Usages do
 
   # Ends `usage` without affecting its `ServerAccUser`.
   defp end_usage_only(%Usage{} = usage) do
-    sau = ServerAccUsers.get_server_acc_user(usage.server_acc_user_id)
-    # Computing UsageState just for one usage
-    usage_state =
-      %UsageState{
-        usages: [usage |> Repo.preload([:usage_items])],
-        ledgers: Ledgers.get_ledgers(ServerAccUser.user_attrs(sau))
-      }
-      |> UsageState.compute()
+    usage_state = get_acc_usage_state(usage.server_acc_user_id)
 
     Ecto.Multi.new()
     |> Ecto.Multi.run(:usage_state, fn _repo, _changes ->
@@ -248,7 +256,7 @@ defmodule Omc.Usages do
         }
       )
 
-    from(usage in Usage,
+    from(usage in usages_query(),
       where: is_nil(usage.ended_at),
       join: sau in ServerAccUser,
       on: sau.id == usage.server_acc_user_id,
@@ -257,9 +265,7 @@ defmodule Omc.Usages do
       where: ledger.credit_sum <= 0,
       select: usage,
       limit: ^limit,
-      offset: ^((page - 1) * limit),
-      order_by: [asc: usage.id],
-      preload: :usage_items
+      offset: ^((page - 1) * limit)
     )
     |> Repo.all()
   end
@@ -268,14 +274,10 @@ defmodule Omc.Usages do
   Lists usages which their price duration has expired. 
   """
   def get_active_expired_usages(page \\ 1, limit \\ 10) when page > 0 and limit > 0 do
-    # TODO: to investigate the gin index effectiveness for this 
-    from(u in Usage,
-      join: pp in assoc(u, :price_plan),
+    from([u, pp] in usages_query(),
       where: is_nil(u.ended_at) and u.started_at <= ago(pp.duration, "second"),
       limit: ^limit,
-      offset: ^((page - 1) * limit),
-      preload: :usage_items,
-      preload: [price_plan: pp]
+      offset: ^((page - 1) * limit)
     )
     |> Repo.all()
   end

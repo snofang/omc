@@ -25,6 +25,7 @@ defmodule Omc.ServerAccUsers do
     from(sau in server_acc_users_in_use_query(user),
       join: sa in ServerAcc,
       on: sa.id == sau.server_acc_id,
+      order_by: sau.id,
       select: %{sa_id: sa.id, sa_name: sa.name, sau_id: sau.id}
     )
     |> Repo.all()

@@ -21,7 +21,7 @@ defmodule Omc.UsagesTest do
 
       computed_money_credit =
         ledger
-        |> Usages.get_usage_state()
+        |> Usages.get_user_usage_state()
         |> get_in([Access.key(:ledgers), Access.at(0)])
         |> Ledger.credit_money()
 
@@ -47,7 +47,7 @@ defmodule Omc.UsagesTest do
       usage_fixture(%{server: server, user_attrs: ledger})
       |> usage_duration_use_fixture(3, :day)
 
-      usage_state = Usages.get_usage_state(ledger)
+      usage_state = Usages.get_user_usage_state(ledger)
       assert get_in(usage_state.ledgers, [Access.at(0), Access.key(:credit)]) == 0
     end
   end
@@ -62,12 +62,12 @@ defmodule Omc.UsagesTest do
       usage_duration_use_fixture(usage, 5, :day)
 
       # compute usage_state
-      usage_state = Usages.get_usage_state(ledger)
+      usage_state = Usages.get_user_usage_state(ledger)
       assert usage_state.changesets |> length() == 1
       # trying to persis eligible changesets
       Usages.persist_usage_state!(usage_state)
       # recompute changeset
-      usage_state = Usages.get_usage_state(ledger)
+      usage_state = Usages.get_user_usage_state(ledger)
       assert usage_state.changesets |> length() == 1
     end
 
@@ -78,12 +78,12 @@ defmodule Omc.UsagesTest do
       usage_duration_use_fixture(usage, 20, :day)
 
       # compute usage_state
-      usage_state = Usages.get_usage_state(ledger)
+      usage_state = Usages.get_user_usage_state(ledger)
       assert usage_state.changesets |> length() == 2
       # trying to persis eligible changesets
       Usages.persist_usage_state!(usage_state)
       # recompute changeset
-      usage_state = Usages.get_usage_state(ledger)
+      usage_state = Usages.get_user_usage_state(ledger)
       assert usage_state.changesets |> length() == 0
       assert Ledgers.get_ledger(ledger) |> then(& &1.credit) < 0
       assert usage_state.usages |> length() == 1
@@ -129,14 +129,14 @@ defmodule Omc.UsagesTest do
       |> usage_duration_use_fixture(3, :day)
 
       # compute usage_state
-      usage_state = Usages.get_usage_state(ledger)
+      usage_state = Usages.get_user_usage_state(ledger)
       assert usage_state.changesets |> length() == 4
 
       # persisting
       Usages.persist_usage_state!(usage_state)
 
       # recompute changeset
-      usage_state = Usages.get_usage_state(ledger)
+      usage_state = Usages.get_user_usage_state(ledger)
       assert usage_state.changesets |> length() == 0
       assert Ledgers.get_ledger(ledger) |> then(& &1.credit) == 0
     end
@@ -286,7 +286,7 @@ defmodule Omc.UsagesTest do
       assert usage_ended.ended_at |> TestUtils.happend_now_or_a_second_later()
 
       # usage state
-      usage_state = Usages.get_usage_state(Ledger.user_attrs(ledger))
+      usage_state = Usages.get_user_usage_state(Ledger.user_attrs(ledger))
       assert usage_state.ledgers |> List.first() |> Map.get(:credit) < @initial_credit.amount
       assert usage_state.usages == []
       assert usage_state.changesets == []
@@ -320,7 +320,7 @@ defmodule Omc.UsagesTest do
       Usages.end_usage!(usage1)
 
       # usage state
-      usage_state = Usages.get_usage_state(Ledger.user_attrs(ledger))
+      usage_state = Usages.get_user_usage_state(Ledger.user_attrs(ledger))
       assert usage_state.ledgers |> List.first() |> Map.get(:credit) < @initial_credit.amount
       assert usage_state.usages |> length() == 2
       assert usage_state.changesets |> length() == 2
@@ -382,7 +382,7 @@ defmodule Omc.UsagesTest do
       Usages.update_usage_states()
       Usages.end_usages_with_no_credit()
 
-      usage_state = Usages.get_usage_state(ledger)
+      usage_state = Usages.get_user_usage_state(ledger)
       assert usage_state.usages == []
       assert get_in(usage_state.ledgers, [Access.at(0), Access.key(:credit)]) == 0
     end
@@ -416,9 +416,9 @@ defmodule Omc.UsagesTest do
       Usages.update_usage_states()
       Usages.end_usages_with_no_credit()
 
-      assert get_in(Usages.get_usage_state(ledger), [Access.key(:usages)]) == []
-      assert get_in(Usages.get_usage_state(ledger1), [Access.key(:usages)]) == []
-      assert get_in(Usages.get_usage_state(ledger2), [Access.key(:usages)]) == []
+      assert get_in(Usages.get_user_usage_state(ledger), [Access.key(:usages)]) == []
+      assert get_in(Usages.get_user_usage_state(ledger1), [Access.key(:usages)]) == []
+      assert get_in(Usages.get_user_usage_state(ledger2), [Access.key(:usages)]) == []
     end
   end
 
@@ -456,7 +456,7 @@ defmodule Omc.UsagesTest do
         |> usage_duration_use_fixture(5, :day)
         |> Usages.renew_usage()
 
-      usage_state = Usages.get_usage_state(ledger)
+      usage_state = Usages.get_user_usage_state(ledger)
 
       # ledgers credit updated
       assert usage_state.ledgers
@@ -485,7 +485,7 @@ defmodule Omc.UsagesTest do
       Usages.renew_usages_expired()
 
       # there should exist a usage strted now
-      assert get_in(Usages.get_usage_state(ledger), [
+      assert get_in(Usages.get_user_usage_state(ledger), [
                Access.key(:usages),
                Access.at(0),
                Access.key(:started_at)
@@ -511,7 +511,7 @@ defmodule Omc.UsagesTest do
       Usages.renew_usages_expired(1, 1)
 
       # there should exist a usage strted now
-      assert Usages.get_usage_state(ledger)
+      assert Usages.get_user_usage_state(ledger)
              |> then(& &1.usages)
              |> Enum.reduce(
                true,
@@ -544,11 +544,11 @@ defmodule Omc.UsagesTest do
 
       Usages.update_usages()
 
-      assert Usages.get_usage_state(ledger)
+      assert Usages.get_user_usage_state(ledger)
              |> then(& &1.usages)
              |> length() == 0
 
-      usage_state1 = Usages.get_usage_state(ledger1)
+      usage_state1 = Usages.get_user_usage_state(ledger1)
 
       # no change usage
       assert_usages_equal(get_in(usage_state1.usages, [Access.at(0)]), no_change_usage)

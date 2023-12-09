@@ -49,10 +49,10 @@ defmodule Omc.Telegram.CallbackAccounts do
 
   defp acc_markup_params_provider(%{
          sa_id: sa_id,
-         sa_name: _sa_name,
+         sa_name: sa_name,
          sau_id: sau_id
        }) do
-    [sa_id |> to_string(), sau_id |> to_string()]
+    [sa_id |> to_string(), sa_name, sau_id |> to_string()]
   end
 
   def acc_markup_text_provider(%{
