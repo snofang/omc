@@ -1,11 +1,13 @@
 defmodule Omc.Usages do
   require Logger
+  alias Omc.Usages.UsageItem
+  alias Omc.Ledgers.LedgerTx
   alias Ecto.Repo
   alias Omc.Servers
   alias Omc.ServerAccUsers
   alias Omc.Servers.ServerAccUser
   alias Omc.Ledgers
-  alias Omc.Usages.{Usage, UsageState}
+  alias Omc.Usages.{Usage, UsageState, UsageLineItem}
   alias Omc.Repo
   alias Omc.Ledgers.Ledger
   import Ecto.Query
@@ -136,7 +138,8 @@ defmodule Omc.Usages do
     )
   end
 
-  defp get_active_usage_by_sau_id(sau_id) do
+  @doc false
+  def get_active_usage_by_sau_id(sau_id) do
     from(u in usages_query(),
       where: u.server_acc_user_id == ^sau_id,
       where: is_nil(u.ended_at)
@@ -321,5 +324,44 @@ defmodule Omc.Usages do
     update_usage_states()
     end_usages_with_no_credit()
     renew_usages_expired()
+  end
+
+  @doc """
+  Gets all `UsageLineItem`s of specified `server_acc_user_id` upto now.
+  """
+  @spec get_acc_usages_line_items(server_acc_user_id :: integer()) :: [%UsageLineItem{}]
+  def get_acc_usages_line_items(server_acc_user_id) do
+    live_usage_line_items =
+      server_acc_user_id
+      |> get_acc_usage_state()
+      |> UsageLineItem.usage_state_usage_line_items()
+
+    stored_usage_line_items =
+      server_acc_user_id
+      |> list_stored_acc_usages_line_items()
+
+    stored_usage_line_items ++ live_usage_line_items
+  end
+
+  @spec list_stored_acc_usages_line_items(server_acc_user_id :: integer()) :: [%UsageLineItem{}]
+  def list_stored_acc_usages_line_items(server_acc_user_id) do
+    from(u in subquery(from(u in Usage, where: u.server_acc_user_id == ^server_acc_user_id)),
+      join: ui in UsageItem,
+      on: u.id == ui.usage_id,
+      join: tx in LedgerTx,
+      on: tx.context_id == ui.id,
+      where: tx.context == :usage,
+      join: l in Ledger,
+      on: l.id == tx.ledger_id,
+      order_by: [asc: ui.id],
+      select: %UsageLineItem{
+        usage_item_id: ui.id,
+        started_at: ui.started_at,
+        ended_at: ui.ended_at,
+        amount: tx.amount,
+        currency: l.currency
+      }
+    )
+    |> Repo.all()
   end
 end

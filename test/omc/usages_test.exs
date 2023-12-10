@@ -562,10 +562,6 @@ defmodule Omc.UsagesTest do
   end
 
   describe "start_usage/1" do
-    # server = server_fixture(@server_price)
-    # ledger = ledger_fixture(@initial_credit)
-    # server_acc = ServersFixtures.server_acc_fixture(%{server_id: server.id})
-    # ServersFixtures.activate_server_acc(server, server_acc)
     test "without credit - failed_value: :no_credit}" do
       server = server_fixture(@server_price)
       server_acc = ServersFixtures.server_acc_fixture(%{server_id: server.id})
@@ -613,6 +609,77 @@ defmodule Omc.UsagesTest do
       assert TestUtils.happend_now_or_a_second_later(sau_started_at)
       assert TestUtils.happend_now_or_a_second_later(usage_started_at)
       assert sau_id == usage_sau_id
+    end
+  end
+
+  describe "get_acc_usages_line_items/1" do
+    setup :setup_a_usage_started
+
+    test "just created usage - should have one usage_line_item with zero amount", %{
+      usage: usage,
+      ledger: ledger
+    } do
+      [
+        %{
+          usage_item_id: -1,
+          started_at: started_at,
+          ended_at: ended_at,
+          amount: 0,
+          currency: currency
+        }
+      ] = Usages.get_acc_usages_line_items(usage.server_acc_user_id)
+
+      assert TestUtils.happend_now_or_a_second_later(started_at)
+      assert TestUtils.happend_now_or_a_second_later(ended_at)
+      assert ledger.currency == currency
+    end
+
+    test "only live usage line items", %{
+      usage: usage,
+      ledger: _ledger,
+      server: _server
+    } do
+      # consuming some part of credit
+      usage_duration_use_fixture(usage, 3, :day)
+      Usages.update_usages()
+
+      [%{usage_item_id: -1, started_at: started_at, ended_at: ended_at, amount: 1_000}] =
+        Usages.get_acc_usages_line_items(usage.server_acc_user_id)
+
+      assert TestUtils.happend_closely(started_at |> NaiveDateTime.add(3, :day), ended_at)
+    end
+
+    test "having persisted usages", %{
+      usage: usage,
+      ledger: ledger,
+      server: _server
+    } do
+      # increasing user's credit; it should now have credit for 3.5 months
+      ledger_tx_fixture(ledger, @initial_credit |> Money.multiply(6))
+
+      # one month usage
+      usage_duration_use_fixture(usage, 30, :day)
+      Usages.update_usages()
+      usage1 = Usages.get_active_usage_by_sau_id(usage.server_acc_user_id)
+      assert usage1.id != usage.id
+      assert usage1.server_acc_user_id == usage.server_acc_user_id
+
+      # another one month usage
+      usage_duration_use_fixture(usage1, 30, :day)
+      Usages.update_usages()
+      usage2 = Usages.get_active_usage_by_sau_id(usage.server_acc_user_id)
+
+      # half month usage
+      usage_duration_use_fixture(usage2, 15, :day)
+      Usages.update_usages()
+
+      [item1, item2, item3] = Usages.get_acc_usages_line_items(usage.server_acc_user_id)
+      assert Money.new(item1.amount, item1.currency) |> Money.compare(@server_price) == 0
+      assert item1.usage_item_id != -1
+      assert Money.new(item2.amount, item2.currency) |> Money.compare(@server_price) == 0
+      assert item2.usage_item_id != -1
+      assert Money.new(item3.amount, item3.currency) |> Money.compare(@initial_credit) == 0
+      assert item3.usage_item_id == -1
     end
   end
 

@@ -28,6 +28,16 @@ defmodule Omc.UsagesFixtures do
     ledger
   end
 
+  def ledger_tx_fixture(%{user_id: user_id, user_type: user_type}, money) do
+    %{ledger: ledger, ledger_tx: _ledger_tx} =
+      ledger_tx_fixture!(
+        %{user_id: user_id, user_type: user_type}
+        |> Map.put(:money, money)
+      )
+
+    ledger
+  end
+
   def usage_fixture(
         %{server: server, user_attrs: %{user_type: _, user_id: _} = user_attrs} = _attrs
       ) do
