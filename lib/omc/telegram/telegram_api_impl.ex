@@ -43,6 +43,14 @@ defmodule Omc.Telegram.TelegramApiImpl do
     )
   end
 
+  @impl true
+  def send_file(token, chat_id, file_name, file_content) do
+    Telegram.Api.request(token, "sendDocument",
+      chat_id: chat_id,
+      document: {:file_content, file_content, file_name}
+    )
+  end
+
   @doc false
   def escape_text(text) do
     text

@@ -63,7 +63,7 @@
       <.link
         :if={server_acc.status == :active}
         phx-click={JS.push("deactivate", value: %{id: server_acc.id})}
-        data-confirm="It will be marked as :deactive_pending and will be affected by server account syncing process. Are you sure?"
+        data-confirm="It will be marked as :deactive_pending and will be effective by server account syncing process. Are you sure?"
       >
         Deactivate
       </.link>

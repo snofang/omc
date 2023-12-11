@@ -22,6 +22,13 @@ defmodule Omc.Telegram.TelegramApi do
               inline_keyboard :: [[map()]]
             ) :: term()
 
+  @callback send_file(
+              token :: binary(),
+              chat_id :: binary(),
+              file_name :: binary(),
+              file_content :: binary()
+            ) :: term()
+
   def send_message(token, chat_id, text, inline_keyboard),
     do: impl().send_message(token, chat_id, text, inline_keyboard)
 
@@ -33,6 +40,9 @@ defmodule Omc.Telegram.TelegramApi do
 
   def answer_callback(token, callback_query_id, text),
     do: impl().answer_callback(token, callback_query_id, text)
+
+  def send_file(token, chat_id, file_name, file_content),
+    do: impl().send_file(token, chat_id, file_name, file_content)
 
   defp impl(), do: Application.get_env(:omc, :telegram)[:api_impl]
 end
