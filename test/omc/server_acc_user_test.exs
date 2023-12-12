@@ -145,18 +145,22 @@ defmodule Omc.ServerAccUserTest do
 
     test "it should not be possible to end server_acc_user if not started",
          %{server_acc_user: sau} do
-      {:error, :server_acc_user, _, _} = ServerAccUsers.end_server_acc_user(sau)
+      {:error,
+       %{
+         errors: [
+           started_at: {"It's not possible to end a server_acc_user, when not started", []}
+         ]
+       }} = ServerAccUsers.end_server_acc_user(sau)
     end
 
-    test "ending server_acc_user should set its ended_at field and deactivate server_acc",
+    test "ending server_acc_user should set its ended_at field",
          %{server_acc_user: sau} do
       # adding some credit
       ledger_tx_fixture!(%{user_id: sau.user_id, user_type: sau.user_type})
       {:ok, sau} = ServerAccUsers.start_server_acc_user(sau)
 
-      {:ok, %{server_acc: sa, server_acc_user: sau}} = ServerAccUsers.end_server_acc_user(sau)
+      {:ok, sau} = ServerAccUsers.end_server_acc_user(sau)
 
-      assert sa.status == :deactive_pending
       assert TestUtils.happend_now_or_a_second_later(sau.ended_at)
     end
   end

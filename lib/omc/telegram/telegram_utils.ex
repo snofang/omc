@@ -90,9 +90,17 @@ defmodule Omc.Telegram.TelegramUtils do
 
   def handle_callback(callback, args) do
     apply(
-      String.to_existing_atom("Elixir.Omc.Telegram.Callback#{callback |> String.capitalize()}"),
+      String.to_existing_atom("Elixir.Omc.Telegram.Callback#{callback}"),
       :handle,
       [args]
+    )
+  end
+
+  def escape_text(text) do
+    text
+    |> String.replace(
+      ["_", "*"],
+      &"\\#{&1}"
     )
   end
 end

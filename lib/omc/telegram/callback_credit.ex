@@ -16,7 +16,7 @@ defmodule Omc.Telegram.CallbackCredit do
         Payments.create_payment_request(:oxapay, user |> Map.put(:money, Money.parse!(amount)))
         |> case do
           {:ok, _} ->
-            {:ok, args |> Map.put(:message, "Successfully created payment request.")}
+            {:ok, args |> Map.put(:message, "Payment request created.")}
 
           {:error, _} ->
             {:error, args |> Map.put(:message, "Failed creating payment request!")}
@@ -32,7 +32,7 @@ defmodule Omc.Telegram.CallbackCredit do
     __*Your Credit\\(s\\).*__
     *#{ledgers_rows(usage_state.ledgers)}*
 
-    Choose a desired amount for credit increase; Once a pay botton pressed, a new payment request is added on top of the list with coresponding link which can be used to do the payment.
+    Choose an amount for credit increase; Once a pay botton pressed, a new payment request is added on top of the following list with a link which can be used for payment.
 
     *Your Payment Requests* \\(most recent one is on top\\)
     __*Amount, Status*__

@@ -57,7 +57,7 @@ defmodule Omc.Telegram.TelegramApiImpl do
     |> String.split("```")
     |> Enum.reduce({[], true}, fn text_token, {new_list, replace?} ->
       if replace? do
-        {[text_token |> escapte_text_token() | new_list], false}
+        {[text_token |> escape_text_token() | new_list], false}
       else
         {[text_token | new_list], true}
       end
@@ -70,9 +70,9 @@ defmodule Omc.Telegram.TelegramApiImpl do
   end
 
   @doc false
-  def escapte_text_token(text_token) do
-    String.replace(
-      text_token,
+  def escape_text_token(text_token) do
+    text_token
+    |> String.replace(
       ["-", "~", ",", ">", "#", "+", "=", "{", "}", ".", "!"],
       &"\\#{&1}"
     )

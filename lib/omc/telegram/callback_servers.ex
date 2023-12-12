@@ -10,7 +10,7 @@ defmodule Omc.Telegram.CallbackServers do
       [tag | [price_plan_id]] ->
         case Usages.start_usage(user, server_tag: tag, price_plan_id: price_plan_id) do
           {:ok, _} ->
-            {:redirect, "accounts",
+            {:redirect, "Accounts",
              args |> Map.put(:message, "New account created successfully.")}
 
           {:error, error} ->
@@ -52,7 +52,7 @@ defmodule Omc.Telegram.CallbackServers do
 
   defp servers_markup(servers) do
     TelegramUtils.entities_markup(
-      "servers",
+      "Servers",
       servers,
       &server_markup_text_provider/1,
       &server_markup_params_provider/1

@@ -5,12 +5,13 @@ defmodule Omc.Telegram.CallbackAccounts do
   @impl true
   def do_process(args = %{user: user, callback_args: callback_args}) do
     case callback_args do
-      ["not_possible_arg_error"] ->
-        {:error, %{message: "Dialyzer trick"}}
+      ["some imposible arg1"] ->
+        {:redirect, "Main", %{message: "dialyzer trick"}}
 
-      ["not_possible_arg_redirect"] ->
-        {:redirect, "main", %{message: "Dialyzer trick"}}
+      ["some imposible arg2"] ->
+        {:error, %{message: "dialyzer trick"}}
 
+      # doesn't matter which callback_args are comming for each of redirection.
       _ ->
         {:ok,
          args
@@ -25,7 +26,7 @@ defmodule Omc.Telegram.CallbackAccounts do
     __*Your Account\\(s\\).*__
 
     #{if accs |> length() > 0 do
-      "By selecting each active account represented in the following buttons, you can manage them, download their .ovpn file, or see usages."
+      "By selecting each __active__ account represented in the following buttons, you can manage them, download connection config __.ovpn__ file, or see their __usages__."
     else
       "No active account!"
     end}
@@ -40,7 +41,7 @@ defmodule Omc.Telegram.CallbackAccounts do
 
   defp accs_markup(accs) do
     TelegramUtils.entities_markup(
-      "account",
+      "Account",
       accs,
       &acc_markup_text_provider/1,
       &acc_markup_params_provider/1
@@ -60,6 +61,6 @@ defmodule Omc.Telegram.CallbackAccounts do
         sa_name: sa_name,
         sau_id: _sau_id
       }) do
-    "Account - #{sa_name}"
+    "#{sa_name}"
   end
 end

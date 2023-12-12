@@ -1,7 +1,6 @@
 defmodule Omc.ServerAccUsers do
   alias Omc.PricePlans
   alias Omc.Ledgers
-  alias Omc.Servers
   alias Omc.Repo
   alias Omc.Servers.{Server, ServerAcc, ServerAccUser}
   import Ecto.Query, warn: false
@@ -10,8 +9,9 @@ defmodule Omc.ServerAccUsers do
   @doc """
   Returns all `ServerAccUser`s which are in use.
   """
-  def get_server_acc_users_in_use(user = %{user_type: _, user_id: _}) do
-    server_acc_users_in_use_query(user)
+  def get_server_acc_users_in_use(%{user_type: user_type, user_id: user_id}) do
+    server_acc_users_in_use_query()
+    |> where([sau], sau.user_type == ^user_type and sau.user_id == ^user_id)
     |> Repo.all()
   end
 
@@ -21,27 +21,38 @@ defmodule Omc.ServerAccUsers do
   @spec get_server_accs_in_use(%{user_type: atom(), user_id: binary()}) :: [
           %{sa_id: integer(), sa_name: binary, sau_id: integer()}
         ]
-  def get_server_accs_in_use(user = %{user_type: _, user_id: _}) do
-    from(sau in server_acc_users_in_use_query(user),
-      join: sa in ServerAcc,
-      on: sa.id == sau.server_acc_id,
+  def get_server_accs_in_use(%{user_type: user_type, user_id: user_id}) do
+    from([sau, sa] in server_acc_users_in_use_query(),
+      where:
+        sau.user_type == ^user_type and
+          sau.user_id == ^user_id,
       order_by: sau.id,
       select: %{sa_id: sa.id, sa_name: sa.name, sau_id: sau.id}
     )
     |> Repo.all()
   end
 
-  defp server_acc_users_in_use_query(%{user_type: user_type, user_id: user_id}) do
+  defp server_acc_users_in_use_query() do
     from(sau in ServerAccUser,
+      join: sa in ServerAcc,
+      on: sa.id == sau.server_acc_id,
       where:
-        sau.user_type == ^user_type and
-          sau.user_id == ^user_id and
-          not is_nil(sau.started_at) and
+        not is_nil(sau.started_at) and
           is_nil(sau.ended_at)
     )
   end
 
-  # Allocates a `ServerAcc` to a user by creating a record of `ServerAccUser` in db and 
+  @doc """
+  Returns in use `ServerAccUser` associated with given `server_acc_id`
+  """
+  def get_server_acc_user_in_use(server_acc_id) do
+    from([sau, sa] in server_acc_users_in_use_query(),
+      where: sa.id == ^server_acc_id
+    )
+    |> Repo.one()
+  end
+
+  # Allocates a `ServerAcc` for a user by creating a record of `ServerAccUser` in db and 
   # setting its `allocated_at` to the current `NaiveDateTime`.
   # This is triggered on any request for an acc for a given user. This is temporary 
   # and serves as mechanism to reserve an acc(before final activation which happens in `start` operation).
@@ -204,21 +215,11 @@ defmodule Omc.ServerAccUsers do
   end
 
   @doc """
-  Ends started `ServerAccUser` by setting its `ended_at` to current `NaiveDateTime` and also
-  deactivating related `ServerAcc`.
-  returns on success a multi resutl {:ok, %{server_acc: _, server_acc_user: _}}
+  Ends started `ServerAccUser` by setting its `ended_at` to current `NaiveDateTime`. 
   """
   def end_server_acc_user(%ServerAccUser{} = sau) do
-    server_acc = Servers.get_server_acc!(sau.server_acc_id)
-
-    Ecto.Multi.new()
-    # marking acc for deactivation
-    |> Ecto.Multi.run(:server_acc, fn _repo, _changes ->
-      Servers.deactivate_acc(server_acc)
-    end)
-    # ending acc allocation
-    |> Ecto.Multi.update(:server_acc_user, ServerAccUser.end_changeset(sau))
-    |> Repo.transaction()
+    ServerAccUser.end_changeset(sau)
+    |> Repo.update()
   end
 
   @doc false

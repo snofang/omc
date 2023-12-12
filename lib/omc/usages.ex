@@ -33,7 +33,8 @@ defmodule Omc.Usages do
     sau = ServerAccUsers.get_server_acc_user(server_acc_user_id)
 
     %UsageState{
-      usages: [get_active_usage_by_sau_id(sau.id)],
+      # TODO: add a test case to cover non existance active usage
+      usages: if(u = get_active_usage_by_sau_id(sau.id), do: [u], else: []),
       ledgers: Ledgers.get_ledgers(ServerAccUser.user_attrs(sau))
     }
     |> UsageState.compute()
@@ -204,17 +205,21 @@ defmodule Omc.Usages do
   - Persists all of its `UsageState` chanesets.
   - Ends its `ServerAccUser`.
   """
-  def end_usage!(%Usage{} = usage) do
-    {:ok, %{end_usage_only: %{usage: usage}}} =
-      Ecto.Multi.new()
-      |> Ecto.Multi.run(:end_usage_only, fn _repo, _changes -> end_usage_only(usage) end)
-      |> Ecto.Multi.run(:end_server_acc_user, fn _repo, _changes ->
-        ServerAccUsers.get_server_acc_user(usage.server_acc_user_id)
-        |> ServerAccUsers.end_server_acc_user()
-      end)
-      |> Repo.transaction()
-
-    usage
+  @spec end_usage(%Usage{}) ::
+          {:ok,
+           %{
+             usage_and_state: %{usage: %Usage{}, state: %UsageState{}},
+             server_acc_user: %ServerAccUser{}
+           }}
+          | {:error, Ecto.Multi.name(), any, %{required(Ecto.Multi.name()) => any}}
+  def end_usage(%Usage{} = usage) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.run(:usage_and_state, fn _repo, _changes -> end_usage_only(usage) end)
+    |> Ecto.Multi.run(:server_acc_user, fn _repo, _changes ->
+      ServerAccUsers.get_server_acc_user(usage.server_acc_user_id)
+      |> ServerAccUsers.end_server_acc_user()
+    end)
+    |> Repo.transaction()
   end
 
   # Ends `usage` without affecting its `ServerAccUser`.
@@ -239,7 +244,7 @@ defmodule Omc.Usages do
     (usages = get_active_no_credit_usages(page, batch_size))
     |> Enum.each(fn usage ->
       usage
-      |> end_usage!()
+      |> end_usage()
     end)
 
     if usages |> length() > 0, do: end_usages_with_no_credit(page + 1, batch_size)

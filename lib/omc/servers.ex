@@ -5,6 +5,8 @@ defmodule Omc.Servers do
 
   import Ecto.Query, warn: false
   import Ecto.Query.API, only: [like: 2], warn: false
+  alias Omc.Usages
+  alias Omc.ServerAccUsers
   alias Phoenix.PubSub
   alias Omc.Servers.{Server, ServerOps}
   alias Omc.Repo
@@ -146,7 +148,7 @@ defmodule Omc.Servers do
   defp server_accs_name(server_acc, name) when name == "" or name == nil, do: server_acc
 
   defp server_accs_name(server_acc, name),
-    do: server_acc |> where([acc], like(acc.name, ^"#{name}%"))
+    do: server_acc |> where([acc], like(acc.name, ^"%#{name}%"))
 
   @doc """
   Gets a single server_acc.
@@ -298,9 +300,42 @@ defmodule Omc.Servers do
 
     list_server_accs(%{server_id: server_id, status: :deactive_pending})
     |> Enum.each(fn acc ->
-      update_server_acc(acc, ServerOps.acc_file_based_status_change(acc))
+      # update_server_acc(acc, ServerOps.acc_file_based_status_change(acc))
+      try_deactivate_server_acc(acc)
       |> broadcast_server_update()
     end)
+  end
+
+  defp try_deactivate_server_acc(%ServerAcc{} = acc) do
+    case ServerOps.acc_file_based_status_change(acc) do
+      attrs = %{status: :deactive} ->
+        case Ecto.Multi.new()
+             |> Ecto.Multi.run(:acc, fn _repo, _changes ->
+               update_server_acc(acc, attrs)
+             end)
+             |> Ecto.Multi.run(:usage, fn _repo, _changes ->
+               end_acc_usage_if_exists(acc.id)
+             end)
+             |> Repo.transaction() do
+          {:ok, %{acc: deactivated_acc}} -> {:ok, deactivated_acc}
+          _ -> {:error, acc}
+        end
+
+      %{} ->
+        {:ok, acc}
+    end
+  end
+
+  defp end_acc_usage_if_exists(server_acc_id) do
+    case ServerAccUsers.get_server_acc_user_in_use(server_acc_id) do
+      nil ->
+        {:ok, nil}
+
+      sau ->
+        # it is not possible to have sau started without having usage started.
+        Usages.get_active_usage_by_sau_id(sau.id)
+        |> Usages.end_usage()
+    end
   end
 
   defp broadcast_server_update({result, acc}) do

@@ -50,7 +50,7 @@ defmodule Omc.TelegramBot do
           TelegramApi.send_message(
             token,
             update["callback_query"]["message"]["chat"]["id"],
-            "Sorry! Some problem happened.\nWe'll be back soon.\nIn the meanwhile please try /start again.",
+            "Sorry! Some problem happened.\nPlease try /start again.",
             [[]]
           )
         end

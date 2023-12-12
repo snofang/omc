@@ -1,7 +1,6 @@
 defmodule Omc.UsagesTest do
   alias Omc.ServersFixtures
   alias Omc.LedgersFixtures
-  alias Omc.Servers
   alias Omc.ServerAccUsers
   alias Omc.TestUtils
   alias Omc.Ledgers
@@ -278,10 +277,10 @@ defmodule Omc.UsagesTest do
       usage: usage,
       ledger: ledger
     } do
-      usage_ended =
+      {:ok, %{usage_and_state: %{usage: usage_ended}}} =
         usage
         |> usage_duration_use_fixture(1, :day)
-        |> Usages.end_usage!()
+        |> Usages.end_usage()
 
       assert usage_ended.ended_at |> TestUtils.happend_now_or_a_second_later()
 
@@ -294,10 +293,6 @@ defmodule Omc.UsagesTest do
       # server_user_acc
       sau = ServerAccUsers.get_server_acc_user(usage.server_acc_user_id)
       assert TestUtils.happend_now_or_a_second_later(sau.ended_at)
-
-      # server_acc
-      acc = Servers.get_server_acc!(sau.server_acc_id)
-      assert acc.status == :deactive_pending
     end
 
     test "multiple usages, ending one should not affect the others", %{
@@ -317,7 +312,7 @@ defmodule Omc.UsagesTest do
       |> usage_duration_use_fixture(3, :day)
 
       # ending one of them
-      Usages.end_usage!(usage1)
+      {:ok, _} = Usages.end_usage(usage1)
 
       # usage state
       usage_state = Usages.get_user_usage_state(Ledger.user_attrs(ledger))
