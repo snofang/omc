@@ -1,5 +1,5 @@
 defmodule Omc.ServerOpsTest do
-  use Omc.DataCase, async: true
+  use Omc.DataCase, async: false
   alias Omc.Servers.{ServerOps, Server, ServerTaskManager}
   import Mox
   setup :verify_on_exit!
