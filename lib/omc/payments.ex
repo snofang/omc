@@ -89,32 +89,6 @@ defmodule Omc.Payments do
     |> Repo.one()
   end
 
-  # @doc """
-  # Finds all payments which have got `:done` state within last `duration` in seconds.
-  # """
-  # @spec update_ledgers(integer()) :: :ok
-  # def update_ledgers(duration) when is_integer(duration) do
-  #   Logger.info("-- update payments --")
-  #
-  #   duration
-  #   |> get_payments_with_last_done_state()
-  #   |> Enum.each(fn i ->
-  #     try do
-  #       update_ledger(i)
-  #     rescue
-  #       any_exception ->
-  #         Logger.info(~s(
-  #           Updating ledger by payment, failed
-  #           {payment_request, payment_state}:
-  #             #{inspect(i)}
-  #           reason: 
-  #             #{inspect(any_exception)}))
-  #     end
-  #   end)
-  #
-  #   :ok
-  # end
-
   @doc false
   # Updates user's ledger with the paid amount. It first checks if this payment has already 
   # caused ledger change or not. In case of already affected ledger, do nothing and returns success. 
@@ -137,27 +111,6 @@ defmodule Omc.Payments do
       _already_existing_ledger_tx ->
         :ledger_unchanged
     end
-  end
-
-  # TODO: to remove this; it is not necessary anymore
-  @doc false
-  def get_payments_with_last_done_state(duration) when is_integer(duration) do
-    last_done_payment_state =
-      from(ps in PaymentState,
-        where: ps.state == :done and ps.inserted_at > ago(^duration, "second"),
-        group_by: ps.payment_request_id,
-        select: %{id: max(ps.id), payment_request_id: ps.payment_request_id}
-      )
-
-    from(pr in PaymentRequest,
-      join: ldps in subquery(last_done_payment_state),
-      on: ldps.payment_request_id == pr.id,
-      join: ps in PaymentState,
-      on: ldps.id == ps.id,
-      order_by: [asc: pr.id],
-      select: {pr, ps}
-    )
-    |> Repo.all()
   end
 
   @spec list_payment_requests(Keyword.t()) :: list(%PaymentRequest{})
