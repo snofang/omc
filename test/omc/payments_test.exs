@@ -6,7 +6,7 @@ defmodule Omc.PaymentsTest do
   alias Omc.Payments
   alias Omc.Payments.PaymentRequest
   alias Omc.PaymentProviderOxapayMock
-  use Omc.DataCase, async: false
+  use Omc.DataCase, async: true
   import Mox
   import Omc.PaymentFixtures
 
@@ -104,6 +104,8 @@ defmodule Omc.PaymentsTest do
 
   describe "callback/3" do
     setup %{} do
+      start_supervised(Payments)
+      Ecto.Adapters.SQL.Sandbox.allow(Omc.Repo, self(), Process.whereis(Omc.Payments))
       %{payment_request: payment_request_fixture()}
     end
 
@@ -241,20 +243,22 @@ defmodule Omc.PaymentsTest do
       payment_request: payment_request
     } do
       payment_state_by_callback_fixture(payment_request, :done)
-      assert [{^payment_request, %{state: :done}}] = Payments.get_payments_with_last_done_state(1)
+
+      assert [{^payment_request, %{state: :done}}] =
+               Payments.get_payments_with_last_done_state(10)
     end
 
     test "payments which their state is update befor duration should not listed", %{
       payment_request: payment_request
     } do
       payment_state_by_callback_fixture(payment_request, :done)
-      [{_, state}] = Payments.get_payments_with_last_done_state(1)
+      [{_, state}] = Payments.get_payments_with_last_done_state(10)
 
       state
-      |> Ecto.Changeset.change(%{inserted_at: Utils.now(-5, :second)})
+      |> Ecto.Changeset.change(%{inserted_at: Utils.now(-20, :second)})
       |> Repo.update()
 
-      assert [] = Payments.get_payments_with_last_done_state(1)
+      assert [] = Payments.get_payments_with_last_done_state(10)
     end
 
     test "with multiple states and not :done state, there should be not result", %{
@@ -263,7 +267,7 @@ defmodule Omc.PaymentsTest do
       payment_state_by_callback_fixture(payment_request, :pending)
       payment_state_by_callback_fixture(payment_request, :pending)
       payment_state_by_callback_fixture(payment_request, :pending)
-      assert [] = Payments.get_payments_with_last_done_state(1)
+      assert [] = Payments.get_payments_with_last_done_state(10)
     end
 
     test "Multiple :done payments should result in multiple results", %{
@@ -273,7 +277,7 @@ defmodule Omc.PaymentsTest do
       done_payment_request_fixture()
       done_payment_request_fixture()
 
-      assert Payments.get_payments_with_last_done_state(2) |> length() == 3
+      assert Payments.get_payments_with_last_done_state(10) |> length() == 3
     end
 
     test "multiple :done states; last :done state should returned", %{
@@ -287,7 +291,7 @@ defmodule Omc.PaymentsTest do
         %PaymentState{state: :done, payment_request_id: payment_request.id, data: %{}}
         |> Repo.insert()
 
-      assert [{_, ^last_done_state}] = Payments.get_payments_with_last_done_state(2)
+      assert [{_, ^last_done_state}] = Payments.get_payments_with_last_done_state(10)
     end
   end
 
@@ -440,6 +444,8 @@ defmodule Omc.PaymentsTest do
 
   describe "send_state_inquiry_request/1" do
     setup %{} do
+      start_supervised(Payments)
+      Ecto.Adapters.SQL.Sandbox.allow(Omc.Repo, self(), Process.whereis(Omc.Payments))
       %{payment_request: payment_request_fixture()}
     end
 

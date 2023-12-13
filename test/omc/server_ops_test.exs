@@ -1,19 +1,23 @@
 defmodule Omc.ServerOpsTest do
-  alias Omc.Servers.ServerOps
-  alias Omc.Servers.Server
-  use Omc.DataCase, async: false
+  use Omc.DataCase, async: true
+  alias Omc.Servers.{ServerOps, Server, ServerTaskManager}
   import Mox
-  setup :set_mox_from_context
   setup :verify_on_exit!
+
+  setup %{} do
+    start_supervised(ServerTaskManager)
+    :ok
+  end
 
   test "ansible hosts file should be created/modified on operation(s)" do
     Omc.CmdWrapperMock
     |> expect(:run, 2, fn _cmd, _timeout, _topic, _ref -> {:ok, "command executed"} end)
+    |> allow(self(), Process.whereis(ServerTaskManager))
 
     #
     # on first install operation it should be created
     #
-    File.rm_rf!(Omc.Common.Utils.data_dir())
+    File.rm_rf(Omc.Common.Utils.data_dir())
     server = %Server{id: 1, name: "client"}
     ServerOps.ansible_ovpn_install(server)
 

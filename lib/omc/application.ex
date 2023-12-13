@@ -4,6 +4,8 @@ defmodule Omc.Application do
   @moduledoc false
 
   use Application
+  alias Omc.Servers.ServerTaskManager
+  alias Omc.Payments
 
   @impl true
   def start(_type, _args) do
@@ -21,13 +23,14 @@ defmodule Omc.Application do
         OmcWeb.Endpoint,
         # Start the TaskSupervisor
         {Task.Supervisor, name: Omc.TaskSupervisor},
-        # Start ServerTaskManager
-        Omc.Servers.ServerTaskManager,
         # Scheduler
-        Omc.Scheduler,
-        Omc.Payments
+        Omc.Scheduler
       ]
-      # Start Telegram bot 
+      # Start ServerTaskManager
+      |> add_if(Application.get_env(:omc, ServerTaskManager)[:enabled], ServerTaskManager)
+      # Starts Payments GenServer
+      |> add_if(Application.get_env(:omc, Payments)[:enabled], Payments)
+      # Starts Telegram bot 
       |> add_if(
         Application.get_env(:omc, :telegram)[:enabled],
         {Telegram.Webhook,

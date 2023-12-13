@@ -54,6 +54,9 @@ config :omc, :telegram,
   api_impl: Omc.Telegram.TelegramApiImpl,
   host: "telegram.example.com"
 
+config :omc, Omc.Payments, enabled: true
+config :omc, Omc.Servers.ServerTaskManager, enabled: true
+
 config :telegram,
   webserver: Telegram.WebServer.Cowboy
 

@@ -139,6 +139,7 @@ defmodule Omc.Payments do
     end
   end
 
+  # TODO: to remove this; it is not necessary anymore
   @doc false
   def get_payments_with_last_done_state(duration) when is_integer(duration) do
     last_done_payment_state =

@@ -19,6 +19,9 @@ config :omc, :ipgs,
 
 config :omc, :telegram, enabled: false
 
+config :omc, Omc.Payments, enabled: false
+config :omc, Omc.Servers.ServerTaskManager, enabled: false
+
 config :tesla, Omc.Payments.PaymentProviderOxapay, adapter: Omc.TeslaMock
 
 # Configure your database

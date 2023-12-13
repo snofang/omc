@@ -36,6 +36,9 @@ defmodule Omc.PaymentFixtures do
 
   def payment_state_by_callback_fixture(%PaymentRequest{} = payment_request, state)
       when is_atom(state) do
+    ExUnit.Callbacks.start_supervised(Omc.Payments)
+    Ecto.Adapters.SQL.Sandbox.allow(Omc.Repo, self(), Process.whereis(Omc.Payments))
+
     PaymentProviderOxapayMock
     |> stub(:callback, fn _data ->
       {:ok, %{state: state, ref: payment_request.ref, data: %{}}, :some_response}
@@ -43,7 +46,9 @@ defmodule Omc.PaymentFixtures do
     |> stub(:get_paid_money!, fn _data, _currency -> payment_request.money end)
     |> allow(self(), Process.whereis(Omc.Payments))
 
-    {:ok, :some_response} = Payments.callback(payment_request.ipg, %{})
+    response = {:ok, :some_response} = Payments.callback(payment_request.ipg, %{})
+    ExUnit.Callbacks.stop_supervised(Omc.Payments)
+    response
   end
 
   def done_payment_request_fixture() do
