@@ -39,6 +39,7 @@
   >
     <:col :let={{_id, ledger}} label="User ID"><%= ledger.user_id %></:col>
     <:col :let={{_id, ledger}} label="User Type"><%= ledger.user_type %></:col>
+    <:col :let={{_id, ledger}} label="User Info"><%= ledger.user_info %></:col>
     <:col :let={{_id, ledger}} label="Credit">
       <%= Money.new(ledger.credit, ledger.currency) %>
     </:col>

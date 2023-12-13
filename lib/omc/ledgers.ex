@@ -2,6 +2,7 @@ defmodule Omc.Ledgers do
   alias Omc.Common.Utils
   alias Omc.Repo
   alias Omc.Ledgers.{Ledger, LedgerTx}
+  alias Omc.Users.UserInfo
   import Ecto.Query, warn: false
 
   @doc """
@@ -236,7 +237,7 @@ defmodule Omc.Ledgers do
     args =
       Keyword.validate!(args, page: 1, limit: 10, user_id: nil, user_type: nil, currency: nil)
 
-    Ledger
+    list_ledgers_query()
     |> list_ledgers_where_user_type(args[:user_type])
     |> list_ledgers_where_user_id(args[:user_id])
     |> list_ledgers_where_currency(args[:currency])
@@ -244,6 +245,23 @@ defmodule Omc.Ledgers do
     |> limit(^args[:limit])
     |> order_by(desc: :id)
     |> Repo.all()
+  end
+
+  defp list_ledgers_query() do
+    from(l in Ledger,
+      left_join: ui in UserInfo,
+      on: ui.user_id == l.user_id and ui.user_type == l.user_type,
+      select: %{
+        l
+        | user_info:
+            fragment(
+              "concat('un: ', ?, ',fn: ', ?, ',ln: ', ?)",
+              ui.user_name,
+              ui.first_name,
+              ui.last_name
+            )
+      }
+    )
   end
 
   defp list_ledgers_where_user_type(query, user_type) when user_type == nil, do: query

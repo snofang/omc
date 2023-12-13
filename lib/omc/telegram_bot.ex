@@ -26,20 +26,24 @@ defmodule Omc.TelegramBot do
           "callback_query" => %{
             "id" => callback_query_id,
             "data" => data,
-            "from" => %{"id" => _from_id},
+            "from" => from_data,
             "message" => %{"message_id" => message_id, "chat" => %{"id" => chat_id}}
           }
         } ->
           {callback, args} = data |> TelegramUtils.decode_callback_data()
 
           {:ok, _} =
-            TelegramUtils.handle_callback(callback, %{
-              token: token,
-              callback_query_id: callback_query_id,
-              chat_id: chat_id,
-              message_id: message_id,
-              callback_args: args
-            })
+            TelegramUtils.handle_callback(
+              callback,
+              %{
+                token: token,
+                callback_query_id: callback_query_id,
+                chat_id: chat_id,
+                message_id: message_id,
+                callback_args: args,
+                user: to_user_info_attrs(from_data)
+              }
+            )
 
         _ ->
           Logger.debug("Unknown message:\n\n```\n#{inspect(update, pretty: true)}\n```")
@@ -63,5 +67,29 @@ defmodule Omc.TelegramBot do
           #{Exception.format(:error, error, __STACKTRACE__)}
         """)
     end
+  end
+
+  defp to_user_info_attrs(from_data = %{"id" => user_id}) do
+    %{user_type: :telegram, user_id: user_id |> to_string()}
+    |> then(fn attrs ->
+      if from_data["username"],
+        do: attrs |> Map.put(:user_name, from_data["username"]),
+        else: attrs
+    end)
+    |> then(fn attrs ->
+      if from_data["first_name"],
+        do: attrs |> Map.put(:first_name, from_data["first_name"]),
+        else: attrs
+    end)
+    |> then(fn attrs ->
+      if from_data["last_name"],
+        do: attrs |> Map.put(:last_name, from_data["last_name"]),
+        else: attrs
+    end)
+    |> then(fn attrs ->
+      if from_data["language_code"],
+        do: attrs |> Map.put(:language_code, from_data["language_code"]),
+        else: attrs
+    end)
   end
 end

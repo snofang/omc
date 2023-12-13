@@ -1,4 +1,5 @@
 defmodule Omc.Telegram.CallbackCredit do
+  alias Omc.Users
   use Omc.Telegram.CallbackQuery
   alias Omc.Usages
   alias Omc.Payments
@@ -12,7 +13,10 @@ defmodule Omc.Telegram.CallbackCredit do
       [] ->
         {:ok, args |> Map.put_new(:message, "")}
 
-      [amount | []] ->
+      [amount] ->
+        {:ok, _} =
+          Users.upsert_user_info(user) |> IO.inspect(label: "--- user_info upsert result ---")
+
         Payments.create_payment_request(:oxapay, user |> Map.put(:money, Money.parse!(amount)))
         |> case do
           {:ok, _} ->
@@ -78,10 +82,20 @@ defmodule Omc.Telegram.CallbackCredit do
   end
 
   defp last_payment_requests(%{user_id: user_id, user_type: user_type}) do
-    Payments.list_payment_requests(page: 1, limit: 5, user_id: user_id, user_type: user_type)
-    |> Enum.reduce("", fn item, acc ->
-      acc <>
-        "#{if(acc != "", do: "\n")}- _#{item.money}, #{item.state || "'new'"},  [Pay Link](#{item.url})_"
-    end)
+    case Payments.list_payment_requests(page: 1, limit: 5, user_id: user_id, user_type: user_type) do
+      items = [_item | _] ->
+        items
+        |> Enum.reduce("", fn item, acc ->
+          acc <>
+            "#{if(acc != "", do: "\n")}" <> payment_request_text(item)
+        end)
+
+      _ ->
+        "- no payment request yet."
+    end
+  end
+
+  defp payment_request_text(item) do
+    "- _#{item.money}, #{item.state || "'new'"},  [Pay Link](#{item.url})_"
   end
 end

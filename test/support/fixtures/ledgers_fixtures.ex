@@ -4,15 +4,11 @@ defmodule Omc.LedgersFixtures do
   entities via the `Omc.Ledgers` context.
   """
   alias Omc.Ledgers
+  alias Omc.UsersFixtures
 
-  def unique_user_id do
-    (0xF000000000000000 + System.unique_integer([:positive, :monotonic]))
-    |> Integer.to_string()
-  end
+  def unique_user_id, do: UsersFixtures.unique_user_id()
 
-  def unique_user_attrs do
-    %{user_type: :telegram, user_id: unique_user_id()}
-  end
+  def unique_user_attrs, do: UsersFixtures.unique_user_attrs()
 
   def valid_ledger_tx_attrubutes(attrs \\ %{}) do
     Enum.into(attrs, %{

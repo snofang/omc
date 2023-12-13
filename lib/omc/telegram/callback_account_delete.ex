@@ -30,7 +30,7 @@ defmodule Omc.Telegram.CallbackAccountDelete do
         {:redirect, "Account",
          args
          |> Map.put(:callback_args, [sa_id, sa_name, sau_id])
-         |> Map.put(:message, "Account #{sa_name} deleted.")}
+         |> Map.put(:message, "Account #{sa_name} registered for deletion.")}
 
       {:error, _} ->
         {:error, %{message: "Failed deactivating #{sa_name}"}}

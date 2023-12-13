@@ -10,7 +10,8 @@ defmodule Omc.Ledgers.Ledger do
           user_data: map(),
           currency: atom(),
           credit: integer(),
-          description: binary()
+          description: binary(),
+          user_info: binary()
         }
 
   schema "ledgers" do
@@ -21,6 +22,7 @@ defmodule Omc.Ledgers.Ledger do
     field(:credit, :integer, default: 0)
     field(:description, :string)
     field(:lock_version, :integer, default: 1)
+    field(:user_info, :string, virtual: true)
     timestamps()
     # has_many :ledger_txs, Omc.Ledgers.LedgerTx
     # has_many :ledger_accs, Omc.Ledgers.LedgerAcc

@@ -37,8 +37,8 @@ defmodule Omc.Telegram.CallbackServers do
       """
     else
       """
-      Unfortunately no free account is available now. 
-      Come back later and check it again; It will be suuplied ASAP.
+      Unfortunately no free account is available right now. 
+      Please come back later and check it again; It will be supplied ASAP.
       """
     end}
     """

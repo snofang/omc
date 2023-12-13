@@ -1,6 +1,7 @@
 defmodule Omc.Payments do
   use GenServer
   require Logger
+  alias Omc.Users.UserInfo
   alias Omc.Ledgers
   alias Omc.Payments.{PaymentRequest, PaymentState}
   alias Omc.Payments.PaymentProvider
@@ -200,7 +201,19 @@ defmodule Omc.Payments do
       left_join: ps in PaymentState,
       as: :payment_state,
       on: ps.id == ls.id,
-      select: %{pr | state: ps.state}
+      left_join: ui in UserInfo,
+      on: ui.user_id == pr.user_id and ui.user_type == pr.user_type,
+      select: %{
+        pr
+        | state: ps.state,
+          user_info:
+            fragment(
+              "concat('un: ', ?, ',fn: ', ?, ',ln: ', ?)",
+              ui.user_name,
+              ui.first_name,
+              ui.last_name
+            )
+      }
     )
   end
 

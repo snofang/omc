@@ -26,8 +26,6 @@ defmodule Omc.Telegram.CallbackQuery do
             }
           ) do
         try do
-          args = args |> Map.put(:user, %{user_type: :telegram, user_id: chat_id |> to_string()})
-
           case do_process(args) do
             {:redirect, callback, args} ->
               TelegramUtils.handle_callback(callback, args)

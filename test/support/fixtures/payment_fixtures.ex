@@ -1,6 +1,6 @@
 defmodule Omc.PaymentFixtures do
   alias Omc.Payments.PaymentRequest
-  alias Omc.LedgersFixtures
+  alias Omc.UsersFixtures
   alias Omc.Payments
   alias Omc.PaymentProviderOxapayMock
   import Mox
@@ -26,7 +26,7 @@ defmodule Omc.PaymentFixtures do
         :oxapay,
         Enum.into(attrs, %{
           user_type: :telegram,
-          user_id: LedgersFixtures.unique_user_id(),
+          user_id: UsersFixtures.unique_user_id(),
           money: Money.new(10000)
         })
       )

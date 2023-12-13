@@ -14,6 +14,7 @@ defmodule Omc.Payments.PaymentRequest do
     field(:url, :string)
     field :data, :map
     field :state, Ecto.Enum, values: Ecto.Enum.values(PaymentState, :state), virtual: true
+    field :user_info, :string, virtual: true
     has_many(:payment_states, PaymentState)
     timestamps(updated_at: false)
   end
