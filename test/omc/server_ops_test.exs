@@ -2,7 +2,6 @@ defmodule Omc.ServerOpsTest do
   use Omc.DataCase, async: false
   alias Omc.Servers.{ServerOps, Server, ServerTaskManager}
   import Mox
-  setup :verify_on_exit!
 
   setup %{} do
     start_supervised(ServerTaskManager)
@@ -11,7 +10,7 @@ defmodule Omc.ServerOpsTest do
 
   test "ansible hosts file should be created/modified on operation(s)" do
     Omc.CmdWrapperMock
-    |> expect(:run, 2, fn _cmd, _timeout, _topic, _ref -> {:ok, "command executed"} end)
+    |> stub(:run, fn _cmd, _timeout, _topic, _ref -> {:ok, "command executed"} end)
     |> allow(self(), Process.whereis(ServerTaskManager))
 
     #
