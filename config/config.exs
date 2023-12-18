@@ -24,9 +24,9 @@ config :omc, acc_allocation_timeout: 30 * 60
 # ipgs
 # 
 config :omc, :ipgs,
-  return_url: "https://t.me/your_fantastic_bot",
   # Except it's set, the default endpoint url will be used.
   callback_base_url: nil,
+  return_url: "https://t.me/your_fantastic_bot",
   oxapay: [
     currencies: [:USD],
     module: Omc.Payments.PaymentProviderOxapay,
@@ -34,6 +34,13 @@ config :omc, :ipgs,
     api_key: "sandbox",
     timeout: (Application.get_env(:omc, :acc_allocation_timeout, 30 * 60) / 60) |> round()
   ]
+  # nowpayments: [
+  #   currencies: [:USD],
+  #   module: Omc.Payments.PaymentProviderNowpayments,
+  #   base_url: "https://api-sandbox.nowpayments.io/v1",
+  #   api_key: "runtime resolved",
+  #   ipn_secret_key: "runtime resolved"
+  # ]
 
 #
 # scheduler

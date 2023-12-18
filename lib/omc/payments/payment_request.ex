@@ -9,7 +9,7 @@ defmodule Omc.Payments.PaymentRequest do
     field(:user_type, Ecto.Enum, values: [:telegram, :local])
     field(:money, Money.Ecto.Map.Type)
     field(:ref, :string)
-    field(:ipg, Ecto.Enum, values: [:oxapay])
+    field(:ipg, Ecto.Enum, values: [:oxapay, :nowpayments])
     field(:type, Ecto.Enum, values: [:push, :pull])
     field(:url, :string)
     field :data, :map

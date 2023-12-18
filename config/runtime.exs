@@ -24,6 +24,17 @@ config :omc, :telegram,
   token: System.get_env("OMC_TELEGRAM_TOKEN"),
   host: System.get_env("OMC_TELEGRAM_HOST")
 
+#
+# ipgs
+# 
+config :omc, :ipgs,
+  callback_base_url: System.get_env("OMC_BASE_URL"),
+  return_url: System.get_env("OMC_IPGS_RETURNURL"),
+  nowpayments: [
+    api_key: System.get_env("OMC_IPGS_NOWPAYMENTS_APIKEY"),
+    ipn_secret_key: System.get_env("OMC_IPGS_NOWPAYMENT_IPNSECRETKEY")
+  ]
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||

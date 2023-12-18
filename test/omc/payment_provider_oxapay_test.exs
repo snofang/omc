@@ -24,7 +24,7 @@ defmodule Omc.PaymentProviderOxapayTest do
           amount: 5.0,
           currency: "USD",
           lifeTime: Application.get_env(:omc, :ipgs)[:oxapay][:timeout],
-          callbackUrl: OmcWeb.Endpoint.url() <> "/api/payment/oxapay",
+          callbackUrl: Application.get_env(:omc, :ipgs)[:callback_base_url] <> "/api/payment/oxapay",
           returnUrl: Application.get_env(:omc, :ipgs)[:return_url],
           email: "123456789" <> "@" <> "telegram"
         }

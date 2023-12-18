@@ -14,15 +14,15 @@ defmodule Omc.Telegram.CallbackCredit do
         {:ok, args |> Map.put_new(:message, "")}
 
       [amount] ->
-        {:ok, _} =
-          Users.upsert_user_info(user) |> IO.inspect(label: "--- user_info upsert result ---")
+        {:ok, _} = Users.upsert_user_info(user)
 
         Payments.create_payment_request(:oxapay, user |> Map.put(:money, Money.parse!(amount)))
         |> case do
           {:ok, _} ->
             {:ok, args |> Map.put(:message, "Payment request created.")}
 
-          {:error, _} ->
+          {:error, error} ->
+            Logger.error("Failed creating payment request; #{inspect(error)}")
             {:error, args |> Map.put(:message, "Failed creating payment request!")}
         end
     end
