@@ -1,12 +1,4 @@
 defmodule Omc.Payments.PaymentProviderNowpayments do
-  # TODO: this is a draft and will be continued later
-  @doc """
-  This is just a tryout for NowPayments and is not complete; considered as draft.
-  Currently even the `inquiry` function is just a copy and paste and doesn't contain 
-  any meaningful; The problem which caused not continuing this, is the logic behind nowpayments;
-  It accepts any number of repetitive payments for a given payment link and generate a new paymentId 
-  for it. It means there is no end for a given payment, which is not well suited here. 
-  """
   alias Omc.Payments.PaymentProvider
   use PaymentProvider, :nowpayments
   require Logger
@@ -81,31 +73,8 @@ defmodule Omc.Payments.PaymentProviderNowpayments do
   end
 
   @impl PaymentProvider
-  def send_state_inquiry_request(ref) do
-    # |> String.to_integer()
-    track_id = ref
-
-    post(
-      "/inquiry",
-      %{
-        merchant: api_key(),
-        trackId: track_id
-      }
-    )
-    |> case do
-      {:ok, %{body: data = %{"result" => 100, "trackId" => ^track_id, "status" => status}}} ->
-        {:ok, %{state: get_internal_state(status), data: data}}
-
-      res = {:ok, %{body: %{"result" => result, "message" => message}}} ->
-        Logger.info("Calling oxapay inquiry for ref=#{ref} failed; response is: #{inspect(res)}")
-
-        {:error, %{error_code: result, error_message: message}}
-
-      res ->
-        Logger.info("Calling oxapay inquiry for ref=#{ref} failed; response is: #{inspect(res)}")
-
-        {:error, :something_wrong}
-    end
+  def send_state_inquiry_request(_ref) do
+    {:error, :not_supported_yet}
   end
 
   def get_internal_state(status) do
@@ -130,6 +99,11 @@ defmodule Omc.Payments.PaymentProviderNowpayments do
     else
       raise "currency mismatch: requested currency: #{currency}, paid currency: #{data["price_currency"]}"
     end
+  end
+
+  @impl PaymentProvider
+  def get_payment_item_ref(%{"payment_id" => payment_id}) do
+    payment_id |> to_string() 
   end
 
   def hmac(data) when is_binary(data) do

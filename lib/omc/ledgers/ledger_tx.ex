@@ -25,6 +25,7 @@ defmodule Omc.Ledgers.LedgerTx do
     field(:amount, :integer)
     field(:context, Ecto.Enum, values: [:manual, :usage, :payment])
     field(:context_id, :id)
+    field(:context_ref, :string)
     timestamps(updated_at: false)
   end
 
@@ -35,7 +36,8 @@ defmodule Omc.Ledgers.LedgerTx do
       :type,
       :amount,
       :context,
-      :context_id
+      :context_id,
+      :context_ref
     ])
     |> validate_required([:ledger_id, :type, :amount, :context])
     |> validate_number(:amount, greater_than: 0)

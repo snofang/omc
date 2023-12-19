@@ -114,6 +114,11 @@ defmodule Omc.Payments.PaymentProviderOxapay do
     end
   end
 
+  @impl PaymentProvider
+  def get_payment_item_ref(_data) do
+    nil
+  end
+
   def hmac(data) when is_binary(data) do
     :crypto.mac(:hmac, :sha512, Application.get_env(:omc, :ipgs)[:oxapay][:api_key], data)
     |> :binary.encode_hex()

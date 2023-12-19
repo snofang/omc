@@ -9,6 +9,11 @@ defmodule Omc.PaymentsTest do
   import Mox
   import Omc.PaymentFixtures
 
+  setup %{} do
+    stub(PaymentProviderOxapayMock, :get_payment_item_ref, fn _data -> nil end)
+    :ok
+  end
+
   describe "create_payment_request/2" do
     setup %{} do
       %{user_id: LedgersFixtures.unique_user_id(), user_type: :telegram}

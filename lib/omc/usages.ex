@@ -110,8 +110,7 @@ defmodule Omc.Usages do
         user_id: ledger_changeset.data.user_id,
         context: :usage,
         context_id: usage_item.id,
-        money: Money.new(ledger_tx_changeset.changes.amount, ledger_changeset.data.currency),
-        type: :debit
+        money: Money.new(ledger_tx_changeset.changes.amount, ledger_changeset.data.currency)
       }
       |> Ledgers.create_ledger_tx!()
       |> then(&{:ok, &1})

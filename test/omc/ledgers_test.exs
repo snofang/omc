@@ -30,30 +30,30 @@ defmodule Omc.LedgersTest do
     test "adding credit/debit tx should increase/decrease ledger's credit amount", %{
       ledger: ledger
     } do
+      attrs = %{
+        user_type: :telegram,
+        user_id: ledger.user_id,
+        context: :manual,
+        money: Money.new(100),
+        type: :credit
+      }
+
       ledger_updated =
-        valid_ledger_tx_attrubutes(%{
-          user_id: ledger.user_id,
-          type: :credit,
-          money: Money.new(100)
-        })
-        |> Ledgers.create_ledger_tx!()
+        Ledgers.create_ledger_tx!(attrs)
         |> then(fn changes -> Map.get(changes, :ledger) end)
 
       assert ledger_updated.credit == ledger.credit + 100
 
       ledger_updated =
-        valid_ledger_tx_attrubutes(%{
-          user_id: ledger.user_id,
-          type: :credit,
-          money: Money.new(100)
-        })
-        |> Ledgers.create_ledger_tx!()
+        Ledgers.create_ledger_tx!(attrs)
         |> then(fn changes -> Map.get(changes, :ledger) end)
 
       assert ledger_updated.credit == ledger.credit + 200
 
       ledger_updated =
-        valid_ledger_tx_attrubutes(%{user_id: ledger.user_id, type: :debit, money: Money.new(200)})
+        attrs
+        |> Map.put(:money, Money.new(200))
+        |> Map.put(:type, :debit)
         |> Ledgers.create_ledger_tx!()
         |> then(fn changes -> Map.get(changes, :ledger) end)
 
@@ -81,16 +81,50 @@ defmodule Omc.LedgersTest do
       attrs = valid_ledger_tx_attrubutes()
 
       %{ledger: ledger, ledger_tx: ledger_tx} =
-        Ledgers.create_ledger_tx!(%{
+        Ledgers.create_ledger_tx!(
           attrs
-          | type: :credit,
+          |> Map.merge(%{
+            type: :credit,
             money: Money.new(123),
             context: :payment,
-            context_id: 123
-        })
+            context_id: 123,
+            context_ref: "additional_external_ref"
+          })
+        )
 
       assert ledger.credit == 123
       assert ledger_tx.context == :payment
+      assert ledger_tx.context_id == 123
+      assert ledger_tx.context_ref == "additional_external_ref"
+    end
+
+    test "ledgerTx with :usage context requires :context_id" do
+      assert_raise(RuntimeError, "", fn ->
+        try do
+          Ledgers.create_ledger_tx!(%{
+            user_type: :telegram,
+            user_id: unique_user_id(),
+            context: :usage,
+            money: Money.new(100)
+          })
+        rescue
+          _ -> raise ""
+        end
+      end)
+    end
+
+    test "ledgerTx with :usage context success flow" do
+      %{ledger: ledger, ledger_tx: ledger_tx} =
+        Ledgers.create_ledger_tx!(%{
+          user_type: :telegram,
+          user_id: unique_user_id(),
+          context: :usage,
+          context_id: 123,
+          money: Money.new(100)
+        })
+
+      assert ledger.credit == -100
+      assert ledger_tx.context == :usage
       assert ledger_tx.context_id == 123
     end
   end

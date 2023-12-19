@@ -95,13 +95,16 @@ defmodule Omc.Payments do
   @spec __update_ledger__({%PaymentRequest{}, %PaymentState{}}) ::
           :ledger_updated | :ledger_unchanged
   def __update_ledger__({pr, ps}) when ps.state == :done do
-    case Ledgers.get_ledger_tx_by_context(:payment, pr.id) do
-      nil ->
+    payment_item_ref = PaymentProvider.get_payment_item_ref(pr.ipg, ps.data)
+
+    case Ledgers.get_ledger_tx_by_context(:payment, pr.id, payment_item_ref) do
+      [] ->
         Ledgers.create_ledger_tx!(%{
           user_id: pr.user_id,
           user_type: pr.user_type,
           context: :payment,
           context_id: pr.id,
+          context_ref: payment_item_ref,
           money: PaymentProvider.get_paid_money!(pr.ipg, ps.data, pr.money.currency),
           type: :credit
         })

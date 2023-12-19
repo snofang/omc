@@ -13,6 +13,8 @@ defmodule Omc.Payments.PaymentProvider do
 
   @callback get_paid_money!(data :: map(), currency :: atom()) :: Money.t()
 
+  @callback get_payment_item_ref(data :: map()) :: binary() | nil
+
   defmacro __using__(ipg) when is_atom(ipg) do
     quote do
       @behaviour Omc.Payments.PaymentProvider
@@ -51,6 +53,10 @@ defmodule Omc.Payments.PaymentProvider do
   def get_paid_money!(ipg, %{} = data, currency)
       when is_atom(ipg) and is_atom(currency) do
     provider_impl(ipg).get_paid_money!(data, currency)
+  end
+
+  def get_payment_item_ref(ipg, %{} = data) when is_atom(ipg) do
+    provider_impl(ipg).get_payment_item_ref(data)
   end
 
   defp provider_impl(ipg) when is_atom(ipg) do

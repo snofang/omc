@@ -27,10 +27,11 @@ defmodule Omc.Repo.Migrations.CreateLedgersTables do
       # Nornally this should refer to a table(e.g. :payments, :ledger_accs, etc.),
       # and in case of manual it can be null
       add :context_id, :id, null: true
+      add :context_ref, :string, null: true
       timestamps(updated_at: false)
     end
 
     create index(:ledger_txs, [:ledger_id])
-    create unique_index(:ledger_txs, [:context, :context_id])
+    create index(:ledger_txs, [:context, :context_id])
   end
 end

@@ -74,6 +74,7 @@ defmodule Omc.Ledgers do
           user_id: binary(),
           context: :manual | :payment | :usage,
           context_id: integer() | nil,
+          context_ref: binary() | nil,
           money: Money.t(),
           type: :credit | :debit
         }) :: %{ledger: Ledger.t(), ledger_tx: LedgerTx.t()}
@@ -82,6 +83,7 @@ defmodule Omc.Ledgers do
         user_id: user_id,
         context: context,
         context_id: context_id,
+        context_ref: context_ref,
         money: money,
         type: type
       }) do
@@ -101,6 +103,7 @@ defmodule Omc.Ledgers do
           ledger: ledger,
           context: context,
           context_id: context_id,
+          context_ref: context_ref,
           amount: money.amount,
           type: type
         })
@@ -114,6 +117,7 @@ defmodule Omc.Ledgers do
           ledger: ledger,
           context: context,
           context_id: context_id,
+          context_ref: context_ref,
           amount: money.amount,
           type: type
         })
@@ -129,6 +133,29 @@ defmodule Omc.Ledgers do
   @spec create_ledger_tx!(%{
           user_type: atom(),
           user_id: binary(),
+          context: :usage,
+          context_id: integer(),
+          money: Money.t()
+        }) :: %{ledger: Ledger.t(), ledger_tx: LedgerTx.t()}
+  def create_ledger_tx!(
+        attrs = %{
+          user_type: _user_type,
+          user_id: _user_id,
+          context: :usage,
+          context_id: _context_id,
+          money: _money
+        }
+      ) do
+    create_ledger_tx!(
+      attrs
+      |> Map.put(:context_ref, nil)
+      |> Map.put(:type, :debit)
+    )
+  end
+
+  @spec create_ledger_tx!(%{
+          user_type: atom(),
+          user_id: binary(),
           context: :manual,
           money: Money.t(),
           type: :credit | :debit
@@ -137,14 +164,35 @@ defmodule Omc.Ledgers do
         %{
           user_type: _user_type,
           user_id: _user_id,
-          context: _context,
+          context: :manual,
           money: _money,
           type: _type
         } = attrs
       ) do
-    create_ledger_tx!(attrs |> Map.put(:context_id, nil))
+    create_ledger_tx!(attrs 
+      |> Map.put(:context_id, nil) 
+      |> Map.put(:context_ref, nil))
   end
 
+  @spec create_ledger_tx!(%{
+          user_type: atom(),
+          user_id: binary(),
+          context: :payment,
+          context_id: integer(),
+          money: Money.t()
+        }) :: %{ledger: Ledger.t(), ledger_tx: LedgerTx.t()}
+  def create_ledger_tx!(
+        %{
+          user_type: _user_type,
+          user_id: _user_id,
+          context: :payment,
+          context_id: _context_id,
+          money: _money
+        } = attrs
+      ) do
+    create_ledger_tx!(attrs 
+      |> Map.put(:context_ref, nil))
+  end
   @doc """
   Returns changesets required to insert a `LedgerTx` and update its `Ledger` accordingly.
   """
@@ -176,6 +224,7 @@ defmodule Omc.Ledgers do
           ledger: Ledger.t(),
           context: :payment,
           context_id: integer(),
+          context_ref: binary() | nil,
           amount: integer(),
           type: :credit
         }) :: %{
@@ -226,10 +275,15 @@ defmodule Omc.Ledgers do
   end
 
   # @spec get_ledger_tx_by_context(atom(), integer()) :: %LedgerTx{} | nil
-  def get_ledger_tx_by_context(context, context_id)
+  def get_ledger_tx_by_context(context, context_id, context_ref)
       when is_atom(context) and is_integer(context_id) do
     from(tx in LedgerTx, where: tx.context == ^context and tx.context_id == ^context_id)
-    |> Repo.one()
+    |> then(fn q ->
+      if context_ref,
+        do: where(q, context_id: ^context_id),
+        else: where(q, [tx], is_nil(tx.context_ref))
+    end)
+    |> Repo.all()
   end
 
   @spec list_ledgers(Keyword.t()) :: list(%Ledger{})
