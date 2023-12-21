@@ -11,12 +11,12 @@ Application.put_env(:omc, :cmd_wrapper_impl, Omc.CmdWrapperMock)
 #
 # Defining mock implementation of oxapay payment provider.
 #
-Mox.defmock(Omc.PaymentProviderOxapayMock, for: Omc.Payments.PaymentProvider)
+Mox.defmock(Omc.PaymentProviderMock, for: Omc.Payments.PaymentProvider)
 
 Application.put_env(
   :omc,
   :ipgs,
-  Application.get_env(:omc, :ipgs) |> put_in([:oxapay, :module], Omc.PaymentProviderOxapayMock)
+  Application.get_env(:omc, :ipgs) |> put_in([:oxapay, :module], Omc.PaymentProviderMock)
 )
 
 #

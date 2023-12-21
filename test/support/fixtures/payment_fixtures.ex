@@ -2,11 +2,11 @@ defmodule Omc.PaymentFixtures do
   alias Omc.Payments.PaymentRequest
   alias Omc.UsersFixtures
   alias Omc.Payments
-  alias Omc.PaymentProviderOxapayMock
+  alias Omc.PaymentProviderMock
   import Mox
 
   def payment_request_fixture(ipg \\ :oxapay, attrs \\ %{}) when is_atom(ipg) do
-    PaymentProviderOxapayMock
+    PaymentProviderMock
     |> stub(:send_payment_request, fn attrs = %{ipg: _, money: _, user_type: _, user_id: _} ->
       ref = System.unique_integer([:positive])
 
@@ -39,7 +39,7 @@ defmodule Omc.PaymentFixtures do
     ExUnit.Callbacks.start_supervised(Omc.Payments)
     Ecto.Adapters.SQL.Sandbox.allow(Omc.Repo, self(), Process.whereis(Omc.Payments))
 
-    PaymentProviderOxapayMock
+    PaymentProviderMock
     |> stub(:callback, fn _data ->
       {:ok, %{state: state, ref: payment_request.ref, data: %{}}, :some_response}
     end)

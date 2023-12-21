@@ -1,12 +1,12 @@
 defmodule OmcWeb.PaymentControllerTest do
   use OmcWeb.ConnCase, async: true
-  alias Omc.PaymentProviderOxapayMock
+  alias Omc.PaymentProviderMock
   alias Omc.Payments.PaymentProviderOxapay
   import Omc.PaymentFixtures
   import Mox
 
   setup %{conn: conn} do
-    PaymentProviderOxapayMock
+    PaymentProviderMock
     |> expect(:callback, fn data = %{params: %{"hmac" => _hmac}, body: _body} ->
       PaymentProviderOxapay.callback(data)
     end)

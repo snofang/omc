@@ -5,12 +5,12 @@ defmodule Omc.PaymentsTest do
   alias Omc.LedgersFixtures
   alias Omc.Payments
   alias Omc.Payments.PaymentRequest
-  alias Omc.PaymentProviderOxapayMock
+  alias Omc.PaymentProviderMock
   import Mox
   import Omc.PaymentFixtures
 
   setup %{} do
-    stub(PaymentProviderOxapayMock, :get_payment_item_ref, fn _data -> nil end)
+    stub(PaymentProviderMock, :get_payment_item_ref, fn _data -> nil end)
     :ok
   end
 
@@ -23,7 +23,7 @@ defmodule Omc.PaymentsTest do
       user_id: user_id,
       user_type: user_type
     } do
-      PaymentProviderOxapayMock
+      PaymentProviderMock
       |> stub(:send_payment_request, fn attrs ->
         {:ok,
          attrs
@@ -58,7 +58,7 @@ defmodule Omc.PaymentsTest do
       user_id: user_id,
       user_type: user_type
     } do
-      PaymentProviderOxapayMock
+      PaymentProviderMock
       |> stub(:send_payment_request, fn %{} ->
         {:error, :some_reason}
       end)
@@ -75,7 +75,7 @@ defmodule Omc.PaymentsTest do
       user_id: user_id,
       user_type: user_type
     } do
-      PaymentProviderOxapayMock
+      PaymentProviderMock
       |> stub(:send_payment_request, fn attrs ->
         {:ok,
          attrs
@@ -116,7 +116,7 @@ defmodule Omc.PaymentsTest do
     test "callback causing :pending state", %{
       payment_request: payment_request
     } do
-      PaymentProviderOxapayMock
+      PaymentProviderMock
       |> stub(:callback, fn _data ->
         {:ok,
          %{
@@ -137,7 +137,7 @@ defmodule Omc.PaymentsTest do
     end
 
     test "callback having not exising ref" do
-      PaymentProviderOxapayMock
+      PaymentProviderMock
       |> stub(:callback, fn _data ->
         {:ok,
          %{
@@ -153,7 +153,7 @@ defmodule Omc.PaymentsTest do
     test "reapeating callback causing same state inserts for each of them", %{
       payment_request: payment_request
     } do
-      PaymentProviderOxapayMock
+      PaymentProviderMock
       |> stub(:callback, fn _data ->
         {:ok,
          %{
@@ -183,7 +183,7 @@ defmodule Omc.PaymentsTest do
     end
 
     test ":done callback should update ledger", %{payment_request: pr} do
-      PaymentProviderOxapayMock
+      PaymentProviderMock
       |> stub(:callback, fn _data ->
         {:ok,
          %{
@@ -204,7 +204,7 @@ defmodule Omc.PaymentsTest do
     test "already affected ledger should not updated by repetitive :done callbacks", %{
       payment_request: pr
     } do
-      PaymentProviderOxapayMock
+      PaymentProviderMock
       |> stub(:callback, fn _data ->
         {:ok,
          %{
@@ -280,7 +280,7 @@ defmodule Omc.PaymentsTest do
     end
 
     test "should create new PaymentState on success", %{payment_request: pr} do
-      PaymentProviderOxapayMock
+      PaymentProviderMock
       |> stub(:send_state_inquiry_request, fn _ ->
         {:ok, %{state: :pending, data: %{"res_key" => "res_value"}}}
       end)
@@ -291,7 +291,7 @@ defmodule Omc.PaymentsTest do
     end
 
     test "On error, no PaymentState is created", %{payment_request: pr} do
-      PaymentProviderOxapayMock
+      PaymentProviderMock
       |> stub(:send_state_inquiry_request, fn _ ->
         {:error, :some_special_error}
       end)
@@ -303,7 +303,7 @@ defmodule Omc.PaymentsTest do
     end
 
     test "On done state, ledger should be updated", %{payment_request: pr} do
-      PaymentProviderOxapayMock
+      PaymentProviderMock
       |> stub(:send_state_inquiry_request, fn _ ->
         {:ok, %{state: :done, data: %{"res_key" => "res_value"}}}
       end)
@@ -320,7 +320,7 @@ defmodule Omc.PaymentsTest do
     test "already affected ledger should not updated by repetitive :done callbacks", %{
       payment_request: pr
     } do
-      PaymentProviderOxapayMock
+      PaymentProviderMock
       |> stub(:send_state_inquiry_request, fn _ ->
         {:ok, %{state: :done, data: %{"res_key" => "res_value"}}}
       end)
@@ -345,7 +345,7 @@ defmodule Omc.PaymentsTest do
       assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id}) == nil
 
       # pending state
-      PaymentProviderOxapayMock
+      PaymentProviderMock
       |> stub(:send_state_inquiry_request, fn _ ->
         {:ok, %{state: :pending, data: %{"res_key" => "res_value"}}}
       end)
@@ -354,7 +354,7 @@ defmodule Omc.PaymentsTest do
       assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id}) == nil
 
       # failed state
-      PaymentProviderOxapayMock
+      PaymentProviderMock
       |> stub(:send_state_inquiry_request, fn _ ->
         {:ok, %{state: :failed, data: %{"res_key" => "res_value"}}}
       end)

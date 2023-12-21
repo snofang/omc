@@ -1,5 +1,5 @@
 defmodule OmcWeb.PaymentRequestLiveTest do
-  alias Omc.PaymentProviderOxapayMock
+  alias Omc.PaymentProviderMock
   use OmcWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
@@ -43,7 +43,7 @@ defmodule OmcWeb.PaymentRequestLiveTest do
     setup [:create_payment_request]
 
     test "successful inquiry state", %{conn: conn, user: user, payment_request: pr} do
-      PaymentProviderOxapayMock
+      PaymentProviderMock
       |> expect(:send_state_inquiry_request, fn _ ->
         {:ok, %{state: :pending, data: %{"res_key" => "res_value"}}}
       end)
@@ -60,7 +60,7 @@ defmodule OmcWeb.PaymentRequestLiveTest do
     end
 
     test "failed inquiry state", %{conn: conn, user: user, payment_request: pr} do
-      PaymentProviderOxapayMock
+      PaymentProviderMock
       |> expect(:send_state_inquiry_request, fn _ ->
         {:error, %{"error" => "some_error"}}
       end)
