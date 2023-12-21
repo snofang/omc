@@ -8,14 +8,12 @@ defmodule Omc.Payments.PaymentProviderNowpayments do
   plug(Tesla.Middleware.Headers, [{"x-api-key", api_key()}])
 
   @impl PaymentProvider
-  def send_payment_request(
-        %{ipg: :nowpayments, money: money, user_type: _user_type, user_id: _user_id} = attrs
-      ) do
+  def send_payment_request(%{money: money, user_type: _user_type, user_id: _user_id} = attrs) do
     post(
       "/invoice",
       %{
         price_amount: money |> Money.to_decimal() |> Decimal.to_float(),
-        price_currency: to_string(money.currency) |> String.downcase(),
+        price_currency: to_string(money.currency),
         ipn_callback_url: callback_url(),
         success_url: return_url(),
         cancel_url: return_url(),
@@ -74,7 +72,7 @@ defmodule Omc.Payments.PaymentProviderNowpayments do
 
   @impl PaymentProvider
   def send_state_inquiry_request(_ref) do
-    {:error, :not_supported_yet}
+    {:error, :not_supported}
   end
 
   def get_internal_state(status) do
@@ -82,28 +80,33 @@ defmodule Omc.Payments.PaymentProviderNowpayments do
       status when status in ["expired", "failed", "refunded"] ->
         :failed
 
-      status when status in ["waiting", "confirming", "confirmed", "sending", "partially_paid"] ->
+      status when status in ["waiting", "confirming", "confirmed", "sending"] ->
         :pending
 
-      status when status in ["finished"] ->
+      status when status in ["finished", "partially_paid"] ->
         :done
     end
   end
 
   @impl PaymentProvider
-  def get_paid_money!(%{} = data, currency) do
-    if currency |> to_string() |> String.downcase() == data["price_currency"] |> String.downcase() do
-      # data["price_amount"] * data["actually_paid"] / data["pay_amount"]
-      data["price_amount"]
-      |> Money.parse!(currency)
+  def get_paid_money!(
+        %{
+          "price_currency" => price_currency,
+          "actually_paid" => actually_paid,
+          "pay_currency" => pay_currency
+        } = data,
+        :USD
+      ) do
+    if "USD" == price_currency |> String.upcase() do
+      get_paid_crypto_in_usd(actually_paid, pay_currency)
     else
-      raise "currency mismatch: requested currency: #{currency}, paid currency: #{data["price_currency"]}"
+      raise "currency mismatch: requested currency: USD, paid currency: #{data["price_currency"]}"
     end
   end
 
   @impl PaymentProvider
   def get_payment_item_ref(%{"payment_id" => payment_id}) do
-    payment_id |> to_string() 
+    payment_id |> to_string()
   end
 
   def hmac(data) when is_binary(data) do

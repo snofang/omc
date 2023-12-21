@@ -24,7 +24,8 @@ defmodule Omc.PaymentProviderOxapayTest do
           amount: 5.0,
           currency: "USD",
           lifeTime: Application.get_env(:omc, :ipgs)[:oxapay][:timeout],
-          callbackUrl: Application.get_env(:omc, :ipgs)[:callback_base_url] <> "/api/payment/oxapay",
+          callbackUrl:
+            Application.get_env(:omc, :ipgs)[:callback_base_url] <> "/api/payment/oxapay",
           returnUrl: Application.get_env(:omc, :ipgs)[:return_url],
           email: "123456789" <> "@" <> "telegram"
         }
@@ -275,26 +276,48 @@ defmodule Omc.PaymentProviderOxapayTest do
   end
 
   describe "get_paid_money!/2" do
-    setup %{} do
-      {:ok, data} = Jason.decode(~s({
-          "status":"Paid",
-          "amount":"95",
-          "currency":"USD",
-          "payAmount":"1234",
-          "payCurrency":"TRX",
-          "type":"payment"
-      }))
-      %{paid_data: data}
+    test "success case" do
+      data = %{"currency" => "USD", "payAmount" => "970", "payCurrency" => "TRX"}
+
+      TeslaMock
+      |> expect(
+        :call,
+        fn %Tesla.Env{
+             method: :get,
+             url: "https://api.binance.com/api/v3/avgPrice",
+             query: [symbol: "TRXUSDT"],
+             headers: [],
+             body: nil,
+             status: nil,
+             opts: []
+           },
+           [] = _opts ->
+          {:ok,
+           %{
+             status: 200,
+             body: %{"mins" => 5, "price" => "0.1", "closeTime" => 1_703_155_016_256}
+           }}
+        end
+      )
+
+      assert Money.new(9700, :USD) == PaymentProviderOxapay.get_paid_money!(data, :USD)
     end
 
-    test "success case", %{paid_data: paid_data} do
-      assert Money.new(9500, :USD) == PaymentProviderOxapay.get_paid_money!(paid_data, :USD)
-    end
+    test "mismactch curreny causes a raise" do
+      data = %{"currency" => "EUR", "payAmount" => "970", "payCurrency" => "TRX"}
 
-    test "mismactch curreny causes a raise", %{paid_data: paid_data} do
       assert_raise(RuntimeError, fn ->
-        PaymentProviderOxapay.get_paid_money!(paid_data, :EUR)
+        PaymentProviderOxapay.get_paid_money!(data, :USD)
       end)
+    end
+  end
+
+  describe "get_payment_item_ref/1" do
+    test "success case" do
+      refute PaymentProviderOxapay.get_payment_item_ref(%{
+               "trackId" => 123_456_789,
+               "other_field" => "other_field_value"
+             })
     end
   end
 end

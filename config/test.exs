@@ -22,7 +22,8 @@ config :omc, :telegram, enabled: false
 config :omc, Omc.Payments, enabled: false
 config :omc, Omc.Servers.ServerTaskManager, enabled: false
 
-config :tesla, Omc.Payments.PaymentProviderOxapay, adapter: Omc.TeslaMock
+# config :tesla, Omc.Payments.PaymentProviderOxapay, adapter: Omc.TeslaMock
+config :tesla, adapter: Omc.TeslaMock
 
 # Configure your database
 #
@@ -51,7 +52,7 @@ config :omc, Omc.Mailer, adapter: Swoosh.Adapters.Test
 config :swoosh, :api_client, false
 
 # Print only warnings and errors during test
-config :logger, level: :warning
+config :logger, level: :error
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime

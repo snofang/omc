@@ -1,6 +1,5 @@
 import Config
 
-
 # Configure your database
 # config :omc, Omc.Repo,
 #   database: Path.expand("../omc_dev.db", Path.dirname(__ENV__.file)),

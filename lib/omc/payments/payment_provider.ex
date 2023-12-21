@@ -23,11 +23,23 @@ defmodule Omc.Payments.PaymentProvider do
 
       def callback_url(),
         do:
-          (Application.get_env(:omc, :ipgs)[:callback_base_url] ||
-             OmcWeb.Endpoint.url()) <> "/api/payment/" <> to_string(unquote(ipg))
+          Application.get_env(:omc, :ipgs)[:callback_base_url] <>
+            "/api/payment/" <> to_string(unquote(ipg))
 
       def return_url(), do: Application.get_env(:omc, :ipgs)[:return_url]
       def base_url(), do: Application.get_env(:omc, :ipgs)[unquote(ipg)][:base_url]
+
+      def get_paid_crypto_in_usd(pay_amount, pay_currency)
+          when is_binary(pay_currency) do
+        {:ok, price} = Omc.Payments.PaymentExchange.get_avg_price_in_usdt(pay_currency)
+
+        pay_amount
+        |> to_string()
+        |> Decimal.parse()
+        |> then(fn {d, _} -> d end)
+        |> Decimal.mult(price)
+        |> Money.parse!(:USD)
+      end
     end
   end
 

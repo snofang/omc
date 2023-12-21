@@ -169,9 +169,11 @@ defmodule Omc.Ledgers do
           type: _type
         } = attrs
       ) do
-    create_ledger_tx!(attrs 
-      |> Map.put(:context_id, nil) 
-      |> Map.put(:context_ref, nil))
+    create_ledger_tx!(
+      attrs
+      |> Map.put(:context_id, nil)
+      |> Map.put(:context_ref, nil)
+    )
   end
 
   @spec create_ledger_tx!(%{
@@ -190,9 +192,12 @@ defmodule Omc.Ledgers do
           money: _money
         } = attrs
       ) do
-    create_ledger_tx!(attrs 
-      |> Map.put(:context_ref, nil))
+    create_ledger_tx!(
+      attrs
+      |> Map.put(:context_ref, nil)
+    )
   end
+
   @doc """
   Returns changesets required to insert a `LedgerTx` and update its `Ledger` accordingly.
   """
