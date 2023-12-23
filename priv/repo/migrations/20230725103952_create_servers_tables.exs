@@ -16,6 +16,7 @@ defmodule Omc.Repo.Migrations.CreateServersTables do
       add :status, :string, null: false
       add :price_plan_id, references(:price_plans, on_delete: :nothing), null: false
       add :tag, :string, null: false
+      add :max_acc_count, :integer, null: false
       timestamps()
     end
 

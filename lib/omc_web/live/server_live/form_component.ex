@@ -37,6 +37,7 @@ defmodule OmcWeb.ServerLive.FormComponent do
           options={@price_plans}
         />
         <.input field={@form[:tag]} type="text" label="Tag" />
+        <.input field={@form[:max_acc_count]} type="text" label="Max Account Count" />
         <:actions>
           <.button phx-disable-with="Saving...">Save Server</.button>
         </:actions>

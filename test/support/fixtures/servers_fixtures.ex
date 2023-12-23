@@ -20,7 +20,8 @@ defmodule Omc.ServersFixtures do
       tag: "some-tag",
       name: unique_server_name(),
       price_plan_id: price_plan.id,
-      price_plan: price_plan
+      price_plan: price_plan,
+      max_acc_count: 150
     }
   end
 
