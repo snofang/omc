@@ -92,14 +92,24 @@ defmodule Omc.Payments.PaymentProviderNowpayments do
   @impl PaymentProvider
   def get_paid_money!(
         %{
+          "price_amount" => price_amount,
           "price_currency" => price_currency,
           "pay_amount" => pay_amount,
-          "pay_currency" => pay_currency
+          "actually_paid" => actually_paid,
+          "pay_currency" => _pay_currency
         } = data,
         :USD
       ) do
     if "USD" == price_currency |> String.upcase() do
-      get_paid_crypto_in_usd(pay_amount, pay_currency)
+      # Note: this is for dev tesitng purpose and because 
+      # NowPayments returns zero in `actually_paid` in sandbox environment.
+      if(base_url() =~ "sandbox") do
+        # get_paid_crypto_in_usd(pay_amount, pay_currency)
+        Money.parse!(price_amount, :USD)
+      else
+        # get_paid_crypto_in_usd(actually_paid, pay_currency)
+        Money.parse!(price_amount / pay_amount * actually_paid, :USD)
+      end
     else
       raise "currency mismatch: requested currency: USD, paid currency: #{data["price_currency"]}"
     end

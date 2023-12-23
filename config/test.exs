@@ -8,6 +8,18 @@ config :bcrypt_elixir, :log_rounds, 1
 # 
 config :omc, supported_currencies: [:IRR, :USD, :EUR]
 
+#
+# ipgs
+# 
+config :omc, :ipgs,
+  # Note: the whole purpose of providing this config here is to let `base_url` have non `sandbox` value
+  nowpayments: [
+    module: Omc.Payments.PaymentProviderNowpayments,
+    base_url: "https://api.nowpayments.io/v1",
+    api_key: "runtime resolved",
+    ipn_secret_key: "runtime resolved"
+  ]
+
 config :omc, :telegram, enabled: false
 config :omc, Omc.Payments, enabled: false
 config :omc, Omc.Servers.ServerTaskManager, enabled: false

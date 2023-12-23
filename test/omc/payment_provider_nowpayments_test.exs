@@ -144,63 +144,77 @@ defmodule Omc.PaymentProviderNowpaymentsTest do
 
   describe "get_paid_money!/2" do
     test "success case" do
-      TeslaMock
-      |> expect(
-        :call,
-        fn %Tesla.Env{
-             method: :get,
-             url: "https://api.binance.com/api/v3/avgPrice",
-             query: [symbol: "TRXUSDT"],
-             headers: [],
-             body: nil,
-             status: nil,
-             opts: []
-           },
-           [] = _opts ->
-          {:ok,
-           %{
-             status: 200,
-             body: %{"mins" => 5, "price" => "0.10425122", "closeTime" => 1_703_155_016_256}
-           }}
-        end
-      )
+      # TeslaMock
+      # |> expect(
+      #   :call,
+      #   fn %Tesla.Env{
+      #        method: :get,
+      #        url: "https://api.binance.com/api/v3/avgPrice",
+      #        query: [symbol: "TRXUSDT"],
+      #        headers: [],
+      #        body: nil,
+      #        status: nil,
+      #        opts: []
+      #      },
+      #      [] = _opts ->
+      #     {:ok,
+      #      %{
+      #        status: 200,
+      #        body: %{"mins" => 5, "price" => "0.10425122", "closeTime" => 1_703_155_016_256}
+      #      }}
+      #   end
+      # )
 
-      paid_data = %{"price_currency" => "usd", "pay_amount" => 10, "pay_currency" => "trx"}
-      expected_money = Decimal.mult("10", "0.10425122") |> Money.parse!(:USD)
+      paid_data = %{
+        "price_amount" => 1,
+        "price_currency" => "usd",
+        "pay_amount" => 12,
+        "actually_paid" => 10,
+        "pay_currency" => "trx"
+      }
+
+      # expected_money = Decimal.mult("10", "0.10425122") |> Money.parse!(:USD)
+      expected_money = Money.parse!(10 / 12, :USD)
       assert expected_money == PaymentProviderNowpayments.get_paid_money!(paid_data, :USD)
     end
 
     test "mismactch curreny causes a raise" do
-      paid_data = %{"price_currency" => "eur", "pay_amount" => 10, "pay_currency" => "trx"}
+      paid_data = %{
+        "price_amount" => 1,
+        "price_currency" => "eur",
+        "pay_amount" => 12,
+        "actually_paid" => 10,
+        "pay_currency" => "trx"
+      }
 
       assert_raise(RuntimeError, fn ->
         PaymentProviderNowpayments.get_paid_money!(paid_data, :USD)
       end)
     end
 
-    test "getting price invalid symbol failure" do
-      TeslaMock
-      |> expect(
-        :call,
-        fn %Tesla.Env{
-             method: :get,
-             url: "https://api.binance.com/api/v3/avgPrice"
-           },
-           _opts ->
-          {:ok,
-           %{
-             status: 200,
-             body: %{"code" => -1121, "msg" => "Invalid symbol."}
-           }}
-        end
-      )
-
-      paid_data = %{"price_currency" => "usd", "pay_amount" => 10, "pay_currency" => "trx"}
-
-      assert_raise(MatchError, fn ->
-        PaymentProviderNowpayments.get_paid_money!(paid_data, :USD)
-      end)
-    end
+    # test "getting price invalid symbol failure" do
+    #   TeslaMock
+    #   |> expect(
+    #     :call,
+    #     fn %Tesla.Env{
+    #          method: :get,
+    #          url: "https://api.binance.com/api/v3/avgPrice"
+    #        },
+    #        _opts ->
+    #       {:ok,
+    #        %{
+    #          status: 200,
+    #          body: %{"code" => -1121, "msg" => "Invalid symbol."}
+    #        }}
+    #     end
+    #   )
+    #
+    #   paid_data = %{"price_currency" => "usd", "pay_amount" => 10, "pay_currency" => "trx"}
+    #
+    #   assert_raise(MatchError, fn ->
+    #     PaymentProviderNowpayments.get_paid_money!(paid_data, :USD)
+    #   end)
+    # end
   end
 
   describe "get_paid_ref/1" do
