@@ -192,85 +192,10 @@ defmodule Omc.PaymentsTest do
       |> allow(self(), Process.whereis(Payments))
 
       {:ok, "OK"} = Payments.callback(:oxapay, nil)
+      assert Payments.get_payment_request(pr.ref).payment_states |> length() == 1
 
       assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
              |> then(& &1.credit) == 1234
-    end
-
-    test "already affected ledger should not updated by repetitive :done callbacks", %{
-      payment_request: pr
-    } do
-      paid_ref = System.unique_integer([:positive]) |> to_string()
-
-      PaymentProviderMock
-      |> stub(:callback, fn _data ->
-        {:ok,
-         %{
-           state: :done,
-           ref: pr.ref,
-           data: %{"data_field" => "data_field_value"}
-         }, "OK"}
-      end)
-      |> stub(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
-      |> stub(:get_paid_ref, fn _data -> paid_ref end)
-      |> allow(self(), Process.whereis(Payments))
-
-      # first :done callback
-      {:ok, "OK"} = Payments.callback(:oxapay, nil)
-
-      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
-             |> then(& &1.credit) == 1234
-
-      assert Payments.get_payment_request(pr.ref)
-             |> then(& &1.payment_states)
-             |> length() == 1
-
-      # second :done callback
-      {:ok, "OK"} = Payments.callback(:oxapay, nil)
-
-      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
-             |> then(& &1.credit) == 1234
-
-      assert Payments.get_payment_request(pr.ref)
-             |> then(& &1.payment_states)
-             |> length() == 2
-    end
-
-    test "repetitive :done callbacks having different payment_request_item_ref", %{
-      payment_request: pr
-    } do
-      PaymentProviderMock
-      |> stub(:callback, fn _data ->
-        {:ok,
-         %{
-           state: :done,
-           ref: pr.ref,
-           data: %{"data_field" => "data_field_value"}
-         }, "OK"}
-      end)
-      |> stub(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
-      |> stub(:get_paid_ref, fn _data -> System.unique_integer([:positive]) |> to_string() end)
-      |> allow(self(), Process.whereis(Payments))
-
-      # first :done callback
-      {:ok, "OK"} = Payments.callback(:nowpayments, nil)
-
-      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
-             |> then(& &1.credit) == 1234
-
-      assert Payments.get_payment_request(pr.ref)
-             |> then(& &1.payment_states)
-             |> length() == 1
-
-      # second :done callback
-      {:ok, "OK"} = Payments.callback(:nowpayments, nil)
-
-      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
-             |> then(& &1.credit) == 2468
-
-      assert Payments.get_payment_request(pr.ref)
-             |> then(& &1.payment_states)
-             |> length() == 2
     end
   end
 
@@ -369,30 +294,6 @@ defmodule Omc.PaymentsTest do
              |> then(& &1.credit) == 1234
     end
 
-    test "already affected ledger should not updated by repetitive :done callbacks", %{
-      payment_request: pr
-    } do
-      PaymentProviderMock
-      |> stub(:send_state_inquiry_request, fn _ ->
-        {:ok, %{state: :done, data: %{"res_key" => "res_value"}}}
-      end)
-      |> stub(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
-      |> stub(:get_paid_ref, fn _data -> nil end)
-      |> allow(self(), Process.whereis(Payments))
-
-      # first inquiry 
-      {:ok, _} = Payments.send_state_inquiry_request(pr)
-
-      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
-             |> then(& &1.credit) == 1234
-
-      # second inquiry 
-      {:ok, _} = Payments.send_state_inquiry_request(pr)
-
-      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
-             |> then(& &1.credit) == 1234
-    end
-
     test "On non done state, ledger should not updated", %{payment_request: pr} do
       # before any inquiry 
       assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id}) == nil
@@ -414,6 +315,100 @@ defmodule Omc.PaymentsTest do
 
       {:ok, _} = Payments.send_state_inquiry_request(pr)
       assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id}) == nil
+    end
+  end
+
+  describe "__update_ledger__/1" do
+    setup %{} do
+      %{payment_request: payment_request_fixture()}
+    end
+
+    test "non :done PaymentState", %{payment_request: pr} do
+      PaymentProviderMock
+      |> stub(:get_paid_money!, fn _data, _currency -> pr.money end)
+      |> stub(:get_paid_ref, fn _data -> "1" end)
+
+      assert_raise(FunctionClauseError, fn ->
+        Payments.__update_ledger__({pr, %PaymentState{state: :pending, data: %{}}})
+      end)
+    end
+
+    test "zero paid :done PaymentState", %{payment_request: pr} do
+      PaymentProviderMock
+      |> stub(:get_paid_money!, fn _data, _currency -> Money.new(0) end)
+      |> stub(:get_paid_ref, fn _data -> "1" end)
+
+      assert :ledger_unchanged =
+               Payments.__update_ledger__({pr, %PaymentState{state: :done, data: %{}}})
+
+      refute Ledgers.get_ledger(pr)
+    end
+
+    test "single :done PaymentState", %{payment_request: pr} do
+      PaymentProviderMock
+      |> stub(:get_paid_money!, fn _data, _currency -> Money.new(123) end)
+      |> stub(:get_paid_ref, fn _data -> "1" end)
+
+      assert :ledger_updated =
+               Payments.__update_ledger__({pr, %PaymentState{state: :done, data: %{}}})
+
+      assert Ledgers.get_ledger(pr).credit == 123
+    end
+
+    test "multiple :done PaymentState having same paid_ref = nil", %{payment_request: pr} do
+      PaymentProviderMock
+      |> stub(:get_paid_money!, fn _data, _currency -> Money.new(123) end)
+      |> stub(:get_paid_ref, fn _data -> nil end)
+
+      assert :ledger_updated =
+               Payments.__update_ledger__({pr, %PaymentState{state: :done, data: %{}}})
+
+      assert :ledger_unchanged =
+               Payments.__update_ledger__({pr, %PaymentState{state: :done, data: %{}}})
+
+      assert Ledgers.get_ledger(pr).credit == 123
+    end
+
+    test "multiple :done PaymentState having same non nil paid_ref", %{payment_request: pr} do
+      PaymentProviderMock
+      |> stub(:get_paid_money!, fn _data, _currency -> Money.new(123) end)
+      |> stub(:get_paid_ref, fn _data -> "1" end)
+
+      assert :ledger_updated =
+               Payments.__update_ledger__({pr, %PaymentState{state: :done, data: %{}}})
+
+      assert :ledger_unchanged =
+               Payments.__update_ledger__({pr, %PaymentState{state: :done, data: %{}}})
+
+      assert Ledgers.get_ledger(pr).credit == 123
+    end
+
+    test "multiple :done PaymentState having different paid_ref", %{payment_request: pr} do
+      PaymentProviderMock
+      |> stub(:get_paid_money!, fn _data, _currency -> Money.new(111) end)
+
+      # first one
+      PaymentProviderMock
+      |> stub(:get_paid_ref, fn _data -> nil end)
+
+      assert :ledger_updated =
+               Payments.__update_ledger__({pr, %PaymentState{state: :done, data: %{}}})
+
+      # second one
+      PaymentProviderMock
+      |> stub(:get_paid_ref, fn _data -> "1" end)
+
+      assert :ledger_updated =
+               Payments.__update_ledger__({pr, %PaymentState{state: :done, data: %{}}})
+
+      # third one
+      PaymentProviderMock
+      |> stub(:get_paid_ref, fn _data -> "2" end)
+
+      assert :ledger_updated =
+               Payments.__update_ledger__({pr, %PaymentState{state: :done, data: %{}}})
+
+      assert Ledgers.get_ledger(pr).credit == 333
     end
   end
 end

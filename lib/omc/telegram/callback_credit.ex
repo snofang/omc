@@ -43,7 +43,7 @@ defmodule Omc.Telegram.CallbackCredit do
     Choose an amount for credit increase; Once a pay botton pressed, a new payment request is added on top of the following list with a link which can be used for payment.
 
     *Your Payment Requests* \\(most recent one is on top\\)
-    __*Amount, Pay Link, Paid Sum*__
+    __*Payable*__, __*Pay Link*__, __*Received Sum*__
     #{payment_requests_text(prs)} 
     """
   end

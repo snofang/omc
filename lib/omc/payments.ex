@@ -88,7 +88,7 @@ defmodule Omc.Payments do
 
   @doc false
   # Updates user's ledger with the paid amount. It first checks if this payment has already 
-  # caused ledger change or not. In case of already affected ledger, do nothing and returns success. 
+  # caused ledger change or not. In case of already affected ledger, do nothing and returns `:ledger_unchanged`. 
   @spec __update_ledger__({%PaymentRequest{}, %PaymentState{}}) ::
           :ledger_updated | :ledger_unchanged
   def __update_ledger__({pr, ps}) when ps.state == :done do
@@ -96,17 +96,24 @@ defmodule Omc.Payments do
 
     case Ledgers.get_ledger_tx_by_context(:payment, pr.id, payment_item_ref) do
       [] ->
-        Ledgers.create_ledger_tx!(%{
-          user_id: pr.user_id,
-          user_type: pr.user_type,
-          context: :payment,
-          context_id: pr.id,
-          context_ref: payment_item_ref,
-          money: PaymentProvider.get_paid_money!(pr.ipg, ps.data, pr.money.currency),
-          type: :credit
-        })
+        case paid_money = PaymentProvider.get_paid_money!(pr.ipg, ps.data, pr.money.currency) do
+          %{amount: amount} when amount > 0 ->
+            Ledgers.create_ledger_tx!(%{
+              user_id: pr.user_id,
+              user_type: pr.user_type,
+              context: :payment,
+              context_id: pr.id,
+              context_ref: payment_item_ref,
+              money: paid_money,
+              type: :credit
+            })
 
-        :ledger_updated
+            :ledger_updated
+
+          _ ->
+            Logger.warning("Getting not proper paid amount in IPN: #{inspect(ps.data)}")
+            :ledger_unchanged
+        end
 
       _already_existing_ledger_tx ->
         :ledger_unchanged
@@ -167,7 +174,7 @@ defmodule Omc.Payments do
         | paid_sum: type(ltx.paid_sum, :integer),
           user_info:
             fragment(
-              "concat('un:', ? , ', fn: ', ?, ', ln: ', ?)",
+              "concat('un:', ? , ', fn:', ?, ', ln:', ?)",
               ui.user_name,
               ui.first_name,
               ui.last_name
