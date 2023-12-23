@@ -285,7 +285,7 @@ defmodule Omc.Ledgers do
     from(tx in LedgerTx, where: tx.context == ^context and tx.context_id == ^context_id)
     |> then(fn q ->
       if context_ref,
-        do: where(q, context_id: ^context_id),
+        do: where(q, context_ref: ^context_ref),
         else: where(q, [tx], is_nil(tx.context_ref))
     end)
     |> Repo.all()

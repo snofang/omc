@@ -1,6 +1,19 @@
 defmodule Omc.Payments.PaymentProvider do
-  @callback send_payment_request(map()) ::
-              {:ok, map()} | {:error, error_code :: binary()}
+  @type pp_request :: %{
+          user_type: binary(),
+          user_id: binary(),
+          money: Money.t()
+        }
+  @type pp_request_response :: %{
+          data: map(),
+          ref: binary(),
+          url: binary(),
+          type: atom()
+        }
+
+  @callback send_payment_request(pp_request()) ::
+              {:ok, pp_request_response()}
+              | {:error, error_code :: binary()}
 
   @callback callback(data :: binary()) ::
               {:ok, call_info :: %{state: atom(), ref: binary(), data: map()},
@@ -13,7 +26,7 @@ defmodule Omc.Payments.PaymentProvider do
 
   @callback get_paid_money!(data :: map(), currency :: atom()) :: Money.t()
 
-  @callback get_payment_item_ref(data :: map()) :: binary() | nil
+  @callback get_paid_ref(data :: map()) :: binary() | nil
 
   defmacro __using__(ipg) when is_atom(ipg) do
     quote do
@@ -67,8 +80,8 @@ defmodule Omc.Payments.PaymentProvider do
     provider_impl(ipg).get_paid_money!(data, currency)
   end
 
-  def get_payment_item_ref(ipg, %{} = data) when is_atom(ipg) do
-    provider_impl(ipg).get_payment_item_ref(data)
+  def get_paid_ref(ipg, %{} = data) when is_atom(ipg) do
+    provider_impl(ipg).get_paid_ref(data)
   end
 
   defp provider_impl(ipg) when is_atom(ipg) do

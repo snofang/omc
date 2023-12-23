@@ -15,7 +15,7 @@ defmodule OmcWeb.PaymentRequestLive.Index do
 
   defp apply_action(socket, :index, params) do
     socket
-    |> assign(:filter_form, to_form(params_to_changeset(params)))
+    |> assign(:filter_form, to_form(params_to_changeset(params), as: :filter))
     |> assign(:bindings, params_to_bindings(params))
     |> assign(:page_title, "Listing Payment requests")
     |> stream(:payment_requests, Payments.list_payment_requests(params_to_keyword(params, 1)),
@@ -54,8 +54,17 @@ defmodule OmcWeb.PaymentRequestLive.Index do
   end
 
   defp params_to_changeset(params) do
-    %PaymentRequest{}
-    |> Ecto.Changeset.cast(params, [:user_type, :user_id, :state])
+    {%{
+       user_type: nil,
+       user_id: nil,
+       paid?: nil
+     },
+     %{
+       user_type: PaymentRequest.__schema__(:type, :user_type),
+       user_id: PaymentRequest.__schema__(:type, :user_id),
+       paid?: :boolean
+     }}
+    |> Ecto.Changeset.cast(params, [:user_type, :user_id, :paid?])
   end
 
   defp params_to_bindings(params) do

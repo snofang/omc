@@ -8,7 +8,7 @@ defmodule Omc.Payments.PaymentProviderNowpayments do
   plug(Tesla.Middleware.Headers, [{"x-api-key", api_key()}])
 
   @impl PaymentProvider
-  def send_payment_request(%{money: money, user_type: _user_type, user_id: _user_id} = attrs) do
+  def send_payment_request(%{money: money, user_type: _user_type, user_id: _user_id}) do
     post(
       "/invoice",
       %{
@@ -24,11 +24,12 @@ defmodule Omc.Payments.PaymentProviderNowpayments do
     |> case do
       {:ok, %{body: data = %{"id" => invoice_id, "invoice_url" => invoice_url}}} ->
         {:ok,
-         attrs
-         |> Map.put(:data, data)
-         |> Map.put(:ref, invoice_id |> to_string())
-         |> Map.put(:url, invoice_url)
-         |> Map.put(:type, :push)}
+         %{
+           data: data,
+           ref: invoice_id |> to_string(),
+           url: invoice_url,
+           type: :push
+         }}
 
       result ->
         Logger.warning("Nowpayments payment request failure; response: #{inspect(result)}")
@@ -92,20 +93,20 @@ defmodule Omc.Payments.PaymentProviderNowpayments do
   def get_paid_money!(
         %{
           "price_currency" => price_currency,
-          "actually_paid" => actually_paid,
+          "pay_amount" => pay_amount,
           "pay_currency" => pay_currency
         } = data,
         :USD
       ) do
     if "USD" == price_currency |> String.upcase() do
-      get_paid_crypto_in_usd(actually_paid, pay_currency)
+      get_paid_crypto_in_usd(pay_amount, pay_currency)
     else
       raise "currency mismatch: requested currency: USD, paid currency: #{data["price_currency"]}"
     end
   end
 
   @impl PaymentProvider
-  def get_payment_item_ref(%{"payment_id" => payment_id}) do
+  def get_paid_ref(%{"payment_id" => payment_id}) do
     payment_id |> to_string()
   end
 

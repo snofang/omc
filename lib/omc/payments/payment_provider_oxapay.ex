@@ -7,9 +7,7 @@ defmodule Omc.Payments.PaymentProviderOxapay do
   plug(Tesla.Middleware.JSON)
 
   @impl PaymentProvider
-  def send_payment_request(
-        %{ipg: :oxapay, money: money, user_type: user_type, user_id: user_id} = attrs
-      ) do
+  def send_payment_request(%{money: money, user_type: user_type, user_id: user_id}) do
     post(
       "/request",
       %{
@@ -25,12 +23,12 @@ defmodule Omc.Payments.PaymentProviderOxapay do
     |> case do
       {:ok, %{body: data = %{"result" => 100, "trackId" => track_id, "payLink" => pay_link}}} ->
         {:ok,
-         attrs
-         |> Map.put(:data, data)
-         # |> Integer.to_string())
-         |> Map.put(:ref, track_id)
-         |> Map.put(:url, pay_link)
-         |> Map.put(:type, :push)}
+         %{
+           data: data,
+           ref: track_id,
+           url: pay_link,
+           type: :push
+         }}
 
       result = {:ok, %{body: %{"result" => result_code}}} ->
         Logger.info("oxapay payment request failure; response: #{inspect(result)}")
@@ -117,7 +115,7 @@ defmodule Omc.Payments.PaymentProviderOxapay do
   end
 
   @impl PaymentProvider
-  def get_payment_item_ref(_data) do
+  def get_paid_ref(_data) do
     nil
   end
 

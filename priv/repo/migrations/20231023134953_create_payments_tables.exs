@@ -16,7 +16,7 @@ defmodule Omc.Repo.Migrations.CreatePaymentRequests do
 
     create index(:payment_requests, [:user_id, :user_type])
     create index(:payment_requests, [:inserted_at])
-    create unique_index(:payment_requests, [:ref])
+    create unique_index(:payment_requests, [:ipg, :ref])
 
     create table(:payment_states) do
       add :payment_request_id, references(:payment_requests), null: false

@@ -9,10 +9,10 @@ defmodule Omc.PaymentsTest do
   import Mox
   import Omc.PaymentFixtures
 
-  setup %{} do
-    stub(PaymentProviderMock, :get_payment_item_ref, fn _data -> nil end)
-    :ok
-  end
+  # setup %{} do
+  #   stub(PaymentProviderMock, :get_paid_ref, fn _data -> nil end)
+  #   :ok
+  # end
 
   describe "create_payment_request/2" do
     setup %{} do
@@ -71,10 +71,11 @@ defmodule Omc.PaymentsTest do
                })
     end
 
-    test "ref should be unique", %{
-      user_id: user_id,
-      user_type: user_type
-    } do
+    test "ref should be unique for each ipg",
+         user = %{
+           user_id: _,
+           user_type: _
+         } do
       PaymentProviderMock
       |> stub(:send_payment_request, fn attrs ->
         {:ok,
@@ -85,24 +86,18 @@ defmodule Omc.PaymentsTest do
          |> Map.put(:type, :push)}
       end)
 
-      money = Money.new(1300)
+      args = user |> Map.put(:money, Money.new(1300))
 
       # first request
-      {:ok, _} =
-        Payments.create_payment_request(:oxapay, %{
-          user_type: user_type,
-          user_id: user_id,
-          money: money
-        })
+      {:ok, _} = Payments.create_payment_request(:oxapay, args)
 
       # second request
       assert_raise(Ecto.ConstraintError, fn ->
-        Payments.create_payment_request(:oxapay, %{
-          user_type: user_type,
-          user_id: user_id,
-          money: money
-        })
+        Payments.create_payment_request(:oxapay, args)
       end)
+
+      # third request; different ipg
+      assert {:ok, _} = Payments.create_payment_request(:nowpayments, args)
     end
   end
 
@@ -193,6 +188,7 @@ defmodule Omc.PaymentsTest do
          }, "OK"}
       end)
       |> stub(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
+      |> stub(:get_paid_ref, fn _data -> nil end)
       |> allow(self(), Process.whereis(Payments))
 
       {:ok, "OK"} = Payments.callback(:oxapay, nil)
@@ -204,6 +200,8 @@ defmodule Omc.PaymentsTest do
     test "already affected ledger should not updated by repetitive :done callbacks", %{
       payment_request: pr
     } do
+      paid_ref = System.unique_integer([:positive]) |> to_string()
+
       PaymentProviderMock
       |> stub(:callback, fn _data ->
         {:ok,
@@ -214,6 +212,7 @@ defmodule Omc.PaymentsTest do
          }, "OK"}
       end)
       |> stub(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
+      |> stub(:get_paid_ref, fn _data -> paid_ref end)
       |> allow(self(), Process.whereis(Payments))
 
       # first :done callback
@@ -236,6 +235,43 @@ defmodule Omc.PaymentsTest do
              |> then(& &1.payment_states)
              |> length() == 2
     end
+
+    test "repetitive :done callbacks having different payment_request_item_ref", %{
+      payment_request: pr
+    } do
+      PaymentProviderMock
+      |> stub(:callback, fn _data ->
+        {:ok,
+         %{
+           state: :done,
+           ref: pr.ref,
+           data: %{"data_field" => "data_field_value"}
+         }, "OK"}
+      end)
+      |> stub(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
+      |> stub(:get_paid_ref, fn _data -> System.unique_integer([:positive]) |> to_string() end)
+      |> allow(self(), Process.whereis(Payments))
+
+      # first :done callback
+      {:ok, "OK"} = Payments.callback(:nowpayments, nil)
+
+      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
+             |> then(& &1.credit) == 1234
+
+      assert Payments.get_payment_request(pr.ref)
+             |> then(& &1.payment_states)
+             |> length() == 1
+
+      # second :done callback
+      {:ok, "OK"} = Payments.callback(:nowpayments, nil)
+
+      assert Ledgers.get_ledger(%{user_type: pr.user_type, user_id: pr.user_id})
+             |> then(& &1.credit) == 2468
+
+      assert Payments.get_payment_request(pr.ref)
+             |> then(& &1.payment_states)
+             |> length() == 2
+    end
   end
 
   describe "list_payment_requests/1" do
@@ -250,25 +286,40 @@ defmodule Omc.PaymentsTest do
     end
 
     test "user_type filter" do
-      %{id: id1} = payment_request_fixture(:oxapay, %{user_type: :local})
-      %{id: _id2} = payment_request_fixture(:oxapay, %{user_type: :telegram})
+      %{id: id1} = payment_request_fixture(%{user_type: :local})
+      %{id: _id2} = payment_request_fixture(%{user_type: :telegram})
 
       assert [%{id: ^id1}] = Payments.list_payment_requests(user_type: :local)
     end
 
     test "user_id filter" do
-      %{id: id1} = payment_request_fixture(:oxapay, %{user_id: "12345"})
-      %{id: _id2} = payment_request_fixture(:oxapay, %{user_id: "67890"})
+      %{id: id1} = payment_request_fixture(%{user_id: "12345"})
+      %{id: _id2} = payment_request_fixture(%{user_id: "67890"})
 
       assert [%{id: ^id1}] = Payments.list_payment_requests(user_id: "234")
     end
 
-    test "payment state filter" do
+    test "payment paid? filter" do
       %{id: _id1} = payment_request_fixture()
       %{id: id2} = done_payment_request_fixture()
       %{id: _id3} = payment_request_fixture()
 
-      assert [%{id: ^id2}] = Payments.list_payment_requests(state: :done)
+      assert [%{id: ^id2}] = Payments.list_payment_requests(paid?: true)
+    end
+
+    test "should contain paid_sum" do
+      %{id: id1} = payment_request_fixture()
+      %{id: id2} = done_payment_request_fixture()
+      pr3 = %{id: id3, money: %{amount: amount}} = done_payment_request_fixture()
+      payment_state_by_callback_fixture(pr3, :done, "1")
+      payment_state_by_callback_fixture(pr3, :done, "2")
+      pr3_paid_sum = amount * 3
+
+      assert [
+               %{id: ^id3, paid_sum: ^pr3_paid_sum},
+               %{id: ^id2, paid_sum: ^amount},
+               %{id: ^id1, paid_sum: nil}
+             ] = Payments.list_payment_requests()
     end
   end
 
@@ -308,6 +359,7 @@ defmodule Omc.PaymentsTest do
         {:ok, %{state: :done, data: %{"res_key" => "res_value"}}}
       end)
       |> stub(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
+      |> stub(:get_paid_ref, fn _data -> nil end)
       |> allow(self(), Process.whereis(Payments))
 
       {:ok, payment_state} = Payments.send_state_inquiry_request(pr)
@@ -325,6 +377,7 @@ defmodule Omc.PaymentsTest do
         {:ok, %{state: :done, data: %{"res_key" => "res_value"}}}
       end)
       |> stub(:get_paid_money!, fn _data, _currency -> Money.new(1234) end)
+      |> stub(:get_paid_ref, fn _data -> nil end)
       |> allow(self(), Process.whereis(Payments))
 
       # first inquiry 

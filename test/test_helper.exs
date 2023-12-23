@@ -19,6 +19,12 @@ Application.put_env(
   Application.get_env(:omc, :ipgs) |> put_in([:oxapay, :module], Omc.PaymentProviderMock)
 )
 
+Application.put_env(
+  :omc,
+  :ipgs,
+  Application.get_env(:omc, :ipgs) |> put_in([:nowpayments, :module], Omc.PaymentProviderMock)
+)
+
 #
 # Defining mock implementation for tesla.
 #

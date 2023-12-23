@@ -8,17 +8,7 @@ config :bcrypt_elixir, :log_rounds, 1
 # 
 config :omc, supported_currencies: [:IRR, :USD, :EUR]
 
-#
-# ipgs
-# 
-config :omc, :ipgs,
-  wp: [
-    base_url: "https://example.com/api",
-    api_key: "api_key_example"
-  ]
-
 config :omc, :telegram, enabled: false
-
 config :omc, Omc.Payments, enabled: false
 config :omc, Omc.Servers.ServerTaskManager, enabled: false
 

@@ -14,6 +14,10 @@ defmodule Omc.Users do
     |> Repo.insert_or_update()
   end
 
+  @doc """
+  Fetches a single `UserInfo` by filter args.
+  """
+  @spec get_user_info(%{user_type: atom(), user_id: binary()}) :: %UserInfo{} | nil
   def get_user_info(%{user_type: user_type, user_id: user_id}) do
     UserInfo
     |> where([u], u.user_type == ^user_type and u.user_id == ^user_id)

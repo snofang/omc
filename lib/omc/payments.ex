@@ -1,25 +1,22 @@
 defmodule Omc.Payments do
   use GenServer
   require Logger
+  alias Omc.Ledgers.LedgerTx
   alias Omc.Users.UserInfo
   alias Omc.Ledgers
   alias Omc.Payments.{PaymentRequest, PaymentState}
   alias Omc.Payments.PaymentProvider
   import Ecto.Query
   alias Omc.Repo
-  import Ecto.Query.API, only: [max: 1, ago: 2, like: 2], warn: false
+  import Ecto.Query.API, only: [max: 1, ago: 2, like: 2, not: 1], warn: false
 
-  def create_payment_request(ipg, %{user_id: user_id, user_type: user_type, money: money}) do
-    %{
-      user_id: user_id,
-      user_type: user_type,
-      money: money,
-      ipg: ipg
-    }
+  def create_payment_request(ipg, args = %{user_id: _, user_type: _, money: _}) do
+    args
+    |> Map.put(:ipg, ipg)
     |> PaymentProvider.send_paymet_request()
     |> case do
       {:ok, params} ->
-        PaymentRequest.create_changeset(params)
+        PaymentRequest.create_changeset(params |> Map.merge(args) |> Map.put(:ipg, ipg))
         |> Repo.insert()
 
       {:error, reason} ->
@@ -95,7 +92,7 @@ defmodule Omc.Payments do
   @spec __update_ledger__({%PaymentRequest{}, %PaymentState{}}) ::
           :ledger_updated | :ledger_unchanged
   def __update_ledger__({pr, ps}) when ps.state == :done do
-    payment_item_ref = PaymentProvider.get_payment_item_ref(pr.ipg, ps.data)
+    payment_item_ref = PaymentProvider.get_paid_ref(pr.ipg, ps.data)
 
     case Ledgers.get_ledger_tx_by_context(:payment, pr.id, payment_item_ref) do
       [] ->
@@ -117,13 +114,13 @@ defmodule Omc.Payments do
   end
 
   @spec list_payment_requests(Keyword.t()) :: list(%PaymentRequest{})
-  def list_payment_requests(args) do
-    args = Keyword.validate!(args, page: 1, limit: 10, user_id: nil, user_type: nil, state: nil)
+  def list_payment_requests(args \\ []) do
+    args = Keyword.validate!(args, page: 1, limit: 10, user_id: nil, user_type: nil, paid?: nil)
 
     list_payment_requests_query()
     |> list_payment_requests_where_user_type(args[:user_type])
     |> list_payment_requests_where_user_id(args[:user_id])
-    |> list_payment_requests_where_state(args[:state])
+    |> list_payment_requests_where_paid?(args[:paid?])
     |> offset((^args[:page] - 1) * ^args[:limit])
     |> limit(^args[:limit])
     |> order_by(desc: :id)
@@ -140,32 +137,37 @@ defmodule Omc.Payments do
   defp list_payment_requests_where_user_id(query, user_id),
     do: query |> where([pr], like(pr.user_id, ^"%#{user_id}%"))
 
-  defp list_payment_requests_where_state(query, state) when state == nil, do: query
+  defp list_payment_requests_where_paid?(query, paid?) when paid? == nil, do: query
 
-  defp list_payment_requests_where_state(query, state),
-    do: query |> where([payment_state: ps], ps.state == ^state)
+  defp list_payment_requests_where_paid?(query, paid?) do
+    if paid? do
+      query |> where([ltx_sum: ltx], not is_nil(ltx.paid_sum) and ltx.paid_sum > 0)
+    else
+      query |> where([ltx_sum: ltx], is_nil(ltx.paid_sum) or ltx.paid_sum <= 0)
+    end
+  end
 
   defp list_payment_requests_query() do
-    last_payment_state =
-      from(ps in PaymentState,
-        group_by: ps.payment_request_id,
-        select: %{id: max(ps.id), payment_request_id: ps.payment_request_id}
+    ledger_tx =
+      from(ltx in LedgerTx,
+        where: ltx.context == :payment and ltx.context_id == parent_as(:prs).id,
+        group_by: [ltx.context, ltx.context_id],
+        select: %{payment_id: ltx.context_id, paid_sum: sum(ltx.amount)}
       )
 
     from(pr in PaymentRequest,
-      left_join: ls in subquery(last_payment_state),
-      on: ls.payment_request_id == pr.id,
-      left_join: ps in PaymentState,
-      as: :payment_state,
-      on: ps.id == ls.id,
+      as: :prs,
+      left_lateral_join: ltx in subquery(ledger_tx),
+      as: :ltx_sum,
+      on: ltx.payment_id == pr.id,
       left_join: ui in UserInfo,
       on: ui.user_id == pr.user_id and ui.user_type == pr.user_type,
       select: %{
         pr
-        | state: ps.state,
+        | paid_sum: type(ltx.paid_sum, :integer),
           user_info:
             fragment(
-              "concat('un: ', ?, ',fn: ', ?, ',ln: ', ?)",
+              "concat('un:', ? , ', fn: ', ?, ', ln: ', ?)",
               ui.user_name,
               ui.first_name,
               ui.last_name

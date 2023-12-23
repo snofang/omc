@@ -11,15 +11,21 @@ defmodule Omc.Telegram.CallbackCredit do
         {:redirect, "main", %{message: "Dialyzer trick"}}
 
       [] ->
-        {:ok, args |> Map.put_new(:message, "")}
+        {:ok,
+         args
+         |> Map.put_new(:message, "")
+         |> put_common_args()}
 
       [amount] ->
         {:ok, _} = Users.upsert_user_info(user)
 
-        Payments.create_payment_request(:oxapay, user |> Map.put(:money, Money.parse!(amount)))
+        Payments.create_payment_request(
+          Application.get_env(:omc, :ipgs)[:default],
+          user |> Map.put(:money, Money.parse!(amount))
+        )
         |> case do
           {:ok, _} ->
-            {:ok, args |> Map.put(:message, "Payment request created.")}
+            {:ok, args |> Map.put(:message, "Payment request created.") |> put_common_args()}
 
           {:error, error} ->
             Logger.error("Failed creating payment request; #{inspect(error)}")
@@ -29,18 +35,16 @@ defmodule Omc.Telegram.CallbackCredit do
   end
 
   @impl true
-  def get_text(%{user: user}) do
-    usage_state = Usages.get_user_usage_state(user)
-
+  def get_text(%{usage_state: usage_state, payment_requests: prs}) do
     ~s"""
     __*Your Credit\\(s\\).*__
-    *#{ledgers_rows(usage_state.ledgers)}*
+    *#{ledgers_text(usage_state.ledgers)}*
 
     Choose an amount for credit increase; Once a pay botton pressed, a new payment request is added on top of the following list with a link which can be used for payment.
 
     *Your Payment Requests* \\(most recent one is on top\\)
-    __*Amount, Status*__
-    #{last_payment_requests(user)} 
+    __*Amount, Pay Link, Paid Sum*__
+    #{payment_requests_text(prs)} 
     """
   end
 
@@ -62,11 +66,11 @@ defmodule Omc.Telegram.CallbackCredit do
     ]
   end
 
-  defp ledgers_rows([]) do
+  defp ledgers_text([]) do
     Money.new(0) |> Money.to_string()
   end
 
-  defp ledgers_rows(ledgers) do
+  defp ledgers_text(ledgers) do
     ledgers
     |> Enum.reduce("", fn l, result ->
       result
@@ -81,21 +85,31 @@ defmodule Omc.Telegram.CallbackCredit do
     end)
   end
 
-  defp last_payment_requests(%{user_id: user_id, user_type: user_type}) do
-    case Payments.list_payment_requests(page: 1, limit: 5, user_id: user_id, user_type: user_type) do
-      items = [_item | _] ->
-        items
-        |> Enum.reduce("", fn item, acc ->
-          acc <>
-            "#{if(acc != "", do: "\n")}" <> payment_request_text(item)
-        end)
+  defp payment_requests_text([]), do: "- no payment request yet."
 
-      _ ->
-        "- no payment request yet."
-    end
+  defp payment_requests_text(prs) do
+    prs
+    |> Enum.reduce("", fn item, acc ->
+      acc <>
+        "#{if(acc != "", do: "\n")}" <> payment_request_text(item)
+    end)
   end
 
   defp payment_request_text(item) do
-    "- _#{item.money}, #{item.state || "'new'"},  [Pay Link](#{item.url})_"
+    "- _#{item.money}, [Pay Link](#{item.url}), #{Money.new(item.paid_sum || 0, item.money.currency)}_"
+  end
+
+  defp put_common_args(args = %{user: user = %{user_type: user_type, user_id: user_id}}) do
+    args
+    |> Map.put(:usage_state, Usages.get_user_usage_state(user))
+    |> Map.put(
+      :payment_requests,
+      Payments.list_payment_requests(
+        page: 1,
+        limit: 5,
+        user_id: user_id,
+        user_type: user_type
+      )
+    )
   end
 end

@@ -66,11 +66,8 @@ defmodule Omc.PaymentProviderNowpaymentsTest do
                     "other_field" => "other_field_value"
                   },
                   type: :push,
-                  money: %Money{amount: 500, currency: :USD},
                   ref: "12345",
-                  url: "https://example.com/pay_please",
-                  user_id: "123456789",
-                  user_type: :telegram
+                  url: "https://example.com/pay_please"
                 }}
     end
 
@@ -168,13 +165,13 @@ defmodule Omc.PaymentProviderNowpaymentsTest do
         end
       )
 
-      paid_data = %{"price_currency" => "usd", "actually_paid" => 10, "pay_currency" => "trx"}
+      paid_data = %{"price_currency" => "usd", "pay_amount" => 10, "pay_currency" => "trx"}
       expected_money = Decimal.mult("10", "0.10425122") |> Money.parse!(:USD)
       assert expected_money == PaymentProviderNowpayments.get_paid_money!(paid_data, :USD)
     end
 
     test "mismactch curreny causes a raise" do
-      paid_data = %{"price_currency" => "eur", "actually_paid" => 10, "pay_currency" => "trx"}
+      paid_data = %{"price_currency" => "eur", "pay_amount" => 10, "pay_currency" => "trx"}
 
       assert_raise(RuntimeError, fn ->
         PaymentProviderNowpayments.get_paid_money!(paid_data, :USD)
@@ -198,7 +195,7 @@ defmodule Omc.PaymentProviderNowpaymentsTest do
         end
       )
 
-      paid_data = %{"price_currency" => "usd", "actually_paid" => 10, "pay_currency" => "trx"}
+      paid_data = %{"price_currency" => "usd", "pay_amount" => 10, "pay_currency" => "trx"}
 
       assert_raise(MatchError, fn ->
         PaymentProviderNowpayments.get_paid_money!(paid_data, :USD)
@@ -206,10 +203,10 @@ defmodule Omc.PaymentProviderNowpaymentsTest do
     end
   end
 
-  describe "get_payment_item_ref/1" do
+  describe "get_paid_ref/1" do
     test "success case" do
       assert "123456789" =
-               PaymentProviderNowpayments.get_payment_item_ref(%{
+               PaymentProviderNowpayments.get_paid_ref(%{
                  "payment_id" => 123_456_789,
                  "other_field" => "other_field_value"
                })

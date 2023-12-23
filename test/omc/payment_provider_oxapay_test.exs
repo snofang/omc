@@ -59,13 +59,9 @@ defmodule Omc.PaymentProviderOxapayTest do
                     "result" => 100,
                     "trackId" => "12345"
                   },
-                  ipg: :oxapay,
                   type: :push,
-                  money: %Money{amount: 500, currency: :USD},
                   ref: "12345",
-                  url: "https://example.com/pay_please",
-                  user_id: "123456789",
-                  user_type: :telegram
+                  url: "https://example.com/pay_please"
                 }}
     end
 
@@ -87,8 +83,7 @@ defmodule Omc.PaymentProviderOxapayTest do
       assert PaymentProviderOxapay.send_payment_request(%{
                user_id: "123456789",
                user_type: :telegram,
-               money: Money.new(500, :USD),
-               ipg: :oxapay
+               money: Money.new(500, :USD)
              }) ==
                {:error, 101}
     end
@@ -312,9 +307,9 @@ defmodule Omc.PaymentProviderOxapayTest do
     end
   end
 
-  describe "get_payment_item_ref/1" do
+  describe "get_paid_ref/1" do
     test "success case" do
-      refute PaymentProviderOxapay.get_payment_item_ref(%{
+      refute PaymentProviderOxapay.get_paid_ref(%{
                "trackId" => 123_456_789,
                "other_field" => "other_field_value"
              })

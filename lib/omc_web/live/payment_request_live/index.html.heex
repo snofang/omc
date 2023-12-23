@@ -20,11 +20,11 @@
     />
     <.input field={f[:user_id]} type="text" label="User ID" />
     <.input
-      field={f[:state]}
+      field={f[:paid?]}
       type="select"
-      label="State"
+      label="Paid?"
       prompt="Choose a value"
-      options={Ecto.Enum.values(Omc.Payments.PaymentState, :state)}
+      options={[true, false]}
     />
   </.simple_form>
 
@@ -44,8 +44,10 @@
     <:col :let={{_id, pr}} label="User ID"><%= pr.user_id %></:col>
     <:col :let={{_id, pr}} label="User Type"><%= pr.user_type %></:col>
     <:col :let={{_id, pr}} label="User Info"><%= pr.user_info %></:col>
-    <:col :let={{_id, pr}} label="Money"><%= pr.money %></:col>
-    <:col :let={{_id, pr}} label="State"><%= pr.state %></:col>
+    <:col :let={{_id, pr}} label="Pay due"><%= pr.money %></:col>
+    <:col :let={{_id, pr}} label="Paid Sum">
+      <%= Money.new(pr.paid_sum || 0, pr.money.currency) %>
+    </:col>
     <:action :let={{_id, payment_request}}>
       <div class="sr-only">
         <.link navigate={~p"/payment_requests/#{payment_request}"}>Show</.link>

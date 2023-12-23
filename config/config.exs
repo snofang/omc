@@ -26,6 +26,7 @@ config :omc, acc_allocation_timeout: 30 * 60
 config :omc, :ipgs,
   callback_base_url: "http://localhost:4000",
   return_url: "https://t.me/your_fantastic_bot",
+  default: :nowpayments,
   oxapay: [
     currencies: [:USD],
     module: Omc.Payments.PaymentProviderOxapay,
