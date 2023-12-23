@@ -40,9 +40,9 @@ defmodule Omc.Telegram.CallbackCredit do
     __*Your Credit\\(s\\).*__
     *#{ledgers_text(usage_state.ledgers)}*
 
-    Choose an amount for credit increase; Once a pay botton pressed, a new payment request is added on top of the following list with a link which can be used for payment.
+    Choose an amount for credit increase; Once a pay botton pressed, a new payment request is added on top of the following list having a link which can be used for payment.
 
-    *Your Payment Requests* \\(most recent one is on top\\)
+    *Your Last Payment Requests* \\(most recent one is on top\\)
     __*Payable*__, __*Pay Link*__, __*Received Sum*__
     #{payment_requests_text(prs)} 
     """
@@ -106,7 +106,7 @@ defmodule Omc.Telegram.CallbackCredit do
       :payment_requests,
       Payments.list_payment_requests(
         page: 1,
-        limit: 5,
+        limit: 3,
         user_id: user_id,
         user_type: user_type
       )

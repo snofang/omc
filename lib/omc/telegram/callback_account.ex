@@ -58,9 +58,9 @@ defmodule Omc.Telegram.CallbackAccount do
         usage_line_items: usage_line_items
       }) do
     ~s"""
-    *Account __#{server_acc.name}__ Info:*
+    __*Account _#{server_acc.name}_ Info:*__
 
-    *Status:* __#{server_acc.status |> Atom.to_string() |> TelegramUtils.escape_text()}__
+    *Status:**_ __#{server_acc.status |> Atom.to_string() |> TelegramUtils.escape_text() |> String.capitalize()}___*
 
     *Usages List:*
     _Note: All date & time values are in UTC._

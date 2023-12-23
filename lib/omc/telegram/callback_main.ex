@@ -4,7 +4,7 @@ defmodule Omc.Telegram.CallbackMain do
   @impl true
   def get_text(_args) do
     ~s"""
-    *Welcome!* 
+    __*Welcome!*__ 
 
     From here, you can buy account\\(s\\), manage them, and see your credit and billings in detail.
     """

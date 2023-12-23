@@ -32,7 +32,7 @@ defmodule Omc.Telegram.CallbackServers do
 
     #{if servers |> length() > 0 do
       """
-      Use one of __*\\(+\\)*__ botton\\(s\\) below to create one. 
+      Use one of __*\\(+\\)*__ botton\\(s\\) below to create an account based on your __source__ and __destination__ need. 
       Note that you should have enough credit to do so.
       """
     else
@@ -72,6 +72,14 @@ defmodule Omc.Telegram.CallbackServers do
          price_plan: %PricePlan{} = price_plan,
          count: _count
        }) do
-    "+ #{tag} (#{(price_plan.duration / (24 * 60 * 60)) |> round()} Days, #{price_plan.prices |> List.first() |> Money.to_string()})"
+    "+ #{tag_text(tag)} (#{(price_plan.duration / (24 * 60 * 60)) |> round()} Days, #{price_plan.prices |> List.first() |> Money.to_string()})"
+  end
+
+  defp tag_text(tag) do
+    [from, to] =
+      tag
+      |> String.split("-")
+
+    "#{from} --> #{to}"
   end
 end
