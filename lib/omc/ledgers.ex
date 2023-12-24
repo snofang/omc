@@ -314,7 +314,7 @@ defmodule Omc.Ledgers do
         l
         | user_info:
             fragment(
-              "concat('un: ', ?, ',fn: ', ?, ',ln: ', ?)",
+              "concat('un:', ?, ' ,fn:', ?, ' ,ln:', ?)",
               ui.user_name,
               ui.first_name,
               ui.last_name

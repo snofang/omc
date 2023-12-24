@@ -1,4 +1,5 @@
 defmodule Omc.ServersAccsTest do
+  alias Omc.Users
   alias Omc.ServerAccUsers
   alias Omc.Usages
   alias Omc.UsagesFixtures
@@ -15,10 +16,9 @@ defmodule Omc.ServersAccsTest do
   describe "create_server_acc/1" do
     test "success case", %{server: server} do
       {:ok, %ServerAcc{} = sa} =
-        %{description: "some description", name: "some-2345", server_id: server.id}
+        %{name: "some-2345", server_id: server.id}
         |> Servers.create_server_acc()
 
-      assert sa.description == "some description"
       assert sa.name == "some-2345"
       assert sa.server_id == server.id
       assert sa.status == :active_pending
@@ -165,12 +165,10 @@ defmodule Omc.ServersAccsTest do
     test "success case", %{server_acc: server_acc} do
       assert {:ok,
               %ServerAcc{
-                description: "description_new",
                 name: "some_updated-name",
                 status: :active_pending
               }} =
                Servers.update_server_acc(server_acc, %{
-                 description: "description_new",
                  name: "some_updated-name"
                })
     end
@@ -275,6 +273,25 @@ defmodule Omc.ServersAccsTest do
 
       assert Servers.list_server_accs(%{server_id: server.id, status: :deactive_pending})
              |> length() == 1
+    end
+
+    test "by user_info", %{server: server} do
+      # setting up a new acc having usage
+      ledger = UsagesFixtures.ledger_fixture(Money.new(3000))
+
+      Users.upsert_user_info(%{
+        user_type: ledger.user_type,
+        user_id: ledger.user_id,
+        user_name: "user_Jim1_name",
+        first_name: "first_Jim2_name",
+        last_name: "last_Jim3_name"
+      })
+
+      _usage = UsagesFixtures.usage_fixture(%{server: server, user_attrs: ledger})
+      user_info_text = "un:user_Jim1_name, fn:first_Jim2_name, ln:last_Jim3_name"
+      assert [%{user_info: ^user_info_text}] = Servers.list_server_accs(%{user_info: "Jim1"})
+      assert [%{user_info: ^user_info_text}] = Servers.list_server_accs(%{user_info: "Jim2"})
+      assert [%{user_info: ^user_info_text}] = Servers.list_server_accs(%{user_info: "Jim3"})
     end
   end
 

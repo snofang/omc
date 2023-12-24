@@ -33,6 +33,7 @@
       prompt="Choose a value"
       options={Ecto.Enum.values(Omc.Servers.ServerAcc, :status)}
     />
+    <.input field={f[:user_info]} type="text" label="Name" />
   </.simple_form>
 
   <div id="download_hook_holder" phx-hook="DownloadFile" />
@@ -43,12 +44,17 @@
   >
     <:col :let={{_id, server_acc}} label="Name"><%= server_acc.name %></:col>
     <:col :let={{_id, server_acc}} label="Status"><%= server_acc.status %></:col>
-    <:col :let={{_id, server_acc}} label="Description"><%= server_acc.description %></:col>
+    <:col :let={{_id, server_acc}} label="User Info"><%= server_acc.user_info %></:col>
     <:action :let={{_id, server_acc}}>
       <div class="sr-only">
         <.link navigate={~p"/server_accs/#{server_acc}"}>Show</.link>
       </div>
-      <.link patch={~p"/server_accs/#{server_acc}/edit"}>Edit</.link>
+      <.link
+        :if={server_acc.status == :active_pending}
+        patch={~p"/server_accs/#{server_acc}/edit"}
+      >
+        Edit
+      </.link>
     </:action>
     <:action :let={{id, server_acc}}>
       <.link

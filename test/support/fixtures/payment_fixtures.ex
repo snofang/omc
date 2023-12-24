@@ -42,7 +42,7 @@ defmodule Omc.PaymentFixtures do
         money \\ nil
       )
       when is_atom(state) do
-    ExUnit.Callbacks.start_supervised(Omc.Payments)
+    {:ok, _} = ExUnit.Callbacks.start_supervised(Omc.Payments)
     Ecto.Adapters.SQL.Sandbox.allow(Omc.Repo, self(), Process.whereis(Omc.Payments))
 
     PaymentProviderMock
@@ -54,7 +54,7 @@ defmodule Omc.PaymentFixtures do
     |> allow(self(), Process.whereis(Omc.Payments))
 
     response = {:ok, :some_response} = Payments.callback(payment_request.ipg, %{})
-    ExUnit.Callbacks.stop_supervised(Omc.Payments)
+    :ok = ExUnit.Callbacks.stop_supervised(Omc.Payments)
     response
   end
 

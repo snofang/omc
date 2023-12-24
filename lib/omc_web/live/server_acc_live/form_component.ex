@@ -41,7 +41,6 @@ defmodule OmcWeb.ServerAccLive.FormComponent do
           options={Ecto.Enum.values(Omc.Servers.ServerAcc, :status)}
           disabled
         />
-        <.input field={@form[:description]} type="text" label="Description" />
         <:actions>
           <.button phx-disable-with="Saving...">Save Server acc</.button>
         </:actions>

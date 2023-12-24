@@ -110,7 +110,7 @@ defmodule OmcWeb.ServerAccLive.Index do
     params = params |> Map.reject(fn {key, value} -> key == "status" and value == "" end)
 
     %ServerAcc{server_id: nil, name: nil, status: ""}
-    |> Ecto.Changeset.cast(params, [:server_id, :name, :status])
+    |> Ecto.Changeset.cast(params, [:server_id, :name, :status, :user_info])
   end
 
   defp params_to_bindings(params) do

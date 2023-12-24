@@ -5,6 +5,8 @@ defmodule Omc.Servers do
 
   import Ecto.Query, warn: false
   import Ecto.Query.API, only: [like: 2], warn: false
+  alias Omc.Users.UserInfo
+  alias Omc.Servers.ServerAccUser
   alias Omc.Usages
   alias Omc.ServerAccUsers
   alias Phoenix.PubSub
@@ -127,14 +129,35 @@ defmodule Omc.Servers do
   """
   @spec list_server_accs(map()) :: [%ServerAcc{}]
   def list_server_accs(bindings \\ %{}, page \\ 1, limit \\ 10) when page > 0 and limit > 0 do
-    ServerAcc
+    list_server_acc_query()
     |> server_accs_server_id(bindings |> Map.get(:server_id))
     |> server_accs_status(bindings |> Map.get(:status))
     |> server_accs_name(bindings |> Map.get(:name))
+    |> server_accs_user_info(bindings |> Map.get(:user_info))
     |> limit(^limit)
     |> offset((^page - 1) * ^limit)
     |> order_by([acc], desc: acc.id)
     |> Repo.all()
+  end
+
+  defp list_server_acc_query() do
+    from(sa in ServerAcc,
+      left_join: sau in ServerAccUser,
+      on: sau.server_acc_id == sa.id,
+      left_join: ui in UserInfo,
+      as: :user_info,
+      on: ui.user_id == sau.user_id and ui.user_type == sau.user_type,
+      select: %{
+        sa
+        | user_info:
+            fragment(
+              "concat('un:', ?, ', fn:', ?, ', ln:', ?)",
+              ui.user_name,
+              ui.first_name,
+              ui.last_name
+            )
+      }
+    )
   end
 
   defp server_accs_server_id(server_accs, server_id) when server_id == "" or server_id == nil,
@@ -149,6 +172,19 @@ defmodule Omc.Servers do
 
   defp server_accs_name(server_acc, name),
     do: server_acc |> where([acc], like(acc.name, ^"%#{name}%"))
+
+  defp server_accs_user_info(server_acc, user_info)
+       when user_info == "" or user_info == nil,
+       do: server_acc
+
+  defp server_accs_user_info(server_acc, user_info),
+    do:
+      server_acc
+      |> where(
+        [user_info: ui],
+        like(ui.user_name, ^"%#{user_info}%") or like(ui.first_name, ^"%#{user_info}%") or
+          like(ui.last_name, ^"%#{user_info}%")
+      )
 
   @doc """
   Gets a single server_acc.

@@ -5,8 +5,8 @@ defmodule OmcWeb.ServerAccLiveTest do
   import Omc.ServersFixtures
   import Omc.AccountsFixtures
 
-  @create_attrs %{description: "some description", name: "some-name"}
-  @invalid_attrs %{description: nil, name: nil}
+  @create_attrs %{name: "some-name"}
+  @invalid_attrs %{name: nil}
 
   setup %{} do
     user = user_fixture()
@@ -24,7 +24,6 @@ defmodule OmcWeb.ServerAccLiveTest do
         |> live(~p"/server_accs")
 
       assert html =~ "Listing Server accs"
-      # assert html =~ server_acc.description
     end
 
     test "saves new server_acc",
@@ -59,7 +58,6 @@ defmodule OmcWeb.ServerAccLiveTest do
 
       html = render(index_live)
       assert html =~ "Server acc created successfully"
-      assert html =~ "some description"
     end
 
     test "updates server_acc in listing",
@@ -82,7 +80,7 @@ defmodule OmcWeb.ServerAccLiveTest do
 
       assert index_live
              |> form("#server_acc-form",
-               server_acc: %{name: "some-updated-name", description: "some updated description"}
+               server_acc: %{name: "some-updated-name"}
              )
              |> render_submit()
 
@@ -90,7 +88,6 @@ defmodule OmcWeb.ServerAccLiveTest do
 
       html = render(index_live)
       assert html =~ "Server acc updated successfully"
-      assert html =~ "some updated description"
     end
 
     test "deletes server_acc in listing",
@@ -115,7 +112,6 @@ defmodule OmcWeb.ServerAccLiveTest do
         |> live(~p"/server_accs/#{server_acc}")
 
       assert html =~ "Show Server acc"
-      assert html =~ server_acc.description
     end
   end
 

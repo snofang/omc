@@ -3,17 +3,17 @@ defmodule Omc.Servers.ServerAcc do
   import Ecto.Changeset
 
   schema "server_accs" do
-    field :description, :string
-    field :name, :string
+    field(:name, :string)
 
-    field :status, Ecto.Enum,
+    field(:status, Ecto.Enum,
       values: [:active_pending, :active, :deactive_pending, :deactive],
       default: :active_pending
+    )
 
-    field :server_id, :id
-    field :lock_version, :integer, default: 1
-    field :delete, :boolean, virtual: true, default: false
-
+    field(:server_id, :id)
+    field(:lock_version, :integer, default: 1)
+    field(:delete, :boolean, virtual: true, default: false)
+    field(:user_info, :string, virtual: true)
     timestamps()
   end
 
@@ -27,7 +27,7 @@ defmodule Omc.Servers.ServerAcc do
   @doc false
   def changeset(server_acc, attrs, params \\ %{}) do
     server_acc
-    |> cast(attrs, [:name, :status, :description, :server_id])
+    |> cast(attrs, [:name, :status, :server_id])
     |> change(params)
     |> validate_required([:name, :status, :server_id])
     |> validate_format(:name, ~r/^[\w]+[\w\-]*[\w]+$/)
