@@ -5,6 +5,7 @@ defmodule Omc.Common.CmdWrapperImpl do
   @behaviour CmdWrapper
 
   def run(cmd, timeout, topic, ref) do
+    PubSub.broadcast(Omc.PubSub, topic, {:progress, ref, cmd})
     Logger.info(cmd)
 
     task =

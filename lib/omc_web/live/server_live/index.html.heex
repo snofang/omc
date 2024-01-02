@@ -13,7 +13,10 @@
     rows={@streams.servers}
     row_click={fn {_id, server} -> JS.navigate(~p"/servers/#{server}") end}
   >
-    <:col :let={{_id, server}} label="Name">
+    <:col :let={{_id, server}} label="id">
+      <%= server.id %>
+    </:col>
+    <:col :let={{_id, server}} label="name">
       <%= server.name %>
     </:col>
     <:col :let={{_id, server}} label="Status">

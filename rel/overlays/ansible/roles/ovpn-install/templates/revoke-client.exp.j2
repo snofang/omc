@@ -16,8 +16,8 @@ spawn ovpn_revokeclient $client_name
 match_max 100000
 expect -exact " Continue with revocation: "
 send -- "yes\r"
-expect -exact "Enter pass phrase for {{ ovpn_data_config }}/pki/private/ca.key:"
+expect -exact "Enter pass phrase for {{ ovpn_data_pki }}/private/ca.key:"
 send -- "{{ ovpn_ca_pass }}\r"
-expect -exact "Enter pass phrase for {{ ovpn_data_config }}/pki/private/ca.key:"
+expect -exact "Enter pass phrase for {{ ovpn_data_pki }}/private/ca.key:"
 send -- "{{ ovpn_ca_pass }}\r"
 expect eof

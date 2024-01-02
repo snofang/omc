@@ -26,7 +26,7 @@ defmodule Omc.ServerOpsTest do
       |> File.read!()
 
     # host name 
-    assert Regex.match?(~r/^\s*ansible_host:\s+client$/m, host_file_content)
+    assert Regex.match?(~r/^\s*ansible_host:\s+\"client\"$/m, host_file_content)
 
     # paaword 
     password =
@@ -54,7 +54,7 @@ defmodule Omc.ServerOpsTest do
       |> ServerOps.ansible_host_file_path()
       |> File.read!()
 
-    assert Regex.match?(~r/^\s*ansible_host:\s+s111.example.com$/m, host_file_content)
+    assert Regex.match?(~r/^\s*ansible_host:\s+\"s111.example.com\"$/m, host_file_content)
 
     unchanged_password =
       Regex.run(~r/^\s*ovpn_ca_pass:\s+\"(.+)\"$/m, host_file_content, capture: :all_but_first)

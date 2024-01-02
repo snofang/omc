@@ -2,21 +2,23 @@
 
 - name: client request for {{ client_name }} exist?
   stat:
-    path: "{{ ovpn_data_config }}/pki/reqs/{{ client_name }}.req"
+    path: "{{ ovpn_data_pki }}/reqs/{{ client_name }}.req"
   become: true
   register: result
 
 - name: revoke & delete acc 
+  become: true
   when: result.stat.exists
   block:
     - name: revoke client - {{ client_name }}
       shell: "/home/{{ ansible_user }}/revoke-client.exp {{ client_name }}"
       args:
         executable: /bin/bash
+      environment: "{{ ovpn_env }}"
 
     - name: Remove file (delete file)
       ansible.builtin.file:
         path: "{{ ovpn_data_accs }}/{{ client_name }}.ovpn"
         state: absent
-  notify:
-    - restart
+  # notify:
+  #   - restart

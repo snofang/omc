@@ -1,5 +1,8 @@
 ---
 ovpn_config_push: false
-ovpn_dev_number: 1
+ovpn_dev_no: 1
 ovpn_verb: 0
-ovpn_port: 1194
+ovpn_port: 443
+ovpn_proto: tcp
+ovpn_proto_by_version: tcp4
+ovpn_cipher: AES-128-GCM

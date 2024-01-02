@@ -17,6 +17,8 @@
     path: "{{ ovpn_data }}"
     dest: "{{ ovpn_data }}-{{ '%Y%m%dT%H%M%S' | strftime(ansible_date_time.epoch, true) }}.tgz"
     remove: true
+    mode: 0700
+  become: true
   when: st.stat.exists and find.matched > 0
   
 - name: synch existing ovpn data on local to remote machine
@@ -26,4 +28,19 @@
     mode: "push" 
     archive: true
     delete: true
+    owner: true
+  become: true
+  notify: 
+    - restart
+  
+- name: change pushed data ownership
+  ansible.builtin.file:
+    path: "{{ ovpn_data }}"
+    state: directory
+    recurse: yes
+    owner: root
+    group: root
+  become: true
+
+  
 

@@ -3,13 +3,19 @@
 all:
   hosts:
     ovpn_server:
-      ovpn_data: "/home/{{ ansible_user }}/.ovpn_data"
-      ovpn_data_config: "{{ovpn_data}}/conf"
+      ovpn_data: "/etc/openvpn/omc"
+      ovpn_data_conf: "{{ovpn_data}}/conf"
       ovpn_data_accs: "{{ovpn_data}}/accs"
+      ovpn_data_pki: "{{ ovpn_data_conf }}/pki"
+      ovpn_env:  
+        OPENVPN: "{{ ovpn_data_conf }}"
+        EASYRSA: /usr/share/easy-rsa
+        EASYRSA_CRL_DAYS: 3650
+        EASYRSA_PKI: "{{ ovpn_data_pki }}"
       ovpn_data_local: "<%= server.ovpn_data %>"
       ovpn_ca_pass: "<%= :crypto.strong_rand_bytes(16) |> Base.encode64 |> binary_part(0, 16) %>"
   vars:
-    ansible_host: <%= server.name %>
+    ansible_host: "<%= server.name %>"
     ansible_user: omc
     ansible_timeout: 30
     ansible_port: 22

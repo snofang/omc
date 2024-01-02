@@ -19,4 +19,5 @@
     mode: "pull" 
     archive: true
     delete: true
+  become: true
 

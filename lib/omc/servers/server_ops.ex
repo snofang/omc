@@ -74,9 +74,9 @@ defmodule Omc.Servers.ServerOps do
             |> File.read!()
 
           Regex.replace(
-            ~r/^(\s*ansible_host:\s+)([^\s]+)$/m,
+            ~r/^(\s*ansible_host:\s+)"([^\s]+)"$/m,
             existing_content,
-            "\\1#{server.name}"
+            "\\1\"#{server.name}\""
           )
       end
 

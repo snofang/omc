@@ -37,6 +37,9 @@ client
 nobind
 dev $OVPN_DEVICE
 remote-cert-tls server
+auth-nocache
+ignore-unknown-option block-outside-dns
+#setenv opt block-outside-dns # Prevent Windows 10 DNS leak
 
 remote $OVPN_CN $OVPN_PORT $OVPN_PROTO"
     if [ "$OVPN_PROTO" == "udp6" ]; then
@@ -74,7 +77,7 @@ tls-auth ta.key 1
     fi
 
     if [ "$OVPN_DEFROUTE" != "0" ];then
-        echo "redirect-gateway def1"
+        echo "redirect-gateway def1 bypass-dhcp"
     fi
 
     if [ -n "$OVPN_MTU" ]; then

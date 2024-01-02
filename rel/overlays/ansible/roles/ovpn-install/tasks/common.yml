@@ -5,3 +5,24 @@
     state: present
     update_cache: false
   become: true
+  
+- name: UFW - Allow {{ ovpn_port }} connections
+  community.general.ufw:
+    rule: allow
+    port: "{{ ovpn_port }}"
+  become: true
+
+- name: sysctl IP config
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    sysctl_set: true
+    state: present
+    reload: true
+  with_items:
+    - { name: 'net.ipv4.ip_forward', value: '1' }
+    - { name: 'net.ipv6.conf.all.forwarding', value: 1 }
+    - { name: 'net.ipv6.conf.default.forwarding', value: 1 }
+    - { name: 'net.ipv6.conf.all.disable_ipv6', value: 0 }
+  become: true
+

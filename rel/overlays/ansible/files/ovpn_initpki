@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #
-# copied from: https://github.com/kylemanna/docker-openvpn
-# Initialize the EasyRSA PKI
+# most of it copied from: https://github.com/kylemanna/docker-openvpn
+# Initializes the EasyRSA PKI
 #
 
 if [ "$DEBUG" == "1" ]; then
