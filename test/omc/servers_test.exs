@@ -1,4 +1,5 @@
 defmodule Omc.ServersTest do
+  alias Omc.Servers.ServerOps
   alias Omc.PricePlans
   use Omc.DataCase, async: true
   alias Omc.Servers
@@ -6,7 +7,14 @@ defmodule Omc.ServersTest do
   import Omc.ServersFixtures
 
   describe "create_server/1" do
-    @invalid_attrs %{tag: nil, name: nil, price_plan_id: nil, status: nil, max_acc_count: nil}
+    @invalid_attrs %{
+      tag: nil,
+      addaress: nil,
+      name: nil,
+      price_plan_id: nil,
+      status: nil,
+      max_acc_count: nil
+    }
 
     test "create_server/1 with valid data creates a server" do
       valid_attrs = server_valid_attrs()
@@ -20,7 +28,7 @@ defmodule Omc.ServersTest do
       assert server.max_acc_count == valid_attrs.max_acc_count
     end
 
-    test "invalid or empty name" do
+    test ":name validation" do
       assert {:error, %{errors: [name: {"can't be blank", [validation: :required]}]}} =
                Servers.create_server(server_valid_attrs() |> Map.put(:name, nil))
 
@@ -35,6 +43,28 @@ defmodule Omc.ServersTest do
 
       assert {:error, %{errors: [name: {"has invalid format", [validation: :format]}]}} =
                Servers.create_server(server_valid_attrs() |> Map.put(:name, "example-"))
+
+      # it can also be an IP address.
+      assert {:ok, _} =
+               Servers.create_server(
+                 server_valid_attrs()
+                 |> Map.put(:name, unique_server_address())
+               )
+    end
+
+    test ":address validation; the same as :name" do
+      assert {:error, %{errors: [address: {"can't be blank", [validation: :required]}]}} =
+               Servers.create_server(server_valid_attrs() |> Map.put(:address, nil))
+
+      assert {:error, %{errors: [address: {"has invalid format", [validation: :format]}]}} =
+               Servers.create_server(server_valid_attrs() |> Map.put(:address, "22.22.134"))
+
+      # it can also be a domain 
+      assert {:ok, _} =
+               Servers.create_server(
+                 server_valid_attrs()
+                 |> Map.put(:address, unique_server_name())
+               )
     end
 
     test "without price_plan_id" do
@@ -82,39 +112,52 @@ defmodule Omc.ServersTest do
     end
   end
 
-  describe "update_server/1" do
-    test "update_server/2 with valid data updates the server" do
+  describe "update_server/2" do
+    test "valid attrs" do
       server =
         server_fixture(%{
-          tag: "some-tag",
-          name: unique_server_name(),
-          max_acc_count: 150
+          tag: "from1-to1",
+          name: "example2.com",
+          address: "1.1.1.1",
+          max_acc_count: 100
         })
 
       {:ok, new_price_plan} = PricePlans.create_price_plan(Money.new(1100))
-      new_server_name = unique_server_name()
 
-      update_attrs = %{
-        tag: "tag-updated123",
-        name: new_server_name,
-        price_plan_id: new_price_plan.id,
-        status: :deactive,
-        max_acc_count: 200
-      }
+      {:ok, server} =
+        Servers.update_server(server, %{
+          tag: "from2-to2",
+          name: "example2.com",
+          address: "2.2.2.2",
+          price_plan_id: new_price_plan.id,
+          status: :deactive,
+          max_acc_count: 200
+        })
 
-      {:ok, server} = Servers.update_server(server, update_attrs)
-
-      assert server.tag == "tag-updated123"
-      assert server.name == new_server_name
+      assert server.tag == "from2-to2"
+      assert server.name == "example2.com"
+      assert server.address == "2.2.2.2"
       assert server.price_plan_id == new_price_plan.id
       assert server.status == :deactive
       assert server.max_acc_count == 200
     end
 
-    test "update_server/2 with invalid data returns error changeset" do
+    test "invalid attrs" do
       server = server_fixture()
       assert {:error, %Ecto.Changeset{}} = Servers.update_server(server, @invalid_attrs)
       assert server == Servers.get_server!(server.id)
+    end
+
+    test "when server's conf data exists, `name` should be immutable" do
+      server = server_fixture()
+
+      # creating conf dir
+      ServerOps.server_ovpn_data_dir(server)
+      |> Path.join("/conf")
+      |> File.mkdir_p!()
+
+      assert {:error, %{errors: [name: {"after server config, name should not be changed.", []}]}} =
+               Servers.update_server(server, %{name: "new-example.com"})
     end
   end
 

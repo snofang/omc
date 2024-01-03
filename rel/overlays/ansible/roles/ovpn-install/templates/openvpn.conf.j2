@@ -1,8 +1,8 @@
 server 192.168.255.0 255.255.255.0
 verb {{ ovpn_verb }}
-key {{ ovpn_data_pki }}/private/{{ ansible_host }}.key
+key {{ ovpn_data_pki }}/private/{{ ovpn_name }}.key
 ca {{ ovpn_data_pki }}/ca.crt
-cert {{ ovpn_data_pki }}/issued/{{ ansible_host }}.crt
+cert {{ ovpn_data_pki }}/issued/{{ ovpn_name }}.crt
 dh {{ ovpn_data_pki }}/dh.pem
 tls-auth {{ ovpn_data_pki }}/ta.key
 

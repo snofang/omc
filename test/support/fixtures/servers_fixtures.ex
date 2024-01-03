@@ -10,14 +10,19 @@ defmodule Omc.ServersFixtures do
   @doc """
   Generate a unique server name.
   """
-  def unique_server_name, do: "somename#{System.unique_integer([:positive])}"
+  def unique_server_name, do: "somename#{System.unique_integer([:positive])}.com"
+  defp ip_token, do: System.unique_integer([:positive, :monotonic]) |> rem(256)
+
+  # How much calls should happen for this to generate a repetitive IP? it should be very big! :TODO
+  def unique_server_address, do: "#{ip_token()}.#{ip_token()}.#{ip_token()}.#{ip_token()}"
   def unique_server_acc_name, do: "somename#{System.unique_integer([:positive])}"
 
   def server_valid_attrs() do
     {:ok, price_plan} = PricePlans.create_price_plan(Money.new(12050))
 
     %{
-      tag: "some-tag",
+      tag: "from-to",
+      address: unique_server_address(),
       name: unique_server_name(),
       price_plan_id: price_plan.id,
       price_plan: price_plan,

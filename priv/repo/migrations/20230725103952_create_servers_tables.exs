@@ -12,6 +12,7 @@ defmodule Omc.Repo.Migrations.CreateServersTables do
     end
 
     create table(:servers) do
+      add :address, :string, null: false
       add :name, :string, null: false
       add :status, :string, null: false
       add :price_plan_id, references(:price_plans, on_delete: :nothing), null: false
@@ -21,6 +22,7 @@ defmodule Omc.Repo.Migrations.CreateServersTables do
     end
 
     create unique_index(:servers, [:name])
+    create unique_index(:servers, [:address])
     create index(:servers, [:price_plan_id])
     create index(:servers, [:tag])
 

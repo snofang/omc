@@ -1,4 +1,5 @@
 defmodule OmcWeb.ServerLive.FormComponent do
+  alias Omc.Servers.ServerOps
   use OmcWeb, :live_component
   Phoenix.LiveComponent
 
@@ -20,7 +21,14 @@ defmodule OmcWeb.ServerLive.FormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={@form[:name]} type="text" label="Name" />
+        <.input field={@form[:address]} type="text" label="Address" />
+        <.input
+          field={@form[:name]}
+          type="text"
+          label="Name"
+          disabled={ServerOps.conf_exist?(@server.id)}
+        />
+
         <.input
           :if={@action == :edit}
           field={@form[:status]}

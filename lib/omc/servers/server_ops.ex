@@ -61,23 +61,22 @@ defmodule Omc.Servers.ServerOps do
   # or replacing exsting server's name with new one in server's name
   defp ansible_upsert_host_file(server) do
     content =
-      case not File.exists?(ansible_host_file_path(server)) do
-        true ->
+      case File.exists?(ansible_host_file_path(server)) do
+        false ->
           ansible_path()
           |> Path.join("hosts.yml.eex")
           |> EEx.eval_file(server: server |> Map.put(:ovpn_data, server_ovpn_data_dir(server)))
 
         _ ->
-          existing_content =
-            server
-            |> ansible_host_file_path()
-            |> File.read!()
-
-          Regex.replace(
-            ~r/^(\s*ansible_host:\s+)"([^\s]+)"$/m,
-            existing_content,
-            "\\1\"#{server.name}\""
-          )
+          server
+          |> ansible_host_file_path()
+          |> File.read!()
+          |> then(fn c ->
+            Regex.replace(~r/^(\s*ansible_host:\s+)"([^\s]+)"$/m, c, "\\1\"#{server.address}\"")
+          end)
+          |> then(fn c ->
+            Regex.replace(~r/^(\s*ovpn_name:\s+)"([^\s]+)"$/m, c, "\\1\"#{server.name}\"")
+          end)
       end
 
     ansible_host_file_path(server)
@@ -146,5 +145,18 @@ defmodule Omc.Servers.ServerOps do
       _ ->
         %{}
     end
+  end
+
+  @doc """
+  Checks if the `conf` folder of server exist?
+  """
+  def conf_exist?(server_id)
+  def conf_exist?(nil), do: false
+
+  def conf_exist?(server_id) do
+    %Server{id: server_id}
+    |> server_ovpn_data_dir()
+    |> Path.join("conf/")
+    |> File.exists?()
   end
 end

@@ -9,15 +9,17 @@ defmodule OmcWeb.ServerLiveTest do
   @create_attrs %{
     tag: "src-dest",
     name: "some.name",
+    address: "1.1.1.1",
     max_acc_count: 100
   }
   @update_attrs %{
     tag: "src-dest2",
     name: "some.updated.name",
+    address: "2.2.2.2",
     status: :deactive,
     max_acc_count: 150
   }
-  @invalid_attrs %{tag: nil, name: nil, price_plan_id: nil, max_acc_count: nil}
+  @invalid_attrs %{tag: nil, name: nil, address: nil, price_plan_id: nil, max_acc_count: nil}
 
   setup %{} do
     user = user_fixture()
