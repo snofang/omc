@@ -5,6 +5,7 @@ defmodule Omc.Servers do
 
   import Ecto.Query, warn: false
   import Ecto.Query.API, only: [like: 2], warn: false
+  alias Omc.Servers.ServerAcc
   alias Omc.Users.UserInfo
   alias Omc.Servers.ServerAccUser
   alias Omc.Usages
@@ -23,9 +24,37 @@ defmodule Omc.Servers do
 
   """
   def list_servers() do
-    Server
-    |> preload(:price_plan)
+    from(s in Server,
+      left_join: in_use in subquery(server_accs_count_in_use_query()),
+      on: in_use.server_id == s.id,
+      left_join: available in subquery(server_accs_count_available_query()),
+      on: available.server_id == s.id,
+      select: %{
+        s
+        | available_acc_count: available.count,
+          in_use_acc_count: in_use.count
+      }
+    )
+    # |> preload(:price_plan)
     |> Repo.all()
+  end
+
+  defp server_accs_count_in_use_query() do
+    from sa in ServerAcc,
+      join: sau in ServerAccUser,
+      on: sau.server_acc_id == sa.id,
+      where: sa.status == :active and is_nil(sau.ended_at),
+      group_by: sa.server_id,
+      select: %{server_id: sa.server_id, count: count(sa.id)}
+  end
+
+  defp server_accs_count_available_query() do
+    from sa in ServerAcc,
+      left_join: sau in ServerAccUser,
+      on: sau.server_acc_id == sa.id,
+      where: sa.status == :active and is_nil(sau.id),
+      group_by: sa.server_id,
+      select: %{server_id: sa.server_id, count: count(sa.id)}
   end
 
   @doc """

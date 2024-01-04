@@ -45,6 +45,9 @@ defmodule Omc.ServersFixtures do
 
   @doc """
   Generate a server_acc.
+  At least server id should be specified.
+  ## Examples:
+    server_acc_fixture(%{server_id: server_id})
   """
   def server_acc_fixture(attrs \\ %{}) do
     {:ok, server_acc} =

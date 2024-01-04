@@ -147,12 +147,11 @@ defmodule Omc.Usages do
     |> Repo.one()
   end
 
-  @doc """
-  Creates a new `Usage` `started_at` now and following on, it'll be possible to calculate `sau` usages.
-  """
-  @spec start_usage(%ServerAccUser{}) ::
+  # Creates a new `Usage` `started_at` now and following on, it'll be possible to calculate `sau` usages.
+  @doc false
+  @spec start_sau_usage(%ServerAccUser{}) ::
           {:ok, %{usage: %Usage{}, server_acc_user: %ServerAccUser{}}} | {:error, term()}
-  def start_usage(%ServerAccUser{} = sau) do
+  defp start_sau_usage(%ServerAccUser{} = sau) do
     case Ecto.Multi.new()
          |> Ecto.Multi.run(:server_acc_user, fn _repo, _changes ->
            ServerAccUsers.start_server_acc_user(sau)
@@ -181,7 +180,7 @@ defmodule Omc.Usages do
            ServerAccUsers.allocate_new_server_acc_user(user, opts)
          end)
          |> Ecto.Multi.run(:start_usage, fn _repo, %{allocate_sau: sau} ->
-           start_usage(sau)
+           start_sau_usage(sau)
          end)
          |> Repo.transaction() do
       {:ok, %{start_usage: start_usage}} -> {:ok, start_usage}

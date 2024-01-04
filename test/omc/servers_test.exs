@@ -1,4 +1,6 @@
 defmodule Omc.ServersTest do
+  alias Omc.Usages
+  alias Omc.UsagesFixtures
   alias Omc.Servers.ServerOps
   alias Omc.PricePlans
   use Omc.DataCase, async: true
@@ -175,12 +177,44 @@ defmodule Omc.ServersTest do
     end
   end
 
-  describe "servers" do
-    test "list_servers/0 returns all servers" do
-      server = server_fixture()
-      assert Servers.list_servers() == [server]
+  describe "list_servers/0" do
+    setup %{} do
+      %{server: server_fixture()}
     end
 
+    test "single initial server", %{server: server} do
+      [listed_server] = Servers.list_servers()
+
+      assert server.id == listed_server.id
+      assert server.name == listed_server.name
+      assert server.status == listed_server.status
+      assert server.max_acc_count == listed_server.max_acc_count
+      assert listed_server.available_acc_count == nil
+      assert listed_server.in_use_acc_count == nil
+      assert server.tag == listed_server.tag
+    end
+
+    test "single server with accounts", %{server: server} do
+      acc1 = server_acc_fixture(%{server_id: server.id})
+      acc2 = server_acc_fixture(%{server_id: server.id})
+      assert [%{available_acc_count: nil, in_use_acc_count: nil}] = Servers.list_servers()
+      activate_server_acc(server, acc1)
+      assert [%{available_acc_count: 1, in_use_acc_count: nil}] = Servers.list_servers()
+      activate_server_acc(server, acc2)
+      assert [%{available_acc_count: 2, in_use_acc_count: nil}] = Servers.list_servers()
+
+      # making use of first available acc
+      ledger = UsagesFixtures.ledger_fixture(Money.new(1000))
+
+      Usages.start_usage(ledger)
+      assert [%{available_acc_count: 1, in_use_acc_count: 1}] = Servers.list_servers()
+
+      Usages.start_usage(ledger)
+      assert [%{available_acc_count: nil, in_use_acc_count: 2}] = Servers.list_servers()
+    end
+  end
+
+  describe "servers" do
     test "get_server!/1 returns the server with given id" do
       server = server_fixture()
       assert Servers.get_server!(server.id) == server

@@ -38,6 +38,11 @@ defmodule Omc.UsagesFixtures do
     ledger
   end
 
+  @doc """
+  Creates an acc, activate it, and make use of it from given user_attrs
+  ## Examples
+    usage_fixture(%{server: server, user_attrs: %{user_id: "12341234", user_type: :telegram}})
+  """
   def usage_fixture(
         %{server: server, user_attrs: %{user_type: _, user_id: _} = user_attrs} = _attrs
       ) do

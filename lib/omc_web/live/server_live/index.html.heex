@@ -22,6 +22,15 @@
     <:col :let={{_id, server}} label="Status">
       <%= server.status %>
     </:col>
+    <:col :let={{_id, server}} label="Max Accs">
+      <%= server.max_acc_count || 0 %>
+    </:col>
+    <:col :let={{_id, server}} label="Available Accs">
+      <%= server.available_acc_count || 0 %>
+    </:col>
+    <:col :let={{_id, server}} label="In Use Accs">
+      <%= server.in_use_acc_count || 0 %>
+    </:col>
     <:col :let={{_id, server}} label="Tag">
       <%= server.tag %>
     </:col>

@@ -14,6 +14,8 @@ defmodule Omc.Servers.Server do
     field(:max_acc_count, :integer)
     has_many(:server_accs, Omc.Servers.ServerAcc)
     timestamps()
+    field(:available_acc_count, :integer, virtual: true)
+    field(:in_use_acc_count, :integer, virtual: true)
   end
 
   @doc false
