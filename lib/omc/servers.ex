@@ -21,9 +21,13 @@ defmodule Omc.Servers do
 
       iex> list_servers()
       [%Server{}, ...]
+  ## Options
+    :id to list only one server based on its id.
 
   """
-  def list_servers() do
+  def list_servers(filter_opts \\ []) do
+    filter_opts = Keyword.validate!(filter_opts, id: nil)
+
     from(s in Server,
       left_join: in_use in subquery(server_accs_count_in_use_query()),
       on: in_use.server_id == s.id,
@@ -35,26 +39,38 @@ defmodule Omc.Servers do
           in_use_acc_count: in_use.count
       }
     )
-    # |> preload(:price_plan)
+    |> list_servers_query_filter_by_id(filter_opts[:id])
     |> Repo.all()
   end
 
+  defp list_servers_query_filter_by_id(query, id) do
+    case id do
+      nil ->
+        query
+
+      _ ->
+        query |> where(id: ^id)
+    end
+  end
+
   defp server_accs_count_in_use_query() do
-    from sa in ServerAcc,
+    from(sa in ServerAcc,
       join: sau in ServerAccUser,
       on: sau.server_acc_id == sa.id,
       where: sa.status == :active and is_nil(sau.ended_at),
       group_by: sa.server_id,
       select: %{server_id: sa.server_id, count: count(sa.id)}
+    )
   end
 
   defp server_accs_count_available_query() do
-    from sa in ServerAcc,
+    from(sa in ServerAcc,
       left_join: sau in ServerAccUser,
       on: sau.server_acc_id == sa.id,
       where: sa.status == :active and is_nil(sau.id),
       group_by: sa.server_id,
       select: %{server_id: sa.server_id, count: count(sa.id)}
+    )
   end
 
   @doc """

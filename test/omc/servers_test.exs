@@ -212,6 +212,21 @@ defmodule Omc.ServersTest do
       Usages.start_usage(ledger)
       assert [%{available_acc_count: nil, in_use_acc_count: 2}] = Servers.list_servers()
     end
+
+    test "multiple servers with accounts", %{server: server1} do
+      # setting up server2 having 2 accounts and one of them being used
+      server2 = server_fixture()
+      acc1 = server_acc_fixture(%{server_id: server2.id})
+      activate_server_acc(server2, acc1)
+      acc2 = server_acc_fixture(%{server_id: server2.id})
+      activate_server_acc(server2, acc2)
+      # making use of first available acc
+      ledger = UsagesFixtures.ledger_fixture(Money.new(1000))
+      Usages.start_usage(ledger)
+
+      assert [%{available_acc_count: nil, in_use_acc_count: nil}] = Servers.list_servers(id: server1.id)
+      assert [%{available_acc_count: 1, in_use_acc_count: 1}] = Servers.list_servers(id: server2.id)
+    end
   end
 
   describe "servers" do
