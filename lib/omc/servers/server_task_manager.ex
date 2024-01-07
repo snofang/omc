@@ -41,7 +41,11 @@ defmodule Omc.Servers.ServerTaskManager do
     end
 
     def add_task_log(s, task_log) do
-      %{s | task_log: s.task_log <> task_log}
+      max_length =
+        Application.get_env(:omc, Omc.Servers.ServerTaskManager)[:max_log_length_per_server] ||
+          1_000
+
+      %{s | task_log: (s.task_log <> task_log) |> String.slice(-max_length, max_length)}
     end
 
     def clear_task_log(s) do

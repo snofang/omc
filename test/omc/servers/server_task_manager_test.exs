@@ -24,6 +24,17 @@ defmodule Omc.Servers.ServerTaskManagerTest do
       PubSub.broadcast(Omc.PubSub, @topic, {:progress, 1, "c"})
       eventual_assert(fn -> ServerTaskManager.get_task_log(1) == "abc" end)
     end
+
+    test "max_log_length_per_server" do
+      max_length = Application.get_env(:omc, ServerTaskManager)[:max_log_length_per_server]
+      PubSub.broadcast(Omc.PubSub, @topic, {:progress, 1, String.duplicate("a", max_length)})
+
+      eventual_assert(fn -> ServerTaskManager.get_task_log(1) |> String.length() == max_length end)
+
+      PubSub.broadcast(Omc.PubSub, @topic, {:progress, 1, "asdf"})
+
+      eventual_assert(fn -> ServerTaskManager.get_task_log(1) |> String.length() == max_length end)
+    end
   end
 
   describe "run_task/2" do

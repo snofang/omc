@@ -22,7 +22,10 @@ config :omc, :ipgs,
 
 config :omc, :telegram, enabled: false
 config :omc, Omc.Payments, enabled: false
-config :omc, Omc.Servers.ServerTaskManager, enabled: false
+
+config :omc, Omc.Servers.ServerTaskManager,
+  enabled: false,
+  max_log_length_per_server: 100
 
 # config :tesla, Omc.Payments.PaymentProviderOxapay, adapter: Omc.TeslaMock
 config :tesla, adapter: Omc.TeslaMock
