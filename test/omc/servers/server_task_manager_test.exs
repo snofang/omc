@@ -8,6 +8,8 @@ defmodule Omc.Servers.ServerTaskManagerTest do
 
   setup %{} do
     start_supervised(ServerTaskManager)
+    start_supervised(DummyTaskRunner)
+    stub_cmd_wrapper_with_dummy_task()
     :ok
   end
 
@@ -25,12 +27,6 @@ defmodule Omc.Servers.ServerTaskManagerTest do
   end
 
   describe "run_task/2" do
-    setup %{} do
-      start_supervised(DummyTaskRunner)
-      stub_cmd_wrapper_with_dummy_task()
-      :ok
-    end
-
     test "initial task list is empty" do
       assert ServerTaskManager.get_task_list(123) == []
     end
@@ -186,6 +182,39 @@ defmodule Omc.Servers.ServerTaskManagerTest do
 
       eventual_assert(fn -> ServerTaskManager.get_task_list(3) == [] end)
       eventual_assert(fn -> ServerTaskManager.get_task_log(3) == "command7command8" end)
+    end
+  end
+
+  describe "get_task_list/1" do
+    test "no server state" do
+      assert ServerTaskManager.get_task_list(1) == []
+    end
+  end
+
+  describe "cancel_running_task/1" do
+    test "no server - no effect" do
+      ServerTaskManager.cancel_running_task(1)
+    end
+
+    test "running task" do
+      #
+      # #1
+      #
+      ServerTaskManager.run_task(1, "command1")
+      ServerTaskManager.run_task(1, "command2")
+      eventual_assert(fn -> DummyTaskRunner.task_running?("command1") end)
+      eventual_assert(fn -> ServerTaskManager.get_task_list(1) == ["command2"] end)
+      #
+      # #2
+      #
+      ServerTaskManager.cancel_running_task(1)
+      eventual_assert(fn -> ServerTaskManager.get_task_list(1) == [] end)
+      eventual_assert(fn -> DummyTaskRunner.task_running?("command2") end)
+      #
+      # #3
+      #
+      DummyTaskRunner.unblock_task("command2")
+      eventual_assert(fn -> DummyTaskRunner.task_stopped?("command2") end)
     end
   end
 

@@ -16,8 +16,8 @@ defmodule Omc.Servers.ServerTaskManager do
     GenServer.cast(__MODULE__, {:run_cmd, server_id, cmd})
   end
 
-  def cancel_task(server_id) do
-    GenServer.cast(__MODULE__, {:cancel_task, server_id})
+  def cancel_running_task(server_id) do
+    GenServer.cast(__MODULE__, {:cancel_running_task, server_id})
   end
 
   def get_task_log(server_id) do
@@ -91,6 +91,26 @@ defmodule Omc.Servers.ServerTaskManager do
   end
 
   @impl true
+  def handle_cast({:cancel_running_task, server_id}, state) do
+    if state[server_id] do
+      case state[server_id].running_cmd_task do
+        nil ->
+          {:noreply, state}
+
+        task ->
+          Task.shutdown(task, :brutal_kill)
+          # run any queued command, if any
+          GenServer.cast(__MODULE__, {:run_cmd, server_id})
+          # removing ref from ref_map and server state
+          {:noreply,
+           state
+           |> Map.put(server_id, %{state[server_id] | running_cmd_task: nil})
+           |> Map.put(:ref_map, state.ref_map |> Map.delete(task.ref))}
+      end
+    end
+  end
+
+  @impl true
   def handle_cast({:run_cmd, server_id, cmd}, state) do
     {:noreply, state |> queue_cmd(server_id, cmd) |> run_server_cmd(server_id)}
   end
@@ -98,12 +118,6 @@ defmodule Omc.Servers.ServerTaskManager do
   @impl true
   def handle_cast({:run_cmd, server_id}, state) do
     {:noreply, state |> run_server_cmd(server_id)}
-  end
-
-  @impl true
-  def handle_cast({:cancel_cmd, server_id}, state) do
-    Task.shutdown(state[server_id].running_cmd_task, :brutal_kill)
-    {:noreply, state}
   end
 
   @impl true

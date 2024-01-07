@@ -60,6 +60,11 @@ defmodule OmcWeb.ServerLive.Task do
     {:noreply, socket |> assign(task_log: "")}
   end
 
+  def handle_event("cancel_running_task", _unsigned_params, socket) do
+    ServerTaskManager.cancel_running_task(socket.assigns.server.id)
+    {:noreply, socket}
+  end
+
   def render(assigns) do
     ~H"""
     <div class="mx-5">
@@ -76,6 +81,7 @@ defmodule OmcWeb.ServerLive.Task do
           </.button>
           <.button phx-click="ovpn-acc-update">ovpn acc update</.button>
           <.button phx-click="sync-acc-data">sync acc data</.button>
+          <.button phx-click="cancel_running_task">cancel running</.button>
           <.button phx-click="clear-log">clear log</.button>
         </:actions>
         <div></div>
