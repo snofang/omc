@@ -224,8 +224,11 @@ defmodule Omc.ServersTest do
       ledger = UsagesFixtures.ledger_fixture(Money.new(1000))
       Usages.start_usage(ledger)
 
-      assert [%{available_acc_count: nil, in_use_acc_count: nil}] = Servers.list_servers(id: server1.id)
-      assert [%{available_acc_count: 1, in_use_acc_count: 1}] = Servers.list_servers(id: server2.id)
+      assert [%{available_acc_count: nil, in_use_acc_count: nil}] =
+               Servers.list_servers(id: server1.id)
+
+      assert [%{available_acc_count: 1, in_use_acc_count: 1}] =
+               Servers.list_servers(id: server2.id)
     end
   end
 

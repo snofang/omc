@@ -95,7 +95,7 @@ defmodule Omc.Servers.ServerOps do
   def ansible_ovpn_install(server, config_push \\ false) do
     ansible_upsert_host_file(server)
 
-    server
+    server.id
     |> ServerTaskManager.run_task(
       "ansible-playbook" <>
         " -i #{ansible_host_file_path(server)}" <>
@@ -116,7 +116,7 @@ defmodule Omc.Servers.ServerOps do
       Servers.list_server_accs(%{server_id: server.id, status: :deactive_pending})
       |> Enum.map(fn acc -> acc.name end)
 
-    server
+    server.id
     |> ServerTaskManager.run_task(
       "ansible-playbook" <>
         " -i #{ansible_host_file_path(server)}" <>
