@@ -4,6 +4,7 @@ defmodule Omc.Servers.ServerTaskManagerTest do
   alias Phoenix.PubSub
   alias Omc.DummyTaskRunner
   import Mox
+  import Omc.TestUtils
   @topic "server_task_progress"
 
   setup %{} do
@@ -203,6 +204,14 @@ defmodule Omc.Servers.ServerTaskManagerTest do
       eventual_assert(fn -> DummyTaskRunner.task_stopped?("command1") end)
       eventual_assert(fn -> ServerTaskManager.get_task_log(1) == "command1" end)
     end
+
+    test "run_task_by_command_provider support" do
+      ServerTaskManager.run_task_by_command_provider(1, fn -> "command1" end)
+      eventual_assert(fn -> DummyTaskRunner.task_running?("command1") end)
+      DummyTaskRunner.unblock_task("command1")
+      eventual_assert(fn -> DummyTaskRunner.task_stopped?("command1") end)
+      eventual_assert(fn -> ServerTaskManager.get_task_log(1) == "command1" end)
+    end
   end
 
   describe "get_task_list/1" do
@@ -246,14 +255,5 @@ defmodule Omc.Servers.ServerTaskManagerTest do
       {:ok, "collective-result"}
     end)
     |> allow(self(), Process.whereis(ServerTaskManager))
-  end
-
-  defp eventual_assert(func, max_time \\ 1000) do
-    if max_time <= 0, do: raise("times up; assertion failed.")
-
-    unless func.() do
-      Process.sleep(50)
-      eventual_assert(func, max_time - 50)
-    end
   end
 end

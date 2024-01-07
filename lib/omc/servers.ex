@@ -168,7 +168,7 @@ defmodule Omc.Servers do
 
   ## Examples
 
-      iex> list_server_accs()
+      iex> list_server_accs(bindings = %{server_id: _, status: _, name: _, user_info: _})
       [%ServerAcc{}, ...]
 
   """

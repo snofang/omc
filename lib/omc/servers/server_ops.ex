@@ -104,7 +104,7 @@ defmodule Omc.Servers.ServerOps do
     )
   end
 
-  def ansible_ovpn_accs_update(server) do
+  def ansible_ovpn_accs_update_command(server) do
     # it's always needed to update host file before operations
     ansible_upsert_host_file(server)
 
@@ -116,17 +116,20 @@ defmodule Omc.Servers.ServerOps do
       Servers.list_server_accs(%{server_id: server.id, status: :deactive_pending})
       |> Enum.map(fn acc -> acc.name end)
 
-    server.id
-    |> ServerTaskManager.run_task(
-      "ansible-playbook" <>
-        " -i #{ansible_host_file_path(server)}" <>
-        " #{Path.join(ansible_path(), "play-um.yml")}" <>
-        " -e '{\"clients_revoke\": " <>
-        inspect(accs_revoke) <>
-        ", \"clients_create\": " <>
-        inspect(accs_create) <>
-        "}'"
-    )
+    "ansible-playbook" <>
+      " -i #{ansible_host_file_path(server)}" <>
+      " #{Path.join(ansible_path(), "play-um.yml")}" <>
+      " -e '{\"clients_revoke\": " <>
+      inspect(accs_revoke) <>
+      ", \"clients_create\": " <>
+      inspect(accs_create) <>
+      "}'"
+  end
+
+  def ansible_ovpn_accs_update(server) do
+    ServerTaskManager.run_task_by_command_provider(server.id, fn ->
+      ansible_ovpn_accs_update_command(server)
+    end)
   end
 
   @doc """

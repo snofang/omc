@@ -12,6 +12,11 @@ defmodule Omc.Servers.ServerTaskManager do
   alias Phoenix.PubSub
   use GenServer
 
+  @spec run_task_by_command_provider(server_id :: integer(), fun :: (() -> binary())) :: :ok
+  def run_task_by_command_provider(server_id, fun) do
+    GenServer.cast(__MODULE__, {:run_cmd, server_id, {:command_provider, fun}})
+  end
+
   def run_task(server_id, cmd) do
     GenServer.cast(__MODULE__, {:run_cmd, server_id, cmd})
   end
@@ -206,13 +211,11 @@ defmodule Omc.Servers.ServerTaskManager do
                 {m, f, a} ->
                   Task.Supervisor.async_nolink(Omc.TaskSupervisor, m, f, a)
 
+                {:command_provider, fun} when is_function(fun, 0) ->
+                  fun.() |> async_nolink_cmd(timeout, server_id)
+
                 cmd when is_binary(cmd) ->
-                  Task.Supervisor.async_nolink(Omc.TaskSupervisor, CmdWrapper, :run, [
-                    cmd,
-                    timeout,
-                    "server_task_progress",
-                    server_id
-                  ])
+                  async_nolink_cmd(cmd, timeout, server_id)
               end
 
             state
@@ -231,5 +234,14 @@ defmodule Omc.Servers.ServerTaskManager do
       _ ->
         state
     end
+  end
+
+  defp async_nolink_cmd(cmd, timeout, ref) do
+    Task.Supervisor.async_nolink(Omc.TaskSupervisor, CmdWrapper, :run, [
+      cmd,
+      timeout,
+      "server_task_progress",
+      ref
+    ])
   end
 end

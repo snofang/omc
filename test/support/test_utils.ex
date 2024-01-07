@@ -12,4 +12,13 @@ defmodule Omc.TestUtils do
     |> NaiveDateTime.diff(naive_datetime2)
     |> then(&(abs(&1) <= duration_allowance))
   end
+
+  def eventual_assert(func, max_time \\ 1000) do
+    if max_time <= 0, do: raise("times up; assertion failed.")
+
+    unless func.() do
+      Process.sleep(50)
+      eventual_assert(func, max_time - 50)
+    end
+  end
 end
