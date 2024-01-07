@@ -271,7 +271,7 @@ defmodule Omc.Servers do
   six Xs represent account counter. e.g. S0003A00000029
   TODO: It is somehow naive implementatin and  should take into account
     - concurrency.
-    - reusing staled counter number.
+    - reusing stalled counter number.
   """
   def create_server_acc_batch(server_id, count) when server_id > 0 and count > 0 do
     name_prefix =
@@ -442,5 +442,28 @@ defmodule Omc.Servers do
     |> get_server_acc!()
     |> then(fn sa -> get_server!(sa.server_id) end)
     |> then(& &1.price_plan)
+  end
+
+  @doc """
+  Creates accs in batch to fill up to server's `max_acc_count`.
+  Note: This may fail if called concurrently on a single server.
+  """
+  def create_accs_up_to_max_count(server_id) do
+    [%Server{} = server] = list_servers(id: server_id)
+
+    # TODO: to optimize this and fetch only the count. 
+    current_active_pending_count =
+      list_server_accs(%{server_id: server_id, status: :active_pending}) |> length()
+
+    ((server.max_acc_count || 0) - (server.available_acc_count || 0) -
+       (server.in_use_acc_count || 0) -
+       (current_active_pending_count || 0))
+    |> case do
+      c when c > 0 ->
+        create_server_acc_batch(server_id, c)
+
+      _ ->
+        nil
+    end
   end
 end

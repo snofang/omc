@@ -194,6 +194,15 @@ defmodule Omc.Servers.ServerTaskManagerTest do
       eventual_assert(fn -> ServerTaskManager.get_task_list(3) == [] end)
       eventual_assert(fn -> ServerTaskManager.get_task_log(3) == "command7command8" end)
     end
+
+    test "mfa support" do
+      mfa = {Omc.Common.CmdWrapper, :run, ["command1", 1000, @topic, 1]}
+      ServerTaskManager.run_task(1, mfa)
+      eventual_assert(fn -> DummyTaskRunner.task_running?("command1") end)
+      DummyTaskRunner.unblock_task("command1")
+      eventual_assert(fn -> DummyTaskRunner.task_stopped?("command1") end)
+      eventual_assert(fn -> ServerTaskManager.get_task_log(1) == "command1" end)
+    end
   end
 
   describe "get_task_list/1" do

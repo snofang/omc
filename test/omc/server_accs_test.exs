@@ -414,4 +414,66 @@ defmodule Omc.ServersAccsTest do
       assert Servers.get_server_acc!(server_acc.id) == server_acc
     end
   end
+
+  describe "create_accs_up_to_max_count/1" do
+    setup %{} do
+      %{server: server_fixture(max_acc_count: 5)}
+    end
+
+    test "having no acc", %{server: server} do
+      Servers.create_accs_up_to_max_count(server.id)
+
+      assert Servers.list_server_accs(%{server_id: server.id, status: :active_pending})
+             |> length() == 5
+    end
+
+    test "having :active_pending, :active, :deactive_pending, and :deactive accs", %{
+      server: server
+    } do
+      # active_pending
+      server_acc_fixture(%{server_id: server.id})
+
+      # active
+      {:ok, _} =
+        server_acc_fixture(%{server_id: server.id})
+        |> Ecto.Changeset.change(status: :active)
+        |> Omc.Repo.update()
+
+      # deactive_pending
+      {:ok, _} =
+        server_acc_fixture(%{server_id: server.id})
+        |> Ecto.Changeset.change(status: :deactive_pending)
+        |> Omc.Repo.update()
+
+      # deactive
+      {:ok, _} =
+        server_acc_fixture(%{server_id: server.id})
+        |> Ecto.Changeset.change(status: :deactive)
+        |> Omc.Repo.update()
+
+      Servers.create_accs_up_to_max_count(server.id)
+
+      assert Servers.list_server_accs(%{server_id: server.id, status: :active_pending})
+             |> length() == 4
+    end
+
+    test "should cause more than `max_acc_count` accs", %{server: server} do
+      # active_pending
+      server_acc_fixture(%{server_id: server.id})
+      server_acc_fixture(%{server_id: server.id})
+      server_acc_fixture(%{server_id: server.id})
+      server_acc_fixture(%{server_id: server.id})
+
+      # active
+      {:ok, _} =
+        server_acc_fixture(%{server_id: server.id})
+        |> Ecto.Changeset.change(status: :active)
+        |> Omc.Repo.update()
+
+      Servers.create_accs_up_to_max_count(server.id)
+
+      assert Servers.list_server_accs(%{server_id: server.id, status: :active_pending})
+             |> length() == 4
+    end
+  end
 end

@@ -202,12 +202,18 @@ defmodule Omc.Servers.ServerTaskManager do
           # somthing to run exists
           cmd ->
             task =
-              Task.Supervisor.async_nolink(Omc.TaskSupervisor, CmdWrapper, :run, [
-                cmd,
-                timeout,
-                "server_task_progress",
-                server_id
-              ])
+              case cmd do
+                {m, f, a} ->
+                  Task.Supervisor.async_nolink(Omc.TaskSupervisor, m, f, a)
+
+                cmd when is_binary(cmd) ->
+                  Task.Supervisor.async_nolink(Omc.TaskSupervisor, CmdWrapper, :run, [
+                    cmd,
+                    timeout,
+                    "server_task_progress",
+                    server_id
+                  ])
+              end
 
             state
             |> Map.put(
