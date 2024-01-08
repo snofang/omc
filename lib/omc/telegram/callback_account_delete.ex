@@ -46,9 +46,6 @@ defmodule Omc.Telegram.CallbackAccountDelete do
 
     By deleting an account, the system stops billing for it and also it will not be possible to use it anymore.
 
-    _ __Please note that it takes up to 24 hours for delete request to be effective; Till then, it will be active, usable, and being billed.___
-
-
     *Are you sure to delete account __#{sa_name}__?*
 
     """

@@ -362,24 +362,31 @@ defmodule Omc.Servers do
   it will be done/effective by some preodic user management ops 
   """
   def deactivate_acc(%ServerAcc{} = acc) do
-    acc
-    |> ServerAcc.changeset(%{status: :deactive_pending})
-    |> Repo.update()
+    case acc
+         |> ServerAcc.changeset(%{status: :deactive_pending})
+         |> Repo.update() do
+      {:ok, acc} ->
+        PubSub.broadcast(Omc.PubSub, "server-tasks", {:sync_accs_server_task, acc.server_id})
+        {:ok, acc}
+
+      other ->
+        other
+    end
   end
 
   @doc """
   Updates waiting for changes accs(those having :active_pending or :deactive_pending status)
   based on current acc file existance
   """
-  @spec sync_server_accs_status(:integer) :: :ok
-  def sync_server_accs_status(server_id) do
-    list_server_accs(%{server_id: server_id, status: :active_pending})
+  @spec sync_server_accs_status(:integer, non_neg_integer()) :: :ok
+  def sync_server_accs_status(server_id, batch_size \\ 5) do
+    list_server_accs(%{server_id: server_id, status: :active_pending}, 1, batch_size)
     |> Enum.each(fn acc ->
       update_server_acc(acc, ServerOps.acc_file_based_status_change(acc))
       |> broadcast_server_update()
     end)
 
-    list_server_accs(%{server_id: server_id, status: :deactive_pending})
+    list_server_accs(%{server_id: server_id, status: :deactive_pending}, 1, batch_size)
     |> Enum.each(fn acc ->
       # update_server_acc(acc, ServerOps.acc_file_based_status_change(acc))
       try_deactivate_server_acc(acc)
@@ -448,16 +455,20 @@ defmodule Omc.Servers do
   Creates accs in batch to fill up to server's `max_acc_count`.
   Note: This may fail if called concurrently on a single server.
   """
-  def create_accs_up_to_max_count(server_id) do
+  def create_accs_up_to_max_count(server_id, batch_size \\ 5) do
     [%Server{} = server] = list_servers(id: server_id)
 
-    # TODO: to optimize this and fetch only the count. 
     current_active_pending_count =
-      list_server_accs(%{server_id: server_id, status: :active_pending}) |> length()
+      from(sa in ServerAcc,
+        where: sa.server_id == ^server_id and sa.status == :active_pending,
+        select: count(sa)
+      )
+      |> Repo.one!()
 
     ((server.max_acc_count || 0) - (server.available_acc_count || 0) -
        (server.in_use_acc_count || 0) -
-       (current_active_pending_count || 0))
+       current_active_pending_count)
+    |> min(batch_size)
     |> case do
       c when c > 0 ->
         create_server_acc_batch(server_id, c)

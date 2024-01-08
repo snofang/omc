@@ -15,7 +15,7 @@ defmodule Omc.ServerTasksTest do
     %{server: server_fixture(%{max_acc_count: 1})}
   end
 
-  describe "sync_server_accs/1" do
+  describe "sync_accs_server_task/1" do
     test "create and activate acc - normal success flow", %{server: server} do
       Omc.CmdWrapperMock
       |> stub(:run, fn cmd, _timeout, _topic, _ref ->
@@ -38,7 +38,7 @@ defmodule Omc.ServerTasksTest do
       end)
       |> allow(self(), Process.whereis(ServerTaskManager))
 
-      ServerTasks.sync_server_accs(server)
+      ServerTasks.sync_accs_server_task(server)
       eventual_assert(fn -> match?([%{status: :active}], Servers.list_server_accs()) end, 1000)
     end
   end

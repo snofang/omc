@@ -1,4 +1,5 @@
 defmodule OmcWeb.ServerLive.Task do
+  alias Omc.ServerTasks
   alias Phoenix.PubSub
   alias Omc.Servers
   alias Omc.Servers.ServerTaskManager
@@ -24,9 +25,17 @@ defmodule OmcWeb.ServerLive.Task do
 
   def handle_info({:progress, server_id, prompt}, socket) do
     if socket.assigns.server.id == server_id do
+      max_length =
+        Application.get_env(:omc, Omc.Servers.ServerTaskManager)[:max_log_length_per_server] ||
+          1_000
+
       {:noreply,
        socket
-       |> assign(:task_log, (Map.get(socket.assigns, :task_log) || "") <> prompt)}
+       |> assign(
+         :task_log,
+         ((Map.get(socket.assigns, :task_log) || "") <> prompt)
+         |> String.slice(-max_length, max_length)
+       )}
     else
       {:noreply, socket}
     end
@@ -44,14 +53,8 @@ defmodule OmcWeb.ServerLive.Task do
     {:noreply, socket}
   end
 
-  def handle_event("ovpn-acc-update", _unsigned_params, socket) do
-    Logger.info("ovpn-acc-update task called for #{inspect(socket.assigns.server)}")
-    ServerOps.ansible_ovpn_accs_update(socket.assigns.server)
-    {:noreply, socket}
-  end
-
-  def handle_event("sync-acc-data", _unsigned_params, socket) do
-    Servers.sync_server_accs_status(socket.assigns.server.id)
+  def handle_event("sync-accs", _unsigned_params, socket) do
+    ServerTasks.sync_accs_server_task(socket.assigns.server, true)
     {:noreply, socket}
   end
 
@@ -60,7 +63,7 @@ defmodule OmcWeb.ServerLive.Task do
     {:noreply, socket |> assign(task_log: "")}
   end
 
-  def handle_event("cancel_running_task", _unsigned_params, socket) do
+  def handle_event("cancel-running-task", _unsigned_params, socket) do
     ServerTaskManager.cancel_running_task(socket.assigns.server.id)
     {:noreply, socket}
   end
@@ -79,10 +82,9 @@ defmodule OmcWeb.ServerLive.Task do
           >
             ovpn push
           </.button>
-          <.button phx-click="ovpn-acc-update">ovpn acc update</.button>
-          <.button phx-click="sync-acc-data">sync acc data</.button>
-          <.button phx-click="cancel_running_task">cancel running</.button>
-          <.button phx-click="clear-log">clear log</.button>
+          <.button phx-click="sync-accs">Sync Accounts</.button>
+          <.button phx-click="cancel-running-task">Cancel Running Task</.button>
+          <.button phx-click="clear-log">Clear Log</.button>
         </:actions>
         <div></div>
       </.header>

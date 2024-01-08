@@ -41,3 +41,4 @@ npm-debug.log
 
 # Data dir
 .data
+.data_test

@@ -62,7 +62,14 @@ config :omc, :telegram,
   host: "telegram.example.com"
 
 config :omc, Omc.Payments, enabled: true
-config :omc, Omc.Servers.ServerTaskManager, enabled: true
+
+config :omc, Omc.Servers.ServerTaskManager,
+  enabled: true,
+  max_log_length_per_server: 4000
+
+config :omc, Omc.ServerTasks,
+  enabled: true,
+  batch_size: 5
 
 config :telegram,
   webserver: Telegram.WebServer.Cowboy
@@ -74,7 +81,6 @@ config :omc,
 
 config :omc, cmd_wrapper_impl: Omc.Common.CmdWrapperImpl
 config :omc, server_call_timeout: 15 * 60 * 1_000
-config :omc, Omc.Servers.ServerTaskManager, max_log_length_per_server: 4000
 
 # Configures the endpoint
 config :omc, OmcWeb.Endpoint,

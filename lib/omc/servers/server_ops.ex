@@ -104,16 +104,24 @@ defmodule Omc.Servers.ServerOps do
     )
   end
 
-  def ansible_ovpn_accs_update_command(server) do
+  def ansible_ovpn_accs_update_command(server, batch_size \\ 5) do
     # it's always needed to update host file before operations
     ansible_upsert_host_file(server)
 
     accs_create =
-      Servers.list_server_accs(%{server_id: server.id, status: :active_pending})
+      Servers.list_server_accs(
+        %{server_id: server.id, status: :active_pending},
+        1,
+        batch_size
+      )
       |> Enum.map(fn acc -> acc.name end)
 
     accs_revoke =
-      Servers.list_server_accs(%{server_id: server.id, status: :deactive_pending})
+      Servers.list_server_accs(
+        %{server_id: server.id, status: :deactive_pending},
+        1,
+        batch_size
+      )
       |> Enum.map(fn acc -> acc.name end)
 
     "ansible-playbook" <>

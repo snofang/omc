@@ -6,7 +6,7 @@ defmodule Omc.Telegram.CallbackMain do
     ~s"""
     __*Welcome!*__ 
 
-    From here, you can buy account\\(s\\), manage them, and see your credit and billings in detail.
+    From here, you can create account\\(s\\), manage them, and see your credit and usages in detail.
     """
   end
 

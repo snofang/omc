@@ -3,6 +3,9 @@ import Config
 # Only in tests, remove the complexity from the password hashing algorithm
 config :bcrypt_elixir, :log_rounds, 1
 
+config :omc,
+  data: Path.expand("../.data_test", Path.dirname(__ENV__.file))
+
 #
 # money & currency
 # 
@@ -26,6 +29,8 @@ config :omc, Omc.Payments, enabled: false
 config :omc, Omc.Servers.ServerTaskManager,
   enabled: false,
   max_log_length_per_server: 100
+
+config :omc, Omc.ServerTasks, enabled: false
 
 # config :tesla, Omc.Payments.PaymentProviderOxapay, adapter: Omc.TeslaMock
 config :tesla, adapter: Omc.TeslaMock

@@ -1,4 +1,5 @@
 defmodule Omc.ServersAccsTest do
+  alias Phoenix.PubSub
   alias Omc.Users
   alias Omc.ServerAccUsers
   alias Omc.Usages
@@ -127,6 +128,7 @@ defmodule Omc.ServersAccsTest do
   describe "Servers.deactivate_acc/1" do
     setup %{server: server} do
       server_acc = server_acc_fixture(%{server_id: server.id})
+      PubSub.subscribe(Omc.PubSub, "server-tasks")
       %{server_acc: server_acc}
     end
 
@@ -135,6 +137,8 @@ defmodule Omc.ServersAccsTest do
         server_acc |> Ecto.Changeset.change(status: :active) |> Omc.Repo.update()
 
       assert {:ok, %{status: :deactive_pending}} = Servers.deactivate_acc(server_acc)
+      server_id = server_acc.server_id
+      assert_receive({:sync_accs_server_task, ^server_id})
     end
 
     test "success case; server_acc.status = :deactive_pending", %{server_acc: server_acc} do
@@ -142,6 +146,8 @@ defmodule Omc.ServersAccsTest do
         server_acc |> Ecto.Changeset.change(status: :deactive_pending) |> Omc.Repo.update()
 
       assert {:ok, %{status: :deactive_pending}} = Servers.deactivate_acc(server_acc)
+      server_id = server_acc.server_id
+      assert_receive({:sync_accs_server_task, ^server_id})
     end
 
     test "fail case; server_acc.status in (:deactive, :active_pending)", %{server_acc: server_acc} do
@@ -153,6 +159,8 @@ defmodule Omc.ServersAccsTest do
         server_acc |> Ecto.Changeset.change(status: :deactive) |> Omc.Repo.update()
 
       assert {:error, %{errors: [status: _]}} = Servers.deactivate_acc(server_acc)
+      server_id = server_acc.server_id
+      refute_receive({:sync_accs_server_task, ^server_id})
     end
   end
 

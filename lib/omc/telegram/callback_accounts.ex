@@ -26,7 +26,7 @@ defmodule Omc.Telegram.CallbackAccounts do
     __*Your Account\\(s\\).*__
 
     #{if accs |> length() > 0 do
-      "By selecting each __active__ account represented in the following buttons, you can manage them, download connection config __.ovpn__ file, or see their __usages__."
+      "By selecting each account represented by each of the following buttons by account name, you can manage it, download connection config __.ovpn__ file, or see its __usages__."
     else
       "No active account!"
     end}
@@ -36,7 +36,7 @@ defmodule Omc.Telegram.CallbackAccounts do
   @impl true
   def get_markup(%{accs: accs}) do
     accs_markup(accs) ++
-      [[markup_item("<< back", "Main")]]
+      [[markup_item("<< back", "Main"), markup_item("Refresh", "Accounts")]]
   end
 
   defp accs_markup(accs) do
