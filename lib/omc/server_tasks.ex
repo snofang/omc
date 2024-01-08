@@ -10,6 +10,7 @@ defmodule Omc.ServerTasks do
   @doc """
   Do queue in sequence the followings to run:
     - Servers.create_accs_up_to_max_count/1
+    - ansible_upsert_host_file/1
     - fn -> ServerOps.ansible_ovpn_accs_update_command/1
     - Servers.sync_server_accs_status/1
   """
@@ -25,6 +26,11 @@ defmodule Omc.ServerTasks do
       {Servers, :create_accs_up_to_max_count, [server.id, batch_size]}
     )
 
+    ServerTaskManager.run_task(
+      server.id,
+      {ServerOps, :ansible_upsert_host_file, [server]}
+    )
+
     ServerTaskManager.run_task_by_command_provider(
       server.id,
       fn -> ServerOps.ansible_ovpn_accs_update_command(server, batch_size) end
@@ -36,6 +42,18 @@ defmodule Omc.ServerTasks do
     )
 
     :ok
+  end
+
+  def install_ovpn_server_task(server) do
+    ServerTaskManager.run_task(
+      server.id,
+      {ServerOps, :ansible_upsert_host_file, [server]}
+    )
+
+    ServerTaskManager.run_task_by_command_provider(
+      server.id,
+      fn -> ServerOps.ansible_ovpn_install_command(server) end
+    )
   end
 
   def start_link(_args) do

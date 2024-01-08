@@ -3,7 +3,6 @@ defmodule OmcWeb.ServerLive.Task do
   alias Phoenix.PubSub
   alias Omc.Servers
   alias Omc.Servers.ServerTaskManager
-  alias Omc.Servers.ServerOps
   use OmcWeb, :live_view
   require Logger
 
@@ -41,15 +40,8 @@ defmodule OmcWeb.ServerLive.Task do
     end
   end
 
-  def handle_event("ovpn", _unsigned_params, socket) do
-    Logger.info("ovpn-install task called for #{inspect(socket.assigns.server)}")
-    ServerOps.ansible_ovpn_install(socket.assigns.server)
-    {:noreply, socket}
-  end
-
-  def handle_event("ovpn-config-push", _unsigned_params, socket) do
-    Logger.info("ovpn-install task called for #{inspect(socket.assigns.server)}")
-    ServerOps.ansible_ovpn_install(socket.assigns.server, true)
+  def handle_event("install-ovpn", _unsigned_params, socket) do
+    ServerTasks.install_ovpn_server_task(socket.assigns.server)
     {:noreply, socket}
   end
 
@@ -75,13 +67,7 @@ defmodule OmcWeb.ServerLive.Task do
         <%= @page_title %>
         <:subtitle>Server tasks - <%= @server.name %></:subtitle>
         <:actions>
-          <.button phx-click="ovpn">ovpn</.button>
-          <.button
-            phx-click="ovpn-config-push"
-            data-confirm="Are you sure? all config data in the server will be overwritten"
-          >
-            ovpn push
-          </.button>
+          <.button phx-click="install-ovpn">Install OVPN</.button>
           <.button phx-click="sync-accs">Sync Accounts</.button>
           <.button phx-click="cancel-running-task">Cancel Running Task</.button>
           <.button phx-click="clear-log">Clear Log</.button>

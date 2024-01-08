@@ -1,5 +1,4 @@
 defmodule Omc.Servers.ServerOps do
-  alias Omc.Servers.ServerTaskManager
   alias Omc.Servers.ServerAcc
   alias Omc.Servers.Server
   alias Omc.Servers
@@ -57,9 +56,11 @@ defmodule Omc.Servers.ServerOps do
     |> Path.join("hosts.yml")
   end
 
-  # Copies ansible host template file (replacing EEx template values) to `server`'s data dir
-  # or replacing exsting server's name with new one in server's name
-  defp ansible_upsert_host_file(server) do
+  @doc """
+  Copies ansible host template file (replacing EEx template values) to `server`'s data dir
+  or replacing exsting one with fresh `server_name` and `server_address` data.
+  """
+  def ansible_upsert_host_file(server) do
     content =
       case File.exists?(ansible_host_file_path(server)) do
         false ->
@@ -83,31 +84,13 @@ defmodule Omc.Servers.ServerOps do
     |> File.write!(content)
   end
 
-  # @doc """
-  # Updates `server`'s ansible host file replacing its host's name only 
-  # """
-  # def ansible_update_host_file(server) do
-  #   server_dir(server)
-  #   |> Path.join("hosts.yml")
-  #   |> File.write(content)
-  # end
-
-  def ansible_ovpn_install(server, config_push \\ false) do
-    ansible_upsert_host_file(server)
-
-    server.id
-    |> ServerTaskManager.run_task(
-      "ansible-playbook" <>
-        " -i #{ansible_host_file_path(server)}" <>
-        " #{Path.join(ansible_path(), "play-install.yml")}" <>
-        " -e '{\"ovpn_config_push\": #{config_push}}'"
-    )
+  def ansible_ovpn_install_command(server) do
+    "ansible-playbook" <>
+      " -i #{ansible_host_file_path(server)}" <>
+      " #{Path.join(ansible_path(), "play-install.yml")}"
   end
 
   def ansible_ovpn_accs_update_command(server, batch_size \\ 5) do
-    # it's always needed to update host file before operations
-    ansible_upsert_host_file(server)
-
     accs_create =
       Servers.list_server_accs(
         %{server_id: server.id, status: :active_pending},
@@ -132,12 +115,6 @@ defmodule Omc.Servers.ServerOps do
       ", \"clients_create\": " <>
       inspect(accs_create) <>
       "}'"
-  end
-
-  def ansible_ovpn_accs_update(server) do
-    ServerTaskManager.run_task_by_command_provider(server.id, fn ->
-      ansible_ovpn_accs_update_command(server)
-    end)
   end
 
   @doc """

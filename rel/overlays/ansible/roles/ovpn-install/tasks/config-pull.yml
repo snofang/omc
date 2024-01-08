@@ -1,26 +1,26 @@
 ---
 
-- name: ovpn_data_local exist?
-  stat:
-    path: "{{ ovpn_data_local }}"
-  delegate_to: localhost
-  register: st
-  
-- name: Check ovpn_data_local is empty?
-  find:
-    paths: "{{ ovpn_data_local }}"
-    file_type: "any"
-  register: find
-  delegate_to: localhost
-  when: st.stat.exists
-  
-- name: archive already existing ovpn data folder
-  community.general.archive:
-    path: "{{ ovpn_data_local }}"
-    dest: "{{ ovpn_data_local }}-{{ '%Y%m%dT%H%M%S' | strftime(ansible_date_time.epoch, true) }}.tgz"
-    remove: true
-  when: st.stat.exists and find.matched > 0
-  delegate_to: localhost
+# - name: ovpn_data_local exist?
+#   stat:
+#     path: "{{ ovpn_data_local }}"
+#   delegate_to: localhost
+#   register: st
+#   
+# - name: Check ovpn_data_local is empty?
+#   find:
+#     paths: "{{ ovpn_data_local }}"
+#     file_type: "any"
+#   register: find
+#   delegate_to: localhost
+#   when: st.stat.exists
+#   
+# - name: archive already existing ovpn data folder
+#   community.general.archive:
+#     path: "{{ ovpn_data_local }}"
+#     dest: "{{ ovpn_data_local }}-{{ '%Y%m%dT%H%M%S' | strftime(ansible_date_time.epoch, true) }}.tgz"
+#     remove: true
+#   when: st.stat.exists and find.matched > 0
+#   delegate_to: localhost
 
 - name: sync ovpn data from remote machine 
   ansible.posix.synchronize:

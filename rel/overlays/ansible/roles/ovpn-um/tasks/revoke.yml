@@ -20,5 +20,13 @@
       ansible.builtin.file:
         path: "{{ ovpn_data_accs }}/{{ client_name }}.ovpn"
         state: absent
-  # notify:
-  #   - restart
+        
+    - name: Remove easyrsa's revoked files
+      shell: "{{ del_dir_item }}"
+      loop:
+        - rm -rf {{ ovpn_data_pki }}//revoked/certs_by_serial/*
+        - rm -rf {{ ovpn_data_pki }}//revoked/private_by_serial/*
+        - rm -rf {{ ovpn_data_pki }}//revoked/reqs_by_serial/*
+      loop_control:
+        loop_var: del_dir_item
+      become: true

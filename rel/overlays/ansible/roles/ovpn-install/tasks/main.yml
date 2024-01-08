@@ -2,21 +2,18 @@
 
 - name: common
   include_tasks: common.yml  
-  when: not ovpn_config_push
 
 - name: install
   include_tasks: install.yml
 
 - name: config push
   include_tasks: config-push.yml
-  when: ovpn_config_push
   
 - name: config
   include_tasks: config.yml
     
 - name: config pull
   include_tasks: config-pull.yml
-  when: not ovpn_config_push
 
 - name: ensure ovpn started 
   ansible.builtin.service:

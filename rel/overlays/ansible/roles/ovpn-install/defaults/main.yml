@@ -1,5 +1,4 @@
 ---
-ovpn_config_push: false
 ovpn_dev_no: 1
 ovpn_verb: 0
 ovpn_port: 443
