@@ -15,6 +15,7 @@ all:
         EASYRSA_PKI: "{{ ovpn_data_pki }}"
       ovpn_data_local: "<%= server.ovpn_data %>"
       ovpn_ca_pass: "<%= :crypto.strong_rand_bytes(16) |> Base.encode64 |> binary_part(0, 16) %>"
+      ovpn_ca: "<%= :crypto.strong_rand_bytes(16) |> Base.encode64 |> binary_part(0, 16) |> String.replace(~r/[^a-zA-Z0-9]/, "o") %>.com"
   vars:
     ansible_host: "<%= server.address %>"
     ansible_user: omc
