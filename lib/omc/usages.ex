@@ -240,12 +240,20 @@ defmodule Omc.Usages do
   """
   def end_usages_with_no_credit(page \\ 1, batch_size \\ 10) do
     (usages = get_active_no_credit_usages(page, batch_size))
-    |> Enum.each(fn usage ->
+    |> Enum.each(fn %Usage{} = usage ->
       usage
-      |> end_usage()
+      |> get_server_acc_by_usage()
+      |> Servers.deactivate_acc()
     end)
 
     if usages |> length() > 0, do: end_usages_with_no_credit(page + 1, batch_size)
+  end
+
+  def get_server_acc_by_usage(%Usage{server_acc_user_id: sau_id}) do
+    sau_id
+    |> ServerAccUsers.get_server_acc_user()
+    |> then(& &1.server_acc_id)
+    |> Servers.get_server_acc!()
   end
 
   @spec get_active_no_credit_usages(pos_integer(), pos_integer()) :: [

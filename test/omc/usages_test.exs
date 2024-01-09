@@ -370,50 +370,58 @@ defmodule Omc.UsagesTest do
   describe "Omc.Usages.end_usages_with_no_credit/0" do
     setup :setup_a_usage_started
 
-    test "a usage with no credit should ended", %{usage: usage, ledger: ledger} do
+    test "a usage with no credit should ended", %{usage: usage, server: %{id: server_id}} do
       usage
       |> usage_duration_use_fixture(15, :day)
 
       Usages.update_usage_states()
+      Phoenix.PubSub.subscribe(Omc.PubSub, "server-tasks")
       Usages.end_usages_with_no_credit()
 
-      usage_state = Usages.get_user_usage_state(ledger)
-      assert usage_state.usages == []
-      assert get_in(usage_state.ledgers, [Access.at(0), Access.key(:credit)]) == 0
+      # it's just calls `Servers.deactivate_acc/1` and usage ending happening at effective deactivation.
+      assert %{status: :deactive_pending} = Usages.get_server_acc_by_usage(usage)
+
+      # making sure that deactivation is happening via correct execution path and not just updating.
+      assert_receive({:sync_accs_server_task, ^server_id})
     end
 
     test "all no credit usages are considered (tail call test)", %{
       server: server,
-      usage: usage,
-      ledger: ledger
+      usage: usage
     } do
       # default usage, all credit consumption
-      usage_duration_use_fixture(usage, 15, :day)
+      u1 = usage_duration_use_fixture(usage, 15, :day)
 
       # another user and usages; fixing more than credit consumption.
       ledger1 = ledger_fixture(@initial_credit)
 
-      usage_fixture(%{server: server, user_attrs: ledger1})
-      |> usage_duration_use_fixture(20, :day)
+      u2 =
+        usage_fixture(%{server: server, user_attrs: ledger1})
+        |> usage_duration_use_fixture(20, :day)
 
       # another user and usages; fixing all credit consuption.
       ledger2 = ledger_fixture(@initial_credit)
 
-      usage_fixture(%{server: server, user_attrs: ledger2})
-      |> usage_duration_use_fixture(5, :day)
+      u3 =
+        usage_fixture(%{server: server, user_attrs: ledger2})
+        |> usage_duration_use_fixture(5, :day)
 
-      usage_fixture(%{server: server, user_attrs: ledger2})
-      |> usage_duration_use_fixture(7, :day)
+      u4 =
+        usage_fixture(%{server: server, user_attrs: ledger2})
+        |> usage_duration_use_fixture(7, :day)
 
-      usage_fixture(%{server: server, user_attrs: ledger2})
-      |> usage_duration_use_fixture(6, :day)
+      u5 =
+        usage_fixture(%{server: server, user_attrs: ledger2})
+        |> usage_duration_use_fixture(6, :day)
 
       Usages.update_usage_states()
-      Usages.end_usages_with_no_credit()
+      Usages.end_usages_with_no_credit(1, 1)
 
-      assert get_in(Usages.get_user_usage_state(ledger), [Access.key(:usages)]) == []
-      assert get_in(Usages.get_user_usage_state(ledger1), [Access.key(:usages)]) == []
-      assert get_in(Usages.get_user_usage_state(ledger2), [Access.key(:usages)]) == []
+      assert %{status: :deactive_pending} = Usages.get_server_acc_by_usage(u1)
+      assert %{status: :deactive_pending} = Usages.get_server_acc_by_usage(u2)
+      assert %{status: :deactive_pending} = Usages.get_server_acc_by_usage(u3)
+      assert %{status: :deactive_pending} = Usages.get_server_acc_by_usage(u4)
+      assert %{status: :deactive_pending} = Usages.get_server_acc_by_usage(u5)
     end
   end
 
@@ -520,11 +528,10 @@ defmodule Omc.UsagesTest do
 
     test "in one run updates ledgers, close no-credit usages, and renew expired ones", %{
       usage: usage,
-      ledger: ledger,
       server: server
     } do
       # making default one as a candidate of close no-credit
-      usage_duration_use_fixture(usage, 15, :day)
+      u1 = usage_duration_use_fixture(usage, 15, :day)
 
       # setting up another user; more than 30 days credit, renew candidate
       ledger1 = ledger_fixture(@initial_credit |> Money.multiply(3))
@@ -539,9 +546,8 @@ defmodule Omc.UsagesTest do
 
       Usages.update_usages()
 
-      assert Usages.get_user_usage_state(ledger)
-             |> then(& &1.usages)
-             |> length() == 0
+      # effective usage closure is happening gradually when effective acc deactivation happens
+      assert %{status: :deactive_pending} = Usages.get_server_acc_by_usage(u1)
 
       usage_state1 = Usages.get_user_usage_state(ledger1)
 

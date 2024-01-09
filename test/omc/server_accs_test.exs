@@ -80,12 +80,18 @@ defmodule Omc.ServersAccsTest do
       server_acc = server_acc_fixture(%{server_id: server.id})
       {:ok, server_acc} = Servers.update_server_acc(server_acc, %{status: :active})
       ledger = UsagesFixtures.ledger_fixture(Money.new(100_00))
-      Usages.start_usage(ledger, server_tag: "sync-server")
+
+      {:ok, %{usage: usage}} = Usages.start_usage(ledger, server_tag: "sync-server")
+      UsagesFixtures.usage_duration_use_fixture(usage, 1, :day)
 
       # there should exist a usage 
       assert ServerAccUsers.get_server_acc_user_in_use(server_acc.id)
              |> then(& &1.id)
              |> Usages.get_active_usage_by_sau_id()
+
+      assert [_usage] =
+               Usages.get_user_usage_state(ledger)
+               |> then(& &1.usages)
 
       # effectively deactivating acc
       {:ok, server_acc} = Servers.update_server_acc(server_acc, %{status: :deactive_pending})
@@ -93,6 +99,9 @@ defmodule Omc.ServersAccsTest do
 
       # there should not exist an active usage anymore
       refute ServerAccUsers.get_server_acc_user_in_use(server_acc.id)
+      usage_state = Usages.get_user_usage_state(ledger)
+      assert usage_state.usages == []
+      assert get_in(usage_state.ledgers, [Access.at(0), Access.key(:credit)]) < 100_00
     end
   end
 
