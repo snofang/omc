@@ -303,11 +303,12 @@ defmodule Omc.ServerAccUserTest do
     test "one server_acc in use", %{
       user_attrs: user,
       server_acc_user: sau = %{id: sau_id},
-      server_acc: %{id: sa_id, name: sa_name}
+      server_acc: %{id: sa_id},
+      server: %{id: s_id, tag: server_tag}
     } do
       ServerAccUsers.start_server_acc_user(sau)
 
-      assert [%{sa_id: ^sa_id, sa_name: ^sa_name, sau_id: ^sau_id}] =
+      assert [%{s_id: ^s_id, sa_id: ^sa_id, sau_id: ^sau_id, s_tag: ^server_tag}] =
                ServerAccUsers.get_server_accs_in_use(user)
     end
   end

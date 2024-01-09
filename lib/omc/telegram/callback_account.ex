@@ -8,7 +8,7 @@ defmodule Omc.Telegram.CallbackAccount do
   @impl true
   def do_process(args = %{callback_args: callback_args}) do
     case callback_args do
-      [_sa_id, _sa_name, _sau_id | _actions] ->
+      [_s_id, _sa_id, _sau_id, _s_tag | _actions] ->
         process(args)
 
       [] ->
@@ -19,7 +19,7 @@ defmodule Omc.Telegram.CallbackAccount do
     end
   end
 
-  defp process(args = %{callback_args: [sa_id, _sa_name, sau_id]}) do
+  defp process(args = %{callback_args: [_s_id, sa_id, sau_id, _s_tag]}) do
     {:ok,
      args
      |> Map.put(:usage_line_items, Usages.get_acc_usages_line_items(sau_id))
@@ -30,13 +30,18 @@ defmodule Omc.Telegram.CallbackAccount do
   defp process(%{
          token: token,
          chat_id: chat_id,
-         callback_args: [sa_id, _sa_name, _sau_id | ["file"]]
+         callback_args: [_s_id, sa_id, _sau_id, s_tag | ["file"]]
        }) do
     sa = Servers.get_server_acc!(sa_id)
 
     case ServerOps.acc_file_path(sa) |> File.read() do
       {:ok, content} ->
-        case TelegramApi.send_file(token, chat_id, sa.name <> ".ovpn", content) do
+        case TelegramApi.send_file(
+               token,
+               chat_id,
+               "#{TelegramUtils.sa_name(sa_id, s_tag)}.ovpn",
+               content
+             ) do
           {:ok, _} ->
             # trick to stop further text and markup update
             {:error, %{message: "File sent successfully."}}
@@ -53,13 +58,14 @@ defmodule Omc.Telegram.CallbackAccount do
 
   @impl true
   def get_text(%{
-        callback_args: [_sa_id, _sa_name, _sau_id | _action],
+        callback_args: [_s_id, sa_id, _sau_id, s_tag | _action],
         server_acc: server_acc,
         usage_line_items: usage_line_items
       }) do
     ~s"""
-    __*Account _#{server_acc.name}_ Info:*__
+    __*Account Info*__
 
+    *Name:**_ __#{TelegramUtils.sa_name(sa_id, s_tag)}___*
     *Status:**_ __#{server_acc.status |> Atom.to_string() |> TelegramUtils.escape_text() |> String.capitalize()}___*
 
     *Usages List:*

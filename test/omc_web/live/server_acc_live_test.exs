@@ -5,9 +5,6 @@ defmodule OmcWeb.ServerAccLiveTest do
   import Omc.ServersFixtures
   import Omc.AccountsFixtures
 
-  @create_attrs %{name: "some-name"}
-  @invalid_attrs %{name: nil}
-
   setup %{} do
     user = user_fixture()
     server = server_fixture(%{user_id: user.id})
@@ -33,24 +30,13 @@ defmodule OmcWeb.ServerAccLiveTest do
         |> log_in_user(user)
         |> live(~p"/server_accs")
 
-      # before selecting a server, new button should not be visible 
-      # assert_raise ArgumentError, fn -> new_acc_click(index_live) end
-
-      # selecting server and server_acc will be listed
-      # assert index_live |> select_server_change(server.id) =~ server_acc.name
-
-      # after selecting a server, new button should work
       assert index_live |> new_acc_click() =~ "New Server Account"
 
       assert_patch(index_live, ~p"/server_accs/new")
 
       assert index_live
-             |> form("#server_acc-form", server_acc: @invalid_attrs)
-             |> render_change() =~ "can&#39;t be blank"
-
-      assert index_live
              |> form("#server_acc-form",
-               server_acc: @create_attrs |> Map.put(:server_id, server.id)
+               server_acc: %{} |> Map.put(:server_id, server.id)
              )
              |> render_submit(%{server_id: server.id})
 
@@ -58,36 +44,6 @@ defmodule OmcWeb.ServerAccLiveTest do
 
       html = render(index_live)
       assert html =~ "Server acc created successfully"
-    end
-
-    test "updates server_acc in listing",
-         %{conn: conn, user: user, server: server, server_acc: server_acc} do
-      {:ok, index_live, _html} =
-        conn
-        |> log_in_user(user)
-        |> live(~p"/server_accs")
-
-      index_live |> select_server_change(server.id)
-
-      assert index_live |> element("#server_accs-#{server_acc.id} a", "Edit") |> render_click() =~
-               "Edit Server Account"
-
-      assert_patch(index_live, ~p"/server_accs/#{server_acc}/edit")
-
-      assert index_live
-             |> form("#server_acc-form", server_acc: %{name: nil})
-             |> render_change() =~ "can&#39;t be blank"
-
-      assert index_live
-             |> form("#server_acc-form",
-               server_acc: %{name: "some-updated-name"}
-             )
-             |> render_submit()
-
-      assert_patch(index_live, ~p"/server_accs?server_id=#{server.id}")
-
-      html = render(index_live)
-      assert html =~ "Server acc updated successfully"
     end
 
     test "deletes server_acc in listing",

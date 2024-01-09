@@ -23,10 +23,10 @@ defmodule Omc.Telegram.CallbackAccounts do
   @impl true
   def get_text(%{user: _user, callback_args: _callback_args, accs: accs}) do
     ~s"""
-    __*Your Account\\(s\\).*__
+    __*Your Account\\(s\\)*__
 
     #{if accs |> length() > 0 do
-      "By selecting each account represented by each of the following buttons by account name, you can manage it, download connection config __.ovpn__ file, or see its __usages__."
+      "By tapping on each account represented by the following buttons, you can manage it, download its connection config __.ovpn__ file, or see its __usages__."
     else
       "No active account!"
     end}
@@ -48,19 +48,11 @@ defmodule Omc.Telegram.CallbackAccounts do
     )
   end
 
-  defp acc_markup_params_provider(%{
-         sa_id: sa_id,
-         sa_name: sa_name,
-         sau_id: sau_id
-       }) do
-    [sa_id |> to_string(), sa_name, sau_id |> to_string()]
+  defp acc_markup_params_provider(%{s_id: s_id, sa_id: sa_id, sau_id: sau_id, s_tag: s_tag}) do
+    [s_id, sa_id, sau_id, s_tag]
   end
 
-  def acc_markup_text_provider(%{
-        sa_id: _sa_id,
-        sa_name: sa_name,
-        sau_id: _sau_id
-      }) do
-    "#{sa_name}"
+  def acc_markup_text_provider(%{s_id: _s_id, sa_id: sa_id, sau_id: _sau_id, s_tag: s_tag}) do
+    TelegramUtils.sa_name(sa_id, s_tag)
   end
 end

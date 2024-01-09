@@ -35,7 +35,7 @@ defmodule Omc.Servers.ServerOps do
     %Server{id: acc.server_id}
     |> server_ovpn_data_dir()
     |> Path.join("accs/")
-    |> Path.join(acc.name <> ".ovpn")
+    |> Path.join(ServerAcc.name(acc) <> ".ovpn")
   end
 
   def acc_file_exists?(%ServerAcc{} = acc) do
@@ -97,7 +97,7 @@ defmodule Omc.Servers.ServerOps do
         1,
         batch_size
       )
-      |> Enum.map(fn acc -> acc.name end)
+      |> Enum.map(fn acc -> ServerAcc.name(acc) end)
 
     accs_revoke =
       Servers.list_server_accs(
@@ -105,7 +105,7 @@ defmodule Omc.Servers.ServerOps do
         1,
         batch_size
       )
-      |> Enum.map(fn acc -> acc.name end)
+      |> Enum.map(fn acc -> ServerAcc.name(acc) end)
 
     "ansible-playbook" <>
       " -i #{ansible_host_file_path(server)}" <>

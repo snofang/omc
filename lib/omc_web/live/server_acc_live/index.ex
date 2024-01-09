@@ -25,12 +25,6 @@ defmodule OmcWeb.ServerAccLive.Index do
      |> apply_action(socket.assigns.live_action, params)}
   end
 
-  defp apply_action(socket, :edit, %{"id" => id}) do
-    socket
-    |> assign(:page_title, "Edit Server Account")
-    |> assign(:server_acc, Servers.get_server_acc!(id))
-  end
-
   defp apply_action(socket, :new, _params) do
     socket
     |> assign(:page_title, "New Server Account")
@@ -91,7 +85,7 @@ defmodule OmcWeb.ServerAccLive.Index do
          socket
          |> push_event("download-file", %{
            text: content,
-           filename: server_acc.name <> ".ovpn"
+           filename: ServerAcc.name(server_acc) <> ".ovpn"
          })}
 
       {:error, _} ->
@@ -109,8 +103,8 @@ defmodule OmcWeb.ServerAccLive.Index do
     # manually drop empty value change for status to prevent auto falling back to default status
     params = params |> Map.reject(fn {key, value} -> key == "status" and value == "" end)
 
-    %ServerAcc{server_id: nil, name: nil, status: ""}
-    |> Ecto.Changeset.cast(params, [:server_id, :name, :status, :user_info])
+    %ServerAcc{id: nil, server_id: nil, status: ""}
+    |> Ecto.Changeset.cast(params, [:id, :server_id, :status, :user_info])
   end
 
   defp params_to_bindings(params) do

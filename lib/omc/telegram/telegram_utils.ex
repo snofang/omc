@@ -30,6 +30,7 @@ defmodule Omc.Telegram.TelegramUtils do
 
   def encode_callback_data_param(param) do
     param
+    |> to_string()
     |> String.replace(
       Regex.compile!("(?<!\\\\)(#{@callback_params_separator}|#{@callback_separator})"),
       &("\\" <> &1)
@@ -102,5 +103,13 @@ defmodule Omc.Telegram.TelegramUtils do
       ["_", "*"],
       &"\\#{&1}"
     )
+  end
+
+  def sa_name(sa_id, s_tag) when is_binary(sa_id) do
+    "#{s_tag}-#{Omc.Servers.ServerAcc.name(sa_id |> String.to_integer())}"
+  end
+
+  def sa_name(sa_id, s_tag) when is_integer(sa_id) do
+    "#{s_tag}-#{Omc.Servers.ServerAcc.name(sa_id)}"
   end
 end

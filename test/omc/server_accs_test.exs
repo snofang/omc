@@ -17,40 +17,11 @@ defmodule Omc.ServersAccsTest do
   describe "create_server_acc/1" do
     test "success case", %{server: server} do
       {:ok, %ServerAcc{} = sa} =
-        %{name: "some-2345", server_id: server.id}
+        %{server_id: server.id}
         |> Servers.create_server_acc()
 
-      assert sa.name == "some-2345"
       assert sa.server_id == server.id
       assert sa.status == :active_pending
-    end
-
-    test "fail case: invalid names", %{server: server} do
-      valid_attrs = %{description: "some description", name: "some-2345", server_id: server.id}
-
-      assert {:error, %Ecto.Changeset{}} =
-               Servers.create_server_acc(valid_attrs |> Map.put(:name, nil))
-
-      assert {:error, %Ecto.Changeset{}} =
-               Servers.create_server_acc(valid_attrs |> Map.put(:name, "having.dot"))
-
-      assert {:error, %Ecto.Changeset{}} =
-               Servers.create_server_acc(valid_attrs |> Map.put(:name, "having space"))
-    end
-
-    test "name should be unique within a server", %{server: server1} do
-      # not possible to add same named acc to the same server
-      {:ok, server1_acc1} =
-        Omc.Servers.create_server_acc(%{server_id: server1.id, name: unique_server_acc_name()})
-
-      assert {:error, %{errors: [name: _]}} =
-               Omc.Servers.create_server_acc(%{server_id: server1.id, name: server1_acc1.name})
-
-      # while it is possible to add same named acc to the different server
-      server2 = server_fixture()
-
-      assert {:ok, _} =
-               Omc.Servers.create_server_acc(%{server_id: server2.id, name: server1_acc1.name})
     end
   end
 
@@ -170,40 +141,16 @@ defmodule Omc.ServersAccsTest do
       %{server_acc: server_acc}
     end
 
-    test "success case", %{server_acc: server_acc} do
-      assert {:ok,
-              %ServerAcc{
-                name: "some_updated-name",
-                status: :active_pending
-              }} =
-               Servers.update_server_acc(server_acc, %{
-                 name: "some_updated-name"
-               })
-    end
-
-    test "fail case; invalid name", %{server_acc: server_acc} do
-      assert {:error, %{errors: [name: _]}} =
-               Servers.update_server_acc(server_acc, %{name: "new name with space"})
-    end
-
-    test "fail case; status != :active_pending", %{server_acc: server_acc} do
+    test "status sucees flow", %{server_acc: sa} do
       # :active
-      {:ok, server_acc} = Servers.update_server_acc(server_acc, %{status: :active})
-
-      assert {:error, %{errors: [name: _]}} =
-               Servers.update_server_acc(server_acc, %{name: "some_edited_name"})
+      assert {:ok, sa = %{status: :active}} = Servers.update_server_acc(sa, %{status: :active})
 
       # :deactive_pending
-      {:ok, server_acc} = Servers.update_server_acc(server_acc, %{status: :deactive_pending})
-
-      assert {:error, %{errors: [name: _]}} =
-               Servers.update_server_acc(server_acc, %{name: "some_edited_name"})
+      assert {:ok, sa = %{status: :deactive_pending}} =
+               Servers.update_server_acc(sa, %{status: :deactive_pending})
 
       # :deactive
-      {:ok, server_acc} = Servers.update_server_acc(server_acc, %{status: :deactive})
-
-      assert {:error, %{errors: [name: _]}} =
-               Servers.update_server_acc(server_acc, %{name: "some_edited_name"})
+      assert {:ok, %{status: :deactive}} = Servers.update_server_acc(sa, %{status: :deactive})
     end
   end
 
@@ -236,19 +183,19 @@ defmodule Omc.ServersAccsTest do
 
   describe "Servers.list_server_accs/3" do
     setup %{server: server} do
-      sa1 = server_acc_fixture(%{server_id: server.id, name: "name_of_sa1"})
+      sa1 = server_acc_fixture(%{server_id: server.id})
 
       {:ok, sa2} =
-        server_acc_fixture(%{server_id: server.id, name: "sa2_name"})
+        server_acc_fixture(%{server_id: server.id})
         |> Servers.update_server_acc(%{status: :active})
 
       sa3 =
-        server_acc_fixture(%{server_id: server.id, name: "great_sa3_name"})
+        server_acc_fixture(%{server_id: server.id})
         |> Servers.update_server_acc(%{status: :active})
         |> then(fn {:ok, sa} -> Servers.update_server_acc(sa, %{status: :deactive_pending}) end)
 
       server1 = server_fixture()
-      sa4 = server_acc_fixture(%{server_id: server1.id, name: "server1_sa4"})
+      sa4 = server_acc_fixture(%{server_id: server1.id})
 
       %{sa1: sa1, sa2: sa2, sa3: sa3, sa4: sa4}
     end
@@ -267,9 +214,9 @@ defmodule Omc.ServersAccsTest do
       assert Servers.list_server_accs(%{server_id: server.id}) |> length() == 3
     end
 
-    test "by server & name", %{server: server} do
-      assert Servers.list_server_accs(%{server_id: server.id, name: "sa1"}) |> length() == 1
-      assert Servers.list_server_accs(%{server_id: server.id, name: "sa"}) |> length() == 3
+    test "by server & id", %{server: server, sa2: sa2, sa4: sa4} do
+      assert Servers.list_server_accs(%{server_id: server.id, id: sa2.id}) |> length() == 2
+      assert Servers.list_server_accs(%{id: sa4.id}) |> length() == 1
     end
 
     test "by server & status", %{server: server} do
@@ -307,7 +254,6 @@ defmodule Omc.ServersAccsTest do
     test "default changeset; no change" do
       assert %Ecto.Changeset{errors: [], changes: %{}, valid?: true} =
                Servers.change_server_acc(%ServerAcc{
-                 name: "name",
                  status: :active_pending,
                  server_id: 1
                })
@@ -317,7 +263,6 @@ defmodule Omc.ServersAccsTest do
       assert %Ecto.Changeset{errors: [status: _], valid?: false} =
                Servers.change_server_acc(
                  %ServerAcc{
-                   name: "name",
                    status: :active_pending,
                    server_id: 1
                  },
@@ -327,7 +272,6 @@ defmodule Omc.ServersAccsTest do
       assert %Ecto.Changeset{errors: [status: _], valid?: false} =
                Servers.change_server_acc(
                  %ServerAcc{
-                   name: "name",
                    status: :active_pending,
                    server_id: 1
                  },
@@ -339,7 +283,6 @@ defmodule Omc.ServersAccsTest do
       assert %Ecto.Changeset{errors: [status: _], valid?: false} =
                Servers.change_server_acc(
                  %ServerAcc{
-                   name: "name",
                    status: :active,
                    server_id: 1
                  },
@@ -349,7 +292,6 @@ defmodule Omc.ServersAccsTest do
       assert %Ecto.Changeset{errors: [status: _], valid?: false} =
                Servers.change_server_acc(
                  %ServerAcc{
-                   name: "name",
                    status: :active,
                    server_id: 1
                  },
@@ -361,7 +303,6 @@ defmodule Omc.ServersAccsTest do
       assert %Ecto.Changeset{errors: [status: _], valid?: false} =
                Servers.change_server_acc(
                  %ServerAcc{
-                   name: "name",
                    status: :deactive_pending,
                    server_id: 1
                  },
@@ -371,7 +312,6 @@ defmodule Omc.ServersAccsTest do
       assert %Ecto.Changeset{errors: [status: _], valid?: false} =
                Servers.change_server_acc(
                  %ServerAcc{
-                   name: "name",
                    status: :deactive_pending,
                    server_id: 1
                  },
@@ -383,7 +323,6 @@ defmodule Omc.ServersAccsTest do
       assert %Ecto.Changeset{errors: [status: _], valid?: false} =
                Servers.change_server_acc(
                  %ServerAcc{
-                   name: "name",
                    status: :deactive,
                    server_id: 1
                  },
@@ -393,7 +332,6 @@ defmodule Omc.ServersAccsTest do
       assert %Ecto.Changeset{errors: [status: _], valid?: false} =
                Servers.change_server_acc(
                  %ServerAcc{
-                   name: "name",
                    status: :deactive,
                    server_id: 1
                  },
@@ -403,7 +341,6 @@ defmodule Omc.ServersAccsTest do
       assert %Ecto.Changeset{errors: [status: _], valid?: false} =
                Servers.change_server_acc(
                  %ServerAcc{
-                   name: "name",
                    status: :deactive,
                    server_id: 1
                  },

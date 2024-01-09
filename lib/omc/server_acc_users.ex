@@ -7,49 +7,47 @@ defmodule Omc.ServerAccUsers do
   import Ecto.Query.API, only: [count: 1], warn: false
 
   @doc """
-  Returns all `ServerAccUser`s which are in use.
-  """
-  def get_server_acc_users_in_use(%{user_type: user_type, user_id: user_id}) do
-    server_acc_users_in_use_query()
-    |> where([sau], sau.user_type == ^user_type and sau.user_id == ^user_id)
-    |> Repo.all()
-  end
-
-  @doc """
-  Returns all in use `ServerAcc`.
+  Returns all accs which are in use for a given user.
   """
   @spec get_server_accs_in_use(%{user_type: atom(), user_id: binary()}) :: [
-          %{sa_id: integer(), sa_name: binary, sau_id: integer()}
+          %{
+            s_id: non_neg_integer(),
+            sa_id: non_neg_integer(),
+            sau_id: non_neg_integer(),
+            s_tag: binary()
+          }
         ]
   def get_server_accs_in_use(%{user_type: user_type, user_id: user_id}) do
-    from([sau, sa] in server_acc_users_in_use_query(),
-      where:
-        sau.user_type == ^user_type and
-          sau.user_id == ^user_id,
-      order_by: sau.id,
-      select: %{sa_id: sa.id, sa_name: sa.name, sau_id: sau.id}
-    )
-    |> Repo.all()
-  end
-
-  defp server_acc_users_in_use_query() do
-    from(sau in ServerAccUser,
+    from(
+      sau in subquery(
+        server_acc_users_in_use_query()
+        |> where([sau], sau.user_type == ^user_type and sau.user_id == ^user_id)
+      ),
       join: sa in ServerAcc,
       on: sa.id == sau.server_acc_id,
-      where:
-        not is_nil(sau.started_at) and
-          is_nil(sau.ended_at)
+      join: s in Server,
+      on: s.id == sa.server_id,
+      select: %{s_id: s.id, sa_id: sa.id, sau_id: sau.id, s_tag: s.tag}
     )
+    |> Repo.all()
   end
 
   @doc """
   Returns in use `ServerAccUser` associated with given `server_acc_id`
   """
   def get_server_acc_user_in_use(server_acc_id) do
-    from([sau, sa] in server_acc_users_in_use_query(),
-      where: sa.id == ^server_acc_id
+    from(sau in server_acc_users_in_use_query(),
+      where: sau.server_acc_id == ^server_acc_id
     )
     |> Repo.one()
+  end
+
+  defp server_acc_users_in_use_query() do
+    from(sau in ServerAccUser,
+      where:
+        not is_nil(sau.started_at) and
+          is_nil(sau.ended_at)
+    )
   end
 
   # Allocates a `ServerAcc` for a user by creating a record of `ServerAccUser` in db and 

@@ -5,7 +5,7 @@ defmodule Omc.Telegram.CallbackAccountDelete do
   @impl true
   def do_process(args = %{callback_args: callback_args}) do
     case callback_args do
-      [_sa_id, _sa_name, _sau_id | _actions] ->
+      [_s_id, _sa_id, _sau_id, _s_tag | _actions] ->
         process(args)
 
       [] ->
@@ -16,37 +16,40 @@ defmodule Omc.Telegram.CallbackAccountDelete do
     end
   end
 
-  defp process(args = %{callback_args: [_sa_id, _sa_name, _sau_id]}) do
+  defp process(args = %{callback_args: [_s_id, _sa_id, _sau_id, _s_tag]}) do
     {:ok,
      args
      |> Map.put_new(:message, "")}
   end
 
-  defp process(args = %{callback_args: [sa_id, sa_name, sau_id | ["yes"]]}) do
+  defp process(args = %{callback_args: [s_id, sa_id, sau_id, s_tag | ["yes"]]}) do
     case sa_id
          |> Servers.get_server_acc!()
          |> Servers.deactivate_acc() do
       {:ok, _} ->
         {:redirect, "Account",
          args
-         |> Map.put(:callback_args, [sa_id, sa_name, sau_id])
-         |> Map.put(:message, "Account #{sa_name} registered for deletion.")}
+         |> Map.put(:callback_args, [s_id, sa_id, sau_id, s_tag])
+         |> Map.put(
+           :message,
+           "Account #{TelegramUtils.sa_name(sa_id, s_tag)} registered for deletion."
+         )}
 
       {:error, _} ->
-        {:error, %{message: "Failed deactivating #{sa_name}"}}
+        {:error, %{message: "Failed deactivating #{TelegramUtils.sa_name(sa_id, s_tag)}"}}
     end
   end
 
   @impl true
   def get_text(%{
-        callback_args: [_sa_id, sa_name, _sau_id]
+        callback_args: [_s_id, sa_id, _sau_id, s_tag]
       }) do
     ~s"""
-    *Account Deletion Conformation*
+    __*Account Deletion Conformation*__
 
     By deleting an account, the system stops billing for it and also it will not be possible to use it anymore.
 
-    *Are you sure to delete account __#{sa_name}__?*
+    *Are you sure to delete account __#{TelegramUtils.sa_name(sa_id, s_tag)}__?*
 
     """
   end

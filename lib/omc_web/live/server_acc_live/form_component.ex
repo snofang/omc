@@ -25,13 +25,6 @@ defmodule OmcWeb.ServerAccLive.FormComponent do
           label="Server"
           prompt="Choose a server"
           options={@servers}
-          disabled={@action == :edit}
-        />
-        <.input
-          field={@form[:name]}
-          type="text"
-          label="Name"
-          disabled={@action == :edit and @server_acc.status != :active_pending}
         />
         <.input
           field={@form[:status]}
@@ -71,25 +64,10 @@ defmodule OmcWeb.ServerAccLive.FormComponent do
     save_server_acc(socket, socket.assigns.action, server_acc_params)
   end
 
-  defp save_server_acc(socket, :edit, server_acc_params) do
-    case Servers.update_server_acc(socket.assigns.server_acc, server_acc_params) do
-      {:ok, server_acc} ->
-        notify_parent({:saved, server_acc})
-
-        {:noreply,
-         socket
-         |> put_flash(:info, "Server acc updated successfully")
-         |> push_patch(to: socket.assigns.patch)}
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign_form(socket, changeset)}
-    end
-  end
-
   defp save_server_acc(socket, :new, server_acc_params) do
     case Servers.create_server_acc(server_acc_params) do
-      {:ok, _server_acc} ->
-        # notify_parent({:saved, server_acc})
+      {:ok, server_acc} ->
+        notify_parent({:saved, server_acc})
 
         {:noreply,
          socket

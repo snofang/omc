@@ -25,7 +25,7 @@
       prompt="Choose a server"
       options={@servers}
     />
-    <.input field={f[:name]} type="text" label="Name" />
+    <.input field={f[:id]} type="text" label="Id" />
     <.input
       field={f[:status]}
       type="select"
@@ -42,19 +42,13 @@
     rows={@streams.server_accs}
     row_click={fn {_id, server_acc} -> JS.navigate(~p"/server_accs/#{server_acc}") end}
   >
-    <:col :let={{_id, server_acc}} label="Name"><%= server_acc.name %></:col>
+    <:col :let={{_id, server_acc}} label="Id"><%= server_acc.id %></:col>
     <:col :let={{_id, server_acc}} label="Status"><%= server_acc.status %></:col>
     <:col :let={{_id, server_acc}} label="User Info"><%= server_acc.user_info %></:col>
     <:action :let={{_id, server_acc}}>
       <div class="sr-only">
         <.link navigate={~p"/server_accs/#{server_acc}"}>Show</.link>
       </div>
-      <.link
-        :if={server_acc.status == :active_pending}
-        patch={~p"/server_accs/#{server_acc}/edit"}
-      >
-        Edit
-      </.link>
     </:action>
     <:action :let={{id, server_acc}}>
       <.link
@@ -85,7 +79,7 @@
   </.table>
 
   <.modal
-    :if={@live_action in [:new, :edit]}
+    :if={@live_action in [:new]}
     id="server_acc-modal"
     show
     on_cancel={JS.patch(~p"/server_accs?#{@bindings}")}

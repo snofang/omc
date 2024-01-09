@@ -3,8 +3,6 @@ defmodule Omc.Servers.ServerAcc do
   import Ecto.Changeset
 
   schema "server_accs" do
-    field(:name, :string)
-
     field(:status, Ecto.Enum,
       values: [:active_pending, :active, :deactive_pending, :deactive],
       default: :active_pending
@@ -27,14 +25,11 @@ defmodule Omc.Servers.ServerAcc do
   @doc false
   def changeset(server_acc, attrs, params \\ %{}) do
     server_acc
-    |> cast(attrs, [:name, :status, :server_id])
+    |> cast(attrs, [:status, :server_id])
     |> change(params)
-    |> validate_required([:name, :status, :server_id])
-    |> validate_format(:name, ~r/^[\w]+[\w\-]*[\w]+$/)
+    |> validate_required([:status, :server_id])
     |> validate_status()
-    |> validate_update_name()
     |> optimistic_lock(:lock_version)
-    |> unique_constraint([:server_id, :name], error_key: :name)
   end
 
   defp validate_status(changeset) do
@@ -72,24 +67,11 @@ defmodule Omc.Servers.ServerAcc do
     end)
   end
 
-  defp validate_update_name(changeset) do
-    changeset
-    |> validate_change(:name, fn :name, _new_name ->
-      case changeset.data.status do
-        :active_pending ->
-          if(new_status = changeset.changes |> Map.get(:status)) do
-            [
-              {:name,
-               {"name field can not be changed while status is changing to %{new_status}",
-                [new_status: new_status]}}
-            ]
-          else
-            []
-          end
+  def name(%__MODULE__{} = sa) do
+    name(sa.id)
+  end
 
-        _ ->
-          [{:name, {"name can not be changed while status is not :active_pending", []}}]
-      end
-    end)
+  def name(id) when is_integer(id) do
+    id |> to_string() |> String.pad_leading(5, "0")
   end
 end

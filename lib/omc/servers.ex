@@ -168,16 +168,16 @@ defmodule Omc.Servers do
 
   ## Examples
 
-      iex> list_server_accs(bindings = %{server_id: _, status: _, name: _, user_info: _})
+    iex> list_server_accs(bindings = %{id: _, server_id: _, status: _,  user_info: _})
       [%ServerAcc{}, ...]
 
   """
   @spec list_server_accs(map()) :: [%ServerAcc{}]
   def list_server_accs(bindings \\ %{}, page \\ 1, limit \\ 10) when page > 0 and limit > 0 do
     list_server_acc_query()
+    |> server_accs_id(bindings |> Map.get(:id))
     |> server_accs_server_id(bindings |> Map.get(:server_id))
     |> server_accs_status(bindings |> Map.get(:status))
-    |> server_accs_name(bindings |> Map.get(:name))
     |> server_accs_user_info(bindings |> Map.get(:user_info))
     |> limit(^limit)
     |> offset((^page - 1) * ^limit)
@@ -205,6 +205,12 @@ defmodule Omc.Servers do
     )
   end
 
+  defp server_accs_id(server_accs, id) when id == "" or id == nil,
+    do: server_accs
+
+  defp server_accs_id(server_accs, id),
+    do: server_accs |> where([sa], sa.id >= ^id)
+
   defp server_accs_server_id(server_accs, server_id) when server_id == "" or server_id == nil,
     do: server_accs
 
@@ -213,10 +219,6 @@ defmodule Omc.Servers do
 
   defp server_accs_status(server_acc, status) when status == "" or status == nil, do: server_acc
   defp server_accs_status(server_acc, status), do: server_acc |> where(status: ^status)
-  defp server_accs_name(server_acc, name) when name == "" or name == nil, do: server_acc
-
-  defp server_accs_name(server_acc, name),
-    do: server_acc |> where([acc], like(acc.name, ^"%#{name}%"))
 
   defp server_accs_user_info(server_acc, user_info)
        when user_info == "" or user_info == nil,
@@ -266,39 +268,13 @@ defmodule Omc.Servers do
   end
 
   @doc """
-  Creates multiple accs based on harcoded naming, the format is 
-  `SXXXXAXXXXXX` in which the first four X reperents server id and following 
-  six Xs represent account counter. e.g. S0003A00000029
-  TODO: It is somehow naive implementatin and  should take into account
-    - concurrency.
-    - reusing stalled counter number.
+  Creates multiple accs
   """
   def create_server_acc_batch(server_id, count) when server_id > 0 and count > 0 do
-    name_prefix =
-      server_id
-      |> Integer.to_string()
-      |> String.pad_leading(4, "0")
-      |> then(&"S#{&1}A")
-
-    last_count =
-      from(acc in ServerAcc,
-        where: acc.server_id == ^server_id and like(acc.name, ^"#{name_prefix}______"),
-        order_by: [desc: acc.name],
-        limit: 1,
-        select: acc.name
-      )
-      |> Repo.one()
-      |> then(fn n -> if n, do: n, else: name_prefix <> "000000" end)
-      |> String.split_at(name_prefix |> String.length())
-      |> elem(1)
-      |> String.to_integer()
-
     1..count
-    |> Enum.map(fn i ->
+    |> Enum.map(fn _i ->
       %{
-        server_id: server_id,
-        name:
-          name_prefix <> ((i + last_count) |> Integer.to_string() |> String.pad_leading(6, "0"))
+        server_id: server_id
       }
     end)
     |> Enum.reduce([], fn acc, result ->
@@ -432,14 +408,14 @@ defmodule Omc.Servers do
         PubSub.broadcast(
           Omc.PubSub,
           "server_task_progress",
-          {:progress, acc.server_id, "SUCCESS -> #{acc.name} -> #{acc.status}\n"}
+          {:progress, acc.server_id, "SUCCESS -> #{ServerAcc.name(acc)} -> #{acc.status}\n"}
         )
 
       :error ->
         PubSub.broadcast(
           Omc.PubSub,
           "server_task_progress",
-          {:progress, acc.server_id, "FAILED -> #{acc.name} -> #{acc.data.status}\n"}
+          {:progress, acc.server_id, "FAILED -> #{ServerAcc.name(acc)} -> #{acc.data.status}\n"}
         )
     end
   end

@@ -84,9 +84,7 @@ defmodule OmcWeb.Router do
       live("/server_accs", ServerAccLive.Index, :index)
       live("/server_accs/new", ServerAccLive.Index, :new)
       live("/server_accs/new_batch", ServerAccLive.Index, :new_batch)
-      live("/server_accs/:id/edit", ServerAccLive.Index, :edit)
       live("/server_accs/:id", ServerAccLive.Show, :show)
-      live("/server_accs/:id/show/edit", ServerAccLive.Show, :edit)
 
       live("/payment_requests", PaymentRequestLive.Index, :index)
       live("/payment_requests/:id", PaymentRequestLive.Show, :show)

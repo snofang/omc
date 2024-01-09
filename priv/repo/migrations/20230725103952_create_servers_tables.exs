@@ -27,7 +27,6 @@ defmodule Omc.Repo.Migrations.CreateServersTables do
     create index(:servers, [:tag])
 
     create table(:server_accs) do
-      add :name, :string, null: false
       add :status, :string, null: false
       add :server_id, references(:servers, on_delete: :nothing), null: false
       add :lock_version, :integer, default: 1
@@ -35,7 +34,6 @@ defmodule Omc.Repo.Migrations.CreateServersTables do
     end
 
     create index(:server_accs, [:server_id])
-    create unique_index(:server_accs, [:server_id, :name])
 
     create table(:server_acc_users) do
       add :user_type, :string, null: false

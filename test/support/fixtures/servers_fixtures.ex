@@ -15,7 +15,6 @@ defmodule Omc.ServersFixtures do
 
   # How much calls should happen for this to generate a repetitive IP? it should be very big! :TODO
   def unique_server_address, do: "#{ip_token()}.#{ip_token()}.#{ip_token()}.#{ip_token()}"
-  def unique_server_acc_name, do: "somename#{System.unique_integer([:positive])}"
 
   def server_valid_attrs() do
     {:ok, price_plan} = PricePlans.create_price_plan(Money.new(12050))
@@ -53,8 +52,7 @@ defmodule Omc.ServersFixtures do
     {:ok, server_acc} =
       attrs
       |> Enum.into(%{
-        description: "some description",
-        name: unique_server_acc_name()
+        description: "some description"
       })
       |> Omc.Servers.create_server_acc()
 
