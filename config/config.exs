@@ -69,7 +69,8 @@ config :omc, Omc.Servers.ServerTaskManager,
 
 config :omc, Omc.ServerTasks,
   enabled: true,
-  batch_size: 5
+  batch_size: 5,
+  batch_size_max: 200
 
 config :telegram,
   webserver: Telegram.WebServer.Cowboy

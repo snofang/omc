@@ -1,4 +1,4 @@
-server 192.168.255.0 255.255.255.0
+server 10.66.64.0 255.255.240.0
 verb {{ ovpn_verb }}
 key {{ ovpn_data_pki }}/private/{{ ovpn_name }}.key
 ca {{ ovpn_data_pki }}/ca.crt
@@ -25,7 +25,7 @@ comp-lzo no
 
 ### Route Configurations
 ifconfig-pool-persist ipp.txt
-route 192.168.255.0 255.255.255.0
+route 10.66.64.0 255.255.240.0
 
 ### Push Configurations
 push "redirect-gateway def1 bypass-dhcp"

@@ -103,6 +103,9 @@ defmodule Omc.ServersTest do
                Servers.create_server(server_valid_attrs() |> Map.put(:max_acc_count, 0))
 
       assert {:error, %{errors: [max_acc_count: _]}} =
+               Servers.create_server(server_valid_attrs() |> Map.put(:max_acc_count, 4093))
+
+      assert {:error, %{errors: [max_acc_count: _]}} =
                Servers.create_server(server_valid_attrs() |> Map.put(:max_acc_count, "a1234"))
     end
 
@@ -111,6 +114,9 @@ defmodule Omc.ServersTest do
 
       assert {:error, %{errors: [name: {"has already been taken", _}]}} =
                Servers.create_server(server_valid_attrs() |> Map.put(:name, server_name))
+    end
+
+    test "max acc count" do
     end
   end
 

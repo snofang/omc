@@ -4,7 +4,7 @@ defmodule Omc.ServerTasksTest do
   use Omc.DataCase, async: false
   alias Omc.Servers
   alias Omc.ServerTasks
-  alias Omc.Servers.ServerTaskManager
+  alias Omc.Servers.{ServerTaskManager, Server}
   import Mox
   import Omc.ServersFixtures
   import Omc.TestUtils
@@ -40,6 +40,31 @@ defmodule Omc.ServerTasksTest do
 
       ServerTasks.sync_accs_server_task(server)
       eventual_assert(fn -> match?([%{status: :active}], Servers.list_server_accs()) end, 1000)
+    end
+  end
+
+  describe "batch_size/2" do
+    setup %{} do
+      %{
+        batch_size: Application.get_env(:omc, ServerTasks)[:batch_size],
+        batch_size_max: Application.get_env(:omc, ServerTasks)[:batch_size_max]
+      }
+    end
+
+    test "max_count? = false", %{batch_size: batch_size, batch_size_max: batch_size_max} do
+      assert ServerTasks.batch_size(%Server{max_acc_count: batch_size_max - 1}, false) ==
+               batch_size
+
+      assert ServerTasks.batch_size(%Server{max_acc_count: batch_size_max + 1}, false) ==
+               batch_size
+    end
+
+    test "max_count? = true", %{batch_size: _batch_size, batch_size_max: batch_size_max} do
+      assert ServerTasks.batch_size(%Server{max_acc_count: batch_size_max - 1}, true) ==
+               batch_size_max - 1
+
+      assert ServerTasks.batch_size(%Server{max_acc_count: batch_size_max + 1}, true) ==
+               batch_size_max
     end
   end
 end

@@ -30,7 +30,8 @@ defmodule Omc.Servers.Server do
     |> validate_format(:name, ip_domain_format())
     |> validate_format(:address, ip_domain_format())
     |> no_assoc_constraint(:server_accs, message: "A server having acc(s) can not be deleted")
-    |> validate_number(:max_acc_count, greater_than: 0)
+    # Implied by selected subnet 10.66.64.0/20 set for ovpn which have max of 4094 hosts
+    |> validate_number(:max_acc_count, greater_than: 0, less_than_or_equal_to: 4092)
     |> validate_name_change()
   end
 

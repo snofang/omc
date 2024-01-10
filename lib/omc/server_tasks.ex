@@ -14,12 +14,8 @@ defmodule Omc.ServerTasks do
     - fn -> ServerOps.ansible_ovpn_accs_update_command/1
     - Servers.sync_server_accs_status/1
   """
-  def sync_accs_server_task(server, max_acc_count? \\ false) do
-    batch_size =
-      case max_acc_count? do
-        true -> server.max_acc_count
-        _ -> Application.get_env(:omc, __MODULE__)[:batch_size] || 1
-      end
+  def sync_accs_server_task(server, max_count? \\ false) do
+    batch_size = batch_size(server, max_count?)
 
     ServerTaskManager.run_task(
       server.id,
@@ -54,6 +50,17 @@ defmodule Omc.ServerTasks do
       server.id,
       fn -> ServerOps.ansible_ovpn_install_command(server) end
     )
+  end
+
+  def batch_size(server, max_count?) do
+    batch_size =
+      case max_count? do
+        true ->
+          min(server.max_acc_count, Application.get_env(:omc, __MODULE__)[:batch_size_max])
+
+        _ ->
+          Application.get_env(:omc, __MODULE__)[:batch_size]
+      end
   end
 
   def start_link(_args) do
