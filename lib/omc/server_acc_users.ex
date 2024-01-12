@@ -1,6 +1,5 @@
 defmodule Omc.ServerAccUsers do
   alias Omc.PricePlans
-  alias Omc.Ledgers
   alias Omc.Repo
   alias Omc.Servers.{Server, ServerAcc, ServerAccUser}
   import Ecto.Query, warn: false
@@ -196,20 +195,11 @@ defmodule Omc.ServerAccUsers do
   Starts allocated `ServerAccUser` by filling its `started_at` to current `NaiveDateTime`.
   """
   @spec start_server_acc_user(%ServerAccUser{}) ::
-          {:ok, ServerAccUser.t()} | {:error, Ecto.Changest.t()} | {:error, :no_credit}
+          {:ok, ServerAccUser.t()} | {:error, Ecto.Changest.t()}
   def start_server_acc_user(%ServerAccUser{} = sau) do
-    # TODO: to cosider required minimum credit for starting 
-    Ledgers.get_ledgers(%{user_type: sau.user_type, user_id: sau.user_id})
-    |> Enum.reduce(0, &(&1.credit + &2))
-    |> case do
-      credit_sum when credit_sum > 0 ->
-        sau
-        |> ServerAccUser.start_changeset()
-        |> Repo.update()
-
-      _ ->
-        {:error, :no_credit}
-    end
+    sau
+    |> ServerAccUser.start_changeset()
+    |> Repo.update()
   end
 
   @doc """

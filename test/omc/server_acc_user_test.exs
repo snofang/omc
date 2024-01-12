@@ -110,11 +110,6 @@ defmodule Omc.ServerAccUserTest do
       %{server_acc_user: server_acc_user}
     end
 
-    test "without credit, stating server_acc_user, should prevented.",
-         %{server_acc_user: sau} do
-      assert {:error, :no_credit} = ServerAccUsers.start_server_acc_user(sau)
-    end
-
     test "starting server_acc_user should set its started_at field",
          %{server_acc_user: sau} do
       # it should be nil before any start operation
@@ -132,7 +127,6 @@ defmodule Omc.ServerAccUserTest do
 
     test "starting already started sau should prevented",
          %{server_acc_user: sau} do
-      assert {:error, :no_credit} = ServerAccUsers.start_server_acc_user(sau)
       # adding some credit
       ledger_tx_fixture!(%{user_id: sau.user_id, user_type: sau.user_type})
       {:ok, started_sau} = ServerAccUsers.start_server_acc_user(sau)

@@ -53,14 +53,13 @@ defmodule Omc.ServerTasks do
   end
 
   def batch_size(server, max_count?) do
-    batch_size =
-      case max_count? do
-        true ->
-          min(server.max_acc_count, Application.get_env(:omc, __MODULE__)[:batch_size_max])
+    case max_count? do
+      true ->
+        min(server.max_acc_count, Application.get_env(:omc, __MODULE__)[:batch_size_max])
 
-        _ ->
-          Application.get_env(:omc, __MODULE__)[:batch_size]
-      end
+      _ ->
+        Application.get_env(:omc, __MODULE__)[:batch_size]
+    end
   end
 
   def start_link(_args) do

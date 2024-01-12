@@ -51,8 +51,25 @@ defmodule Omc.UsagesTest do
     end
   end
 
-  describe "usage_state_persist/1 tests" do
+  describe "usage_state_persist/1" do
     setup :setup_a_usage_started
+
+    test "minimum duration usage - 1 second", %{
+      usage: usage,
+      ledger: ledger
+    } do
+      usage_duration_use_fixture(usage, 1, :second)
+
+      # compute usage_state
+      usage_state = Usages.get_user_usage_state(ledger)
+      assert usage_state.changesets |> length() == 1
+
+      # trying to persis eligible changesets
+      Usages.persist_usage_state!(usage_state, all: true)
+      # recompute changeset
+      usage_state = Usages.get_user_usage_state(ledger)
+      assert usage_state.changesets |> length() == 1
+    end
 
     test "5 days usage state should not cause any persistance", %{
       usage: usage,
@@ -68,6 +85,22 @@ defmodule Omc.UsagesTest do
       # recompute changeset
       usage_state = Usages.get_user_usage_state(ledger)
       assert usage_state.changesets |> length() == 1
+    end
+
+    test "5 days usage state should not cause persistance having all: true", %{
+      usage: usage,
+      ledger: ledger
+    } do
+      usage_duration_use_fixture(usage, 5, :day)
+
+      # compute usage_state
+      usage_state = Usages.get_user_usage_state(ledger)
+      assert usage_state.changesets |> length() == 1
+      # trying to persis eligible changesets
+      Usages.persist_usage_state!(usage_state, all: true)
+      # recompute changeset
+      usage_state = Usages.get_user_usage_state(ledger)
+      assert usage_state.changesets |> length() == 0
     end
 
     test "20 days usage state should cause two persistance items", %{
@@ -438,7 +471,7 @@ defmodule Omc.UsagesTest do
       assert Usages.get_active_expired_usages() |> length() == 1
 
       # another user and usages; less and more than duration
-      ledger1 = ledger_fixture(@initial_credit)
+      ledger1 = ledger_fixture(@initial_credit |> Money.multiply(2))
 
       usage_fixture(%{server: server, user_attrs: ledger1})
       |> usage_duration_use_fixture(20, :day)
@@ -501,6 +534,9 @@ defmodule Omc.UsagesTest do
       ledger: ledger,
       server: server
     } do
+      # increasing user's credit; it should now have credit for 3.5 months
+      ledger_tx_fixture(ledger, @initial_credit |> Money.multiply(6))
+
       usage_duration_use_fixture(usage, 30, :day)
 
       # another expired usage
@@ -563,12 +599,41 @@ defmodule Omc.UsagesTest do
   end
 
   describe "start_usage/1" do
-    test "without credit - failed_value: :no_credit}" do
+    test "without credit - failed_value: :no_credit" do
       server = server_fixture(@server_price)
       server_acc = ServersFixtures.server_acc_fixture(%{server_id: server.id})
       ServersFixtures.activate_server_acc(server, server_acc)
       user = LedgersFixtures.unique_user_attrs()
       assert Usages.start_usage(user) == {:error, :no_credit}
+    end
+
+    test "minimum credit " do
+      server = server_fixture(@server_price)
+      server_acc = ServersFixtures.server_acc_fixture(%{server_id: server.id})
+      ServersFixtures.activate_server_acc(server, server_acc)
+      ledger = ledger_fixture(Money.new(1))
+      assert {:ok, _} = Usages.start_usage(ledger)
+    end
+
+    test "existing usage duration + acc_min_usage_days = 15 days" do
+      server = server_fixture(@server_price)
+      ledger = ledger_fixture(@initial_credit)
+
+      # first usage
+      sa1 = ServersFixtures.server_acc_fixture(%{server_id: server.id})
+      ServersFixtures.activate_server_acc(server, sa1)
+      {:ok, %{usage: usage}} = Usages.start_usage(ledger)
+
+      usage_duration_use_fixture(
+        usage,
+        15 - Application.get_env(:omc, Omc.Usages)[:acc_min_usage_days],
+        :day
+      )
+
+      # second usage
+      sa2 = ServersFixtures.server_acc_fixture(%{server_id: server.id})
+      ServersFixtures.activate_server_acc(server, sa2)
+      assert {:error, :no_credit} = Usages.start_usage(ledger)
     end
 
     test "without available acc - failed_value: :no_server_acc_available" do
@@ -681,6 +746,32 @@ defmodule Omc.UsagesTest do
       assert item2.usage_item_id != -1
       assert Money.new(item3.amount, item3.currency) |> Money.compare(@initial_credit) == 0
       assert item3.usage_item_id == -1
+    end
+  end
+
+  describe "user_have_enough_credit_for_duration?/3" do
+    setup :setup_a_usage_started
+
+    test "no ledger" do
+      refute %{user_type: :local, user_id: "12345"}
+             |> Usages.user_have_enough_credit_for_duration?(1, :second)
+    end
+
+    test "single usage - full credit usage", %{ledger: ledger, usage: usage} do
+      usage_duration_use_fixture(usage, 15, :day)
+      Usages.update_usages()
+      assert Ledgers.get_ledger(ledger) |> then(& &1.credit) == 0
+
+      refute ledger |> Usages.user_have_enough_credit_for_duration?(1, :second)
+    end
+
+    test "single usage", %{ledger: ledger, usage: usage} do
+      usage_duration_use_fixture(usage, 10, :day)
+      Usages.update_usages()
+
+      assert ledger |> Usages.user_have_enough_credit_for_duration?(5, :second)
+      assert ledger |> Usages.user_have_enough_credit_for_duration?(4, :day)
+      refute ledger |> Usages.user_have_enough_credit_for_duration?(6, :day)
     end
   end
 

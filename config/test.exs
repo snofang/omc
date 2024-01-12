@@ -32,6 +32,8 @@ config :omc, Omc.Servers.ServerTaskManager,
 
 config :omc, Omc.ServerTasks, enabled: false
 
+config :omc, Omc.Usages, acc_min_usage_days: 1
+
 # config :tesla, Omc.Payments.PaymentProviderOxapay, adapter: Omc.TeslaMock
 config :tesla, adapter: Omc.TeslaMock
 

@@ -10,6 +10,7 @@ defmodule Omc.Usages do
   alias Omc.Usages.{Usage, UsageState, UsageLineItem}
   alias Omc.Repo
   alias Omc.Ledgers.Ledger
+  alias Omc.Common.Utils
   import Ecto.Query
 
   @doc """
@@ -152,16 +153,27 @@ defmodule Omc.Usages do
   @spec start_sau_usage(%ServerAccUser{}) ::
           {:ok, %{usage: %Usage{}, server_acc_user: %ServerAccUser{}}} | {:error, term()}
   defp start_sau_usage(%ServerAccUser{} = sau) do
-    case Ecto.Multi.new()
-         |> Ecto.Multi.run(:server_acc_user, fn _repo, _changes ->
-           ServerAccUsers.start_server_acc_user(sau)
-         end)
-         |> Ecto.Multi.run(:usage, fn _repo, %{server_acc_user: sau} ->
-           create_usage(sau)
-         end)
-         |> Repo.transaction() do
-      {:error, _failed_operation, failed_value, _changes_so_far} -> {:error, failed_value}
-      other -> other
+    user_have_enough_credit_for_duration?(
+      sau,
+      Application.get_env(:omc, __MODULE__)[:acc_min_usage_days],
+      :day
+    )
+    |> case do
+      true ->
+        case Ecto.Multi.new()
+             |> Ecto.Multi.run(:server_acc_user, fn _repo, _changes ->
+               ServerAccUsers.start_server_acc_user(sau)
+             end)
+             |> Ecto.Multi.run(:usage, fn _repo, %{server_acc_user: sau} ->
+               create_usage(sau)
+             end)
+             |> Repo.transaction() do
+          {:error, _failed_operation, failed_value, _changes_so_far} -> {:error, failed_value}
+          other -> other
+        end
+
+      false ->
+        {:error, :no_credit}
     end
   end
 
@@ -374,5 +386,22 @@ defmodule Omc.Usages do
       }
     )
     |> Repo.all()
+  end
+
+  @doc false
+  def user_have_enough_credit_for_duration?(user_info, duration, unit)
+      when is_integer(duration) and duration > 0 and is_atom(unit) do
+    user_info
+    |> get_user_usage_state()
+    |> UsageState.compute(Utils.now(duration, unit))
+    |> then(& &1.ledgers)
+    |> Enum.reduce(0, &(&1.credit + &2))
+    |> case do
+      rough_sum when rough_sum > 0 ->
+        true
+
+      _ ->
+        false
+    end
   end
 end

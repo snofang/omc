@@ -11,9 +11,6 @@ defmodule Omc.Usages.UsageState do
   alias Omc.Ledgers.Ledger
   alias Omc.Servers.PricePlan
 
-  # Minimum duration in seconds which is considered in usage calculations
-  @minimum_duration 60 * 60
-
   defstruct usages: [],
             ledgers: [],
             changesets: []
@@ -21,32 +18,32 @@ defmodule Omc.Usages.UsageState do
   @doc """
   Computes last state of usage in terms of `Omc.Usages.UsageState`.
   """
-  def compute(%__MODULE__{} = state) do
-    case first_duration_usage(state.usages) do
+  def compute(%__MODULE__{} = state, till \\ now()) do
+    case first_duration_usage(state.usages, till) do
       nil ->
         state
 
       usage ->
-        case first_least_used_no_zero_ledger(state.ledgers) do
+        case first_oldest_used_ledger(state.ledgers) do
           # No credit, going to make last used ledger's credit negetive
           nil ->
             first_last_used_ledger(state.ledgers)
-            |> use_credit(usage, state, :duration)
-            |> compute()
+            |> use_credit(usage, state, :duration, till)
+            |> compute(till)
 
           # Some credit, going to use it.
           ledger ->
             ledger
-            |> use_credit(usage, state, :duration)
-            |> compute()
+            |> use_credit(usage, state, :duration, till)
+            |> compute(till)
         end
     end
   end
 
   @doc false
-  def use_credit(%Ledger{} = ledger, %Usage{} = usage, %__MODULE__{} = state, :duration)
+  def use_credit(%Ledger{} = ledger, %Usage{} = usage, %__MODULE__{} = state, :duration, till)
       when ledger.credit > 0 do
-    amount = calc_duration_money(usage.price_plan, ledger.currency, usage.started_at, now())
+    amount = calc_duration_money(usage.price_plan, ledger.currency, usage_start_time(usage), till)
 
     amount
     |> Money.compare(Money.new(ledger.credit, ledger.currency))
@@ -65,38 +62,47 @@ defmodule Omc.Usages.UsageState do
 
       # usage amount is less than or equal credit
       _ ->
-        duration_usage_item_attrs(usage.id, usage_start_time(usage), now())
+        duration_usage_item_attrs(usage.id, usage_start_time(usage), till)
     end
     |> then(fn attrs -> add_usage_item(state, ledger.currency, attrs) end)
   end
 
   @doc false
   # ledger's credit is not positive so going to negate it(or let it be debit)
-  def use_credit(%Ledger{} = ledger, %Usage{} = usage, %__MODULE__{} = state, :duration) do
+  def use_credit(%Ledger{} = ledger, %Usage{} = usage, %__MODULE__{} = state, :duration, till) do
     add_usage_item(
       state,
       ledger.currency,
-      duration_usage_item_attrs(usage.id, usage_start_time(usage), now())
+      duration_usage_item_attrs(usage.id, usage_start_time(usage), till)
     )
   end
 
-  defp add_usage_item(%__MODULE__{} = state, currency, %{type: :duration} = usage_item_attrs) do
+  defp add_usage_item(
+         %__MODULE__{} = state,
+         currency,
+         %{
+           type: :duration,
+           usage_id: usage_id,
+           started_at: started_at,
+           ended_at: ended_at
+         } = usage_item_attrs
+       ) do
     usage =
       state.usages
-      |> Enum.find(&(&1.id == usage_item_attrs.usage_id))
+      |> Enum.find(&(&1.id == usage_id))
 
-    amount =
+    money =
       calc_duration_money(
         usage.price_plan,
         currency,
-        usage_item_attrs.started_at,
-        usage_item_attrs.ended_at
+        started_at,
+        ended_at
       )
 
-    add_usage_ledger_tx(state, amount, usage_item_attrs)
+    add_and_apply_changesets(state, money, usage_item_attrs)
   end
 
-  def add_usage_ledger_tx(
+  def add_and_apply_changesets(
         %__MODULE__{} = state,
         %Money{} = money,
         %{} = usage_item_attrs
@@ -107,19 +113,34 @@ defmodule Omc.Usages.UsageState do
     |> apply_ledger_changeset()
   end
 
-  defp add_changesets(%__MODULE__{} = state, money, usage_item_attrs) do
+  defp add_changesets(
+         %__MODULE__{} = state,
+         %Money{amount: amount, currency: currency},
+         usage_item_attrs
+       )
+       when amount > 0 do
     state
     |> add_item(
       :changesets,
       Ledgers.ledger_update_changeset(%{
-        ledger: ledger_by_currency(state, money.currency),
+        ledger: ledger_by_currency(state, currency),
         context: :usage,
         context_id: -1,
-        amount: money.amount,
+        amount: amount,
         type: :debit
       })
       |> Map.put(:usage_item_changeset, UsageItem.create_changeset(usage_item_attrs))
     )
+  end
+
+  # money's amount is not positive
+  defp add_changesets(
+         %__MODULE__{} = state,
+         _money,
+         usage_item_attrs
+       ) do
+    state
+    |> add_item(:changesets, %{usage_item_changeset: UsageItem.create_changeset(usage_item_attrs)})
   end
 
   defp apply_usage_changeset(%__MODULE__{} = state) do
@@ -144,16 +165,29 @@ defmodule Omc.Usages.UsageState do
   end
 
   defp apply_ledger_changeset(%__MODULE__{} = state) do
-    %{ledger_changeset: changeset} = state.changesets |> List.last()
+    state.changesets
+    |> List.last()
+    |> case do
+      nil ->
+        state
 
-    state
-    |> apply_changeset(:ledgers, changeset)
+      changeset ->
+        case changeset do
+          %{ledger_changeset: ledger_changeset} ->
+            state |> apply_changeset(:ledgers, ledger_changeset)
+
+          _ ->
+            state
+        end
+    end
   end
 
   defp add_item(%__MODULE__{} = state, member, item) do
     state
     |> Map.replace(member, Map.get(state, member) ++ [item])
   end
+
+  defp apply_changeset(%__MODULE__{} = state, _member, nil), do: state
 
   defp apply_changeset(%__MODULE__{} = state, member, changeset) do
     state
@@ -163,6 +197,7 @@ defmodule Omc.Usages.UsageState do
       |> Enum.map(fn item ->
         if item.id == changeset.data.id do
           Ecto.Changeset.apply_changes(changeset)
+          # |> Map.replace(:updated_at, Utils.now())
         else
           item
         end
@@ -223,7 +258,7 @@ defmodule Omc.Usages.UsageState do
   end
 
   @doc false
-  def first_last_used_ledger([%Ledger{}] = ledgers) do
+  def first_last_used_ledger(ledgers) do
     ledgers
     |> Enum.filter(&(&1.updated_at != nil))
     |> Enum.sort(&(NaiveDateTime.compare(&1.updated_at, &2.updated_at) == :gt))
@@ -231,12 +266,12 @@ defmodule Omc.Usages.UsageState do
   end
 
   @doc false
-  def first_duration_usage(usages) do
+  def first_duration_usage(usages, till) do
     usages
     |> Enum.filter(fn usage ->
-      now()
+      till
       |> NaiveDateTime.diff(usage_start_time(usage))
-      |> Kernel.>=(@minimum_duration)
+      |> Kernel.>(0)
     end)
     |> List.first()
   end
@@ -268,23 +303,28 @@ defmodule Omc.Usages.UsageState do
   end
 
   @doc false
-  defp first_least_used_no_zero_ledger(ledgers) do
+  defp first_oldest_used_ledger(ledgers) do
     ledgers
     |> Enum.filter(&(&1.updated_at != nil and &1.credit > 0))
     |> Enum.sort(&(NaiveDateTime.compare(&1.updated_at, &2.updated_at) == :lt))
     |> List.first()
   end
 
-  def minimum_duration, do: @minimum_duration
-
   defp now() do
     NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
   end
 
-  def changesets_of_ledger(%__MODULE__{} = state, ledger) do
+  def changesets_of_ledger(%__MODULE__{} = state, %{id: ledger_id}) do
     state.changesets
-    |> Enum.filter(fn %{ledger_changeset: changeset} ->
-      changeset.data.id == ledger.id
+    # Not all changeset group has ledger related changeset. some of them only has just changeset for `UsageItem`
+    |> Enum.filter(fn changeset ->
+      case changeset do
+        %{ledger_changeset: changeset} ->
+          changeset.data.id == ledger_id
+
+        _ ->
+          false
+      end
     end)
   end
 end

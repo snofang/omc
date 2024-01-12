@@ -72,6 +72,8 @@ config :omc, Omc.ServerTasks,
   batch_size: 5,
   batch_size_max: 200
 
+config :omc, Omc.Usages, acc_min_usage_days: 5
+
 config :telegram,
   webserver: Telegram.WebServer.Cowboy
 
