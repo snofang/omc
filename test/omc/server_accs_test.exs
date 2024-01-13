@@ -223,9 +223,9 @@ defmodule Omc.ServersAccsTest do
       assert Servers.list_server_accs(%{server_id: server.id}) |> length() == 3
     end
 
-    test "by server & id", %{server: server, sa2: sa2, sa4: sa4} do
+    test "by server & id", %{server: server, sa1: sa1, sa2: sa2} do
       assert Servers.list_server_accs(%{server_id: server.id, id: sa2.id}) |> length() == 2
-      assert Servers.list_server_accs(%{id: sa4.id}) |> length() == 1
+      assert Servers.list_server_accs(%{id: sa1.id}) |> length() == 1
     end
 
     test "by server & status", %{server: server} do

@@ -209,7 +209,7 @@ defmodule Omc.Servers do
     do: server_accs
 
   defp server_accs_id(server_accs, id),
-    do: server_accs |> where([sa], sa.id >= ^id)
+    do: server_accs |> where([sa], sa.id <= ^id)
 
   defp server_accs_server_id(server_accs, server_id) when server_id == "" or server_id == nil,
     do: server_accs

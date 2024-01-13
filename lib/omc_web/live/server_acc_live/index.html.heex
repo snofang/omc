@@ -25,7 +25,7 @@
       prompt="Choose a server"
       options={@servers}
     />
-    <.input field={f[:id]} type="text" label="Id" />
+    <.input field={f[:id]} type="text" label="Account Id" />
     <.input
       field={f[:status]}
       type="select"
@@ -33,7 +33,7 @@
       prompt="Choose a value"
       options={Ecto.Enum.values(Omc.Servers.ServerAcc, :status)}
     />
-    <.input field={f[:user_info]} type="text" label="Name" />
+    <.input field={f[:user_info]} type="text" label="User Info" />
   </.simple_form>
 
   <div id="download_hook_holder" phx-hook="DownloadFile" />
