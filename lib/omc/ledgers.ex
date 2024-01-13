@@ -1,4 +1,5 @@
 defmodule Omc.Ledgers do
+  alias Omc.Users
   alias Omc.Common.Utils
   alias Omc.Repo
   alias Omc.Ledgers.{Ledger, LedgerTx}
@@ -294,12 +295,20 @@ defmodule Omc.Ledgers do
   @spec list_ledgers(Keyword.t()) :: list(%Ledger{})
   def list_ledgers(args) do
     args =
-      Keyword.validate!(args, page: 1, limit: 10, user_id: nil, user_type: nil, currency: nil)
+      Keyword.validate!(args,
+        page: 1,
+        limit: 10,
+        user_id: nil,
+        user_info: nil,
+        user_type: nil,
+        currency: nil
+      )
 
     list_ledgers_query()
     |> list_ledgers_where_user_type(args[:user_type])
     |> list_ledgers_where_user_id(args[:user_id])
     |> list_ledgers_where_currency(args[:currency])
+    |> Users.where_like_user_info(args[:user_info])
     |> offset(^((args[:page] - 1) * args[:limit]))
     |> limit(^args[:limit])
     |> order_by(desc: :id)
@@ -309,6 +318,7 @@ defmodule Omc.Ledgers do
   defp list_ledgers_query() do
     from(l in Ledger,
       left_join: ui in UserInfo,
+      as: :user_info,
       on: ui.user_id == l.user_id and ui.user_type == l.user_type,
       select: %{
         l

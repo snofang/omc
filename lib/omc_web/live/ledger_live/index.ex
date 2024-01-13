@@ -69,7 +69,7 @@ defmodule OmcWeb.LedgerLive.Index do
 
   defp params_to_changeset(params) do
     %Ledger{}
-    |> Ecto.Changeset.cast(params, [:user_type, :user_id, :currency])
+    |> Ecto.Changeset.cast(params, [:user_type, :user_id, :user_info, :currency])
   end
 
   defp params_to_bindings(params) do

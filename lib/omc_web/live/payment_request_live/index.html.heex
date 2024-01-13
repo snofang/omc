@@ -19,6 +19,7 @@
       options={Ecto.Enum.values(Omc.Payments.PaymentRequest, :user_type)}
     />
     <.input field={f[:user_id]} type="text" label="User ID" />
+    <.input field={f[:user_info]} type="text" label="User Info" />
     <.input
       field={f[:paid?]}
       type="select"

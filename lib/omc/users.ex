@@ -23,4 +23,22 @@ defmodule Omc.Users do
     |> where([u], u.user_type == ^user_type and u.user_id == ^user_id)
     |> Repo.one()
   end
+
+  @doc """
+  Adds like where clause to any name(user_name, first_name, or last_name) in 'UserInfo' to any given `query`
+  """
+  def where_like_user_info(query, user_info)
+
+  def where_like_user_info(query, user_info)
+      when user_info == "" or user_info == nil,
+      do: query
+
+  def where_like_user_info(query, user_info, binded_name \\ :user_info),
+    do:
+      query
+      |> where(
+        [{^binded_name, ui}],
+        like(ui.user_name, ^"%#{user_info}%") or like(ui.first_name, ^"%#{user_info}%") or
+          like(ui.last_name, ^"%#{user_info}%")
+      )
 end

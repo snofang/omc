@@ -5,6 +5,7 @@ defmodule Omc.Servers do
 
   import Ecto.Query, warn: false
   import Ecto.Query.API, only: [like: 2], warn: false
+  alias Omc.Users
   alias Omc.Servers.ServerAcc
   alias Omc.Users.UserInfo
   alias Omc.Servers.ServerAccUser
@@ -178,7 +179,7 @@ defmodule Omc.Servers do
     |> server_accs_id(bindings |> Map.get(:id))
     |> server_accs_server_id(bindings |> Map.get(:server_id))
     |> server_accs_status(bindings |> Map.get(:status))
-    |> server_accs_user_info(bindings |> Map.get(:user_info))
+    |> Users.where_like_user_info(bindings |> Map.get(:user_info))
     |> limit(^limit)
     |> offset((^page - 1) * ^limit)
     |> order_by([acc], desc: acc.id)
@@ -219,19 +220,6 @@ defmodule Omc.Servers do
 
   defp server_accs_status(server_acc, status) when status == "" or status == nil, do: server_acc
   defp server_accs_status(server_acc, status), do: server_acc |> where(status: ^status)
-
-  defp server_accs_user_info(server_acc, user_info)
-       when user_info == "" or user_info == nil,
-       do: server_acc
-
-  defp server_accs_user_info(server_acc, user_info),
-    do:
-      server_acc
-      |> where(
-        [user_info: ui],
-        like(ui.user_name, ^"%#{user_info}%") or like(ui.first_name, ^"%#{user_info}%") or
-          like(ui.last_name, ^"%#{user_info}%")
-      )
 
   @doc """
   Gets a single server_acc.

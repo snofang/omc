@@ -57,14 +57,16 @@ defmodule OmcWeb.PaymentRequestLive.Index do
     {%{
        user_type: nil,
        user_id: nil,
+       user_info: nil,
        paid?: nil
      },
      %{
        user_type: PaymentRequest.__schema__(:type, :user_type),
        user_id: PaymentRequest.__schema__(:type, :user_id),
+       user_info: :string,
        paid?: :boolean
      }}
-    |> Ecto.Changeset.cast(params, [:user_type, :user_id, :paid?])
+    |> Ecto.Changeset.cast(params, [:user_type, :user_id, :user_info, :paid?])
   end
 
   defp params_to_bindings(params) do

@@ -1,6 +1,7 @@
 defmodule Omc.Payments do
   use GenServer
   require Logger
+  alias Omc.Users
   alias Omc.Ledgers.LedgerTx
   alias Omc.Users.UserInfo
   alias Omc.Ledgers
@@ -122,11 +123,20 @@ defmodule Omc.Payments do
 
   @spec list_payment_requests(Keyword.t()) :: list(%PaymentRequest{})
   def list_payment_requests(args \\ []) do
-    args = Keyword.validate!(args, page: 1, limit: 10, user_id: nil, user_type: nil, paid?: nil)
+    args =
+      Keyword.validate!(args,
+        page: 1,
+        limit: 10,
+        user_id: nil,
+        user_type: nil,
+        user_info: nil,
+        paid?: nil
+      )
 
     list_payment_requests_query()
     |> list_payment_requests_where_user_type(args[:user_type])
     |> list_payment_requests_where_user_id(args[:user_id])
+    |> Users.where_like_user_info(args[:user_info])
     |> list_payment_requests_where_paid?(args[:paid?])
     |> offset((^args[:page] - 1) * ^args[:limit])
     |> limit(^args[:limit])
@@ -168,6 +178,7 @@ defmodule Omc.Payments do
       as: :ltx_sum,
       on: ltx.payment_id == pr.id,
       left_join: ui in UserInfo,
+      as: :user_info,
       on: ui.user_id == pr.user_id and ui.user_type == pr.user_type,
       select: %{
         pr
