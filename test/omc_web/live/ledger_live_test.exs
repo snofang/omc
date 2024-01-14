@@ -27,6 +27,74 @@ defmodule OmcWeb.LedgerLiveTest do
       assert html =~ ledger.currency |> to_string()
     end
 
+    test "New Ledger Tx", %{conn: conn, user: user} do
+      {:ok, index_live, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/ledgers")
+
+      assert index_live
+             |> element("a", "New Ledger Tx")
+             |> render_click() =~ "New Ledger Tx"
+
+      assert index_live
+             |> form("#ledger-tx-form",
+               ledger_tx_aux: %{
+                 user_type: "",
+                 user_id: "1234567890",
+                 currency: :USD,
+                 type: :credit,
+                 amount: "123.23"
+               }
+             )
+             |> render_change() =~ "can&#39;t be blank"
+
+      assert index_live
+             |> form("#ledger-tx-form",
+               ledger_tx_aux: %{
+                 user_type: :local,
+                 user_id: "",
+                 currency: :USD,
+                 type: :credit,
+                 amount: "123.23"
+               }
+             )
+             |> render_change() =~ "can&#39;t be blank"
+
+      assert index_live
+             |> form("#ledger-tx-form",
+               ledger_tx_aux: %{
+                 user_type: :local,
+                 user_id: "1234567890",
+                 currency: nil,
+                 type: :credit,
+                 amount: "123.23"
+               }
+             )
+             |> render_change() =~ "can&#39;t be blank"
+
+      index_live
+      |> form("#ledger-tx-form",
+        ledger_tx_aux: %{
+          user_type: :local,
+          user_id: "1234567890",
+          currency: :EUR,
+          type: :credit,
+          amount: "246.24"
+        }
+      )
+      |> render_submit()
+
+      assert_patch(index_live, ~p"/ledgers")
+
+      html = render(index_live)
+      assert html =~ "Ledger Tx created succesfully."
+
+      assert html =~
+               Money.parse!("246.24", :EUR)
+               |> Money.to_string()
+    end
+
     test "New Tx", %{conn: conn, user: user, ledger: ledger} do
       {:ok, index_live, _html} =
         conn

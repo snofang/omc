@@ -79,7 +79,7 @@ defmodule Omc.Telegram.CallbackCredit do
           ""
 
         r ->
-          "\n" <> r
+          r <> "\n"
       end
       |> then(fn r -> r <> "- " <> (Money.new(l.credit, l.currency) |> Money.to_string()) end)
     end)

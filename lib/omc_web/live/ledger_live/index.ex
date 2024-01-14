@@ -57,6 +57,15 @@ defmodule OmcWeb.LedgerLive.Index do
      |> assign(:patch, ~p"/ledgers?#{socket.assigns.bindings}")}
   end
 
+  def handle_event("new_tx", %{}, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_new_tx_modal, true)
+     |> assign(:page_title, "New Ledger Tx")
+     |> assign(:ledger, %Omc.Ledgers.Ledger{})
+     |> assign(:patch, ~p"/ledgers?#{socket.assigns.bindings}")}
+  end
+
   @impl true
   def handle_event("change-filter", %{"filter" => params}, socket) do
     {:noreply, socket |> push_patch(to: ~p"/ledgers?#{params_to_bindings(params)}")}

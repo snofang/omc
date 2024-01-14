@@ -27,16 +27,16 @@ defmodule OmcWeb.LedgerLive.FormComponent do
           label="User Type"
           prompt="Choose a value"
           options={Ecto.Enum.values(Omc.Ledgers.LedgerTxAux, :user_type)}
-          disabled="true"
+          disabled={@id != :new}
         />
-        <.input field={@form[:user_id]} type="text" label="User Id" disabled="true" />
+        <.input field={@form[:user_id]} type="text" label="User Id" disabled={@id != :new} />
         <.input
           field={@form[:currency]}
           type="select"
           label="Currency"
           prompt="Choose a value"
           options={Ecto.Enum.values(Omc.Ledgers.LedgerTxAux, :currency)}
-          disabled="true"
+          disabled={@id != :new}
         />
         <.input
           field={@form[:type]}
@@ -77,15 +77,17 @@ defmodule OmcWeb.LedgerLive.FormComponent do
 
     if changeset.valid? do
       try do
+        data = Ecto.Changeset.apply_changes(changeset)
+
         %{ledger: ledger, ledger_tx: _} =
           Ledgers.create_ledger_tx!(%{
-            user_type: changeset.data.user_type,
-            user_id: changeset.data.user_id,
+            user_type: data.user_type,
+            user_id: data.user_id,
             context: :manual,
             money:
-              Money.parse(changeset.changes.amount, changeset.data.currency)
+              Money.parse(data.amount, data.currency)
               |> then(fn {:ok, amount} -> amount end),
-            type: changeset.changes.type
+            type: data.type
           })
 
         notify_parent({:new_tx_created, ledger})
@@ -96,10 +98,14 @@ defmodule OmcWeb.LedgerLive.FormComponent do
          |> push_patch(to: socket.assigns.patch)}
       rescue
         error ->
-          {:noreply,
-           socket
-           |> put_flash(:error, "Ledger Tx creation failed; #{inspect(error)}")
-           |> assign_form(changeset(socket.assigns.ledger, params))}
+          {
+            :noreply,
+            socket
+            |> put_flash(:error, "Ledger Tx creation failed; #{inspect(error)}")
+            |> push_patch(to: socket.assigns.patch)
+          }
+
+          # |> assign_form(changeset(socket.assigns.ledger, params))}
       end
     else
       {:noreply,
