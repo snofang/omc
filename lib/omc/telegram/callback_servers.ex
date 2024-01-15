@@ -55,7 +55,8 @@ defmodule Omc.Telegram.CallbackServers do
       "Servers",
       servers,
       &server_markup_text_provider/1,
-      &server_markup_params_provider/1
+      &server_markup_params_provider/1,
+      true
     )
   end
 

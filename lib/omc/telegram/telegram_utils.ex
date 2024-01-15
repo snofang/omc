@@ -51,7 +51,7 @@ defmodule Omc.Telegram.TelegramUtils do
           text_provider :: (any() -> binary()),
           params_provider :: (any() -> [binary()])
         ) :: [[binary()]]
-  def entities_markup(callback, entities, text_provider, params_provider) do
+  def entities_markup(callback, entities, text_provider, params_provider, single_cell \\ false) do
     entities
     |> Enum.reduce([[]], fn entity, result ->
       case result |> List.first() do
@@ -65,7 +65,7 @@ defmodule Omc.Telegram.TelegramUtils do
             ]
           ]
 
-        [item | []] ->
+        [item | []] when single_cell == false ->
           result
           |> List.replace_at(0, [
             markup_item(

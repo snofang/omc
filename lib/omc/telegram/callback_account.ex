@@ -118,6 +118,6 @@ defmodule Omc.Telegram.CallbackAccount do
        }) do
     "- *from:* __#{started_at}__," <>
       " *to:* __#{ended_at}__," <>
-      " *usage:* __#{Money.new(amount, currency)}__ "
+      " *__#{Money.new(amount, currency)}__* "
   end
 end

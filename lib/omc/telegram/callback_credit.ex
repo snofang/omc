@@ -72,17 +72,11 @@ defmodule Omc.Telegram.CallbackCredit do
 
   defp ledgers_text(ledgers) do
     ledgers
-    |> Enum.reduce("", fn l, result ->
-      result
-      |> case do
-        "" ->
-          ""
-
-        r ->
-          r <> "\n"
-      end
-      |> then(fn r -> r <> "- " <> (Money.new(l.credit, l.currency) |> Money.to_string()) end)
+    |> Enum.map(fn l ->
+      ("-#{l.currency}:" |> String.pad_trailing(10)) <>
+        (Money.new(l.credit, l.currency) |> Money.to_string())
     end)
+    |> Enum.join("\n")
   end
 
   defp payment_requests_text([]), do: "- no payment request yet."

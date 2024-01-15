@@ -15,7 +15,9 @@ config :omc,
 # money & currency
 # 
 config :money,
-  default_currency: :USD
+  default_currency: :USD,
+  strip_insignificant_fractional_unit: true,
+  fractional_digits: 4
 
 #
 # money & currency

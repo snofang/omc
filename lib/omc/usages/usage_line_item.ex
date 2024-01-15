@@ -66,7 +66,7 @@ defmodule Omc.Usages.UsageLineItem do
                 started_at: started_at,
                 ended_at: ended_at,
                 amount: 0,
-                currency: ledgers |> List.first() |> then(& &1.currency)
+                currency: Application.get_env(:money, :default_currency)
               }
             ]
       end
