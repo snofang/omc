@@ -24,7 +24,7 @@ defmodule OmcWeb.ServerLiveTest do
   setup %{} do
     user = user_fixture()
     server = server_fixture(%{user_id: user.id})
-    {:ok, price_plan} = PricePlans.create_price_plan(Money.new(12345))
+    {:ok, price_plan} = PricePlans.create_price_plan([Money.new(12345), Money.new(11111, :EUR)])
     %{user: user, server: server, price_plan: price_plan}
   end
 

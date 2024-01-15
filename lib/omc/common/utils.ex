@@ -18,4 +18,15 @@ defmodule Omc.Common.Utils do
   def default_currency() do
     Application.get_env(:money, :default_currency)
   end
+
+  # def validate_currency(changeset) do
+  #   changeset
+  #   |> Ecto.Changeset.validate_change(:currency, fn :currency, currency ->
+  #     if currency in Application.get_env(:omc, :supported_currencies) do
+  #       []
+  #     else
+  #       [currency: "unsupported currency"]
+  #     end
+  #   end)
+  # end
 end

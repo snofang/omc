@@ -7,11 +7,6 @@ config :omc,
   data: Path.expand("../.data_test", Path.dirname(__ENV__.file))
 
 #
-# money & currency
-# 
-config :omc, supported_currencies: [:IRR, :USD, :EUR]
-
-#
 # ipgs
 # 
 config :omc, :ipgs,

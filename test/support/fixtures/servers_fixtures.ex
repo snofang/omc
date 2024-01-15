@@ -17,7 +17,7 @@ defmodule Omc.ServersFixtures do
   def unique_server_address, do: "#{ip_token()}.#{ip_token()}.#{ip_token()}.#{ip_token()}"
 
   def server_valid_attrs() do
-    {:ok, price_plan} = PricePlans.create_price_plan(Money.new(12050))
+    {:ok, price_plan} = PricePlans.create_price_plan([Money.new(12050), Money.new(11050, :EUR)])
 
     %{
       tag: "from-to",

@@ -27,6 +27,13 @@ defmodule Omc.LedgersTest do
       assert fetched_ledger == ledger
     end
 
+    test "ledger currency should be in supported currencies" do
+      assert_raise Ecto.Query.CastError, fn ->
+        valid_ledger_tx_attrubutes(%{money: Money.new(1234, :AED)})
+        |> Ledgers.create_ledger_tx!()
+      end
+    end
+
     test "adding credit/debit tx should increase/decrease ledger's credit amount", %{
       ledger: ledger
     } do

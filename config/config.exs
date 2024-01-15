@@ -17,7 +17,11 @@ config :omc,
 config :money,
   default_currency: :USD
 
-config :omc, supported_currencies: [:USD]
+#
+# money & currency
+# 
+# Note: by changing `supported_currencies`, all already defined `PricePlan`s should be updated accordingly
+config :omc, supported_currencies: [:USD, :EUR]
 config :omc, acc_allocation_timeout: 30 * 60
 
 #

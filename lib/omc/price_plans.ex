@@ -9,14 +9,14 @@ defmodule Omc.PricePlans do
     * `:name` - specifies plan's name. default value is `default`.
     * `:duration` - duration subject of price in seconds. default is 30 days.
   """
-  @spec create_price_plan(price :: Money.t(), Keyword.t()) ::
+  @spec create_price_plan(prices :: [Money.t()], Keyword.t()) ::
           {:ok, %PricePlan{}} | {:error, term()}
-  def create_price_plan(price, opts \\ []) do
+  def create_price_plan(prices, opts \\ []) do
     opts = Keyword.validate!(opts, name: "default", duration: 30 * 24 * 60 * 60)
 
     PricePlan.create_changeset(%{
       name: opts[:name],
-      prices: [price],
+      prices: prices,
       duration: opts[:duration]
     })
     |> Repo.insert()

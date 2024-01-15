@@ -35,7 +35,7 @@ defmodule OmcWeb.LedgerLive.FormComponent do
           type="select"
           label="Currency"
           prompt="Choose a value"
-          options={Ecto.Enum.values(Omc.Ledgers.LedgerTxAux, :currency)}
+          options={Application.get_env(:omc, :supported_currencies)}
           disabled={@id != :new}
         />
         <.input

@@ -130,7 +130,8 @@ defmodule Omc.ServersTest do
           max_acc_count: 100
         })
 
-      {:ok, new_price_plan} = PricePlans.create_price_plan(Money.new(1100))
+      {:ok, new_price_plan} =
+        PricePlans.create_price_plan([Money.new(1100), Money.new(1000, :EUR)])
 
       {:ok, server} =
         Servers.update_server(server, %{

@@ -13,17 +13,17 @@ Omc.Accounts.register_user(%{"email" => "admin@omc", "password" => "admin1234567
 
 # predefined `PricePlans`
 if(Omc.PricePlans.list_price_plans(name: "p2") == []) do
-  Omc.PricePlans.create_price_plan(Money.new(199), name: "p2")
+  Omc.PricePlans.create_price_plan([Money.new(199), Money.new(188, :EUR)], name: "p2")
 end
 
 if(Omc.PricePlans.list_price_plans(name: "p3") == []) do
-  Omc.PricePlans.create_price_plan(Money.new(299), name: "p3")
+  Omc.PricePlans.create_price_plan([Money.new(299), Money.new(288, :EUR)], name: "p3")
 end
 
 if(Omc.PricePlans.list_price_plans(name: "p4") == []) do
-  Omc.PricePlans.create_price_plan(Money.new(399), name: "p4")
+  Omc.PricePlans.create_price_plan([Money.new(399), Money.new(388, :EUR)], name: "p4")
 end
 
 if(Omc.PricePlans.list_price_plans(name: "p5") == []) do
-  Omc.PricePlans.create_price_plan(Money.new(499), name: "p5")
+  Omc.PricePlans.create_price_plan([Money.new(499), Money.new(488, :EUR)], name: "p5")
 end

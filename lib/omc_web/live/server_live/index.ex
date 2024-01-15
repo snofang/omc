@@ -1,5 +1,6 @@
 defmodule OmcWeb.ServerLive.Index do
   require Logger
+  alias Omc.Servers.PricePlan
   alias Omc.PricePlans
   use OmcWeb, :live_view
 
@@ -14,9 +15,7 @@ defmodule OmcWeb.ServerLive.Index do
      |> assign(
        :price_plans,
        PricePlans.list_price_plans()
-       |> Enum.map(fn pp ->
-         {pp.name <> (pp.prices |> List.first() |> Money.to_string()), pp.id}
-       end)
+       |> Enum.map(&{PricePlan.to_string_duration_days_no_name(&1), &1.id})
      )}
   end
 

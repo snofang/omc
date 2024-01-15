@@ -2,7 +2,6 @@ defmodule Omc.Ledgers.Ledger do
   use Ecto.Schema
   import Ecto.Schema
   import Ecto.Changeset
-  @supported_currencies Application.compile_env(:omc, :supported_currencies)
 
   @type t :: %__MODULE__{
           user_type: atom(),
@@ -18,7 +17,7 @@ defmodule Omc.Ledgers.Ledger do
     field(:user_type, Ecto.Enum, values: [:local, :telegram])
     field(:user_id, :string)
     field(:user_data, :map, default: %{})
-    field(:currency, Ecto.Enum, values: @supported_currencies)
+    field(:currency, Omc.Common.Currency)
     field(:credit, :integer, default: 0)
     field(:description, :string)
     field(:lock_version, :integer, default: 1)

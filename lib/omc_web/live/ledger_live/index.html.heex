@@ -29,7 +29,7 @@
       type="select"
       label="Currency"
       prompt="Choose a currency"
-      options={Ecto.Enum.values(Omc.Ledgers.Ledger, :currency)}
+      options={Application.get_env(:omc, :supported_currencies)}
     />
   </.simple_form>
 

@@ -36,24 +36,40 @@ defmodule Omc.Usages.UsageLineItem do
   defp usage_state_usage_line_item(%Usage{} = _usage, changesets, ledgers) do
     changesets
     |> Enum.reduce([], fn %{
-                            ledger_tx_changeset: %{
-                              changes: %{amount: amount, ledger_id: ledger_id}
-                            },
                             usage_item_changeset: %{
                               changes: %{started_at: started_at, ended_at: ended_at}
                             }
-                          },
+                          } = item,
                           result ->
-      result ++
-        [
-          %__MODULE__{
-            usage_item_id: -1,
-            started_at: started_at,
-            ended_at: ended_at,
-            amount: amount,
-            currency: ledger_currency(ledgers, ledger_id)
+      case item do
+        %{
+          ledger_tx_changeset: %{
+            changes: %{amount: amount, ledger_id: ledger_id}
           }
-        ]
+        } ->
+          result ++
+            [
+              %__MODULE__{
+                usage_item_id: -1,
+                started_at: started_at,
+                ended_at: ended_at,
+                amount: amount,
+                currency: ledger_currency(ledgers, ledger_id)
+              }
+            ]
+
+        _ ->
+          result ++
+            [
+              %__MODULE__{
+                usage_item_id: -1,
+                started_at: started_at,
+                ended_at: ended_at,
+                amount: 0,
+                currency: ledgers |> List.first() |> then(& &1.currency)
+              }
+            ]
+      end
     end)
   end
 

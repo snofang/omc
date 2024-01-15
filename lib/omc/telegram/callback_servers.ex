@@ -72,7 +72,7 @@ defmodule Omc.Telegram.CallbackServers do
          price_plan: %PricePlan{} = price_plan,
          count: _count
        }) do
-    "+ #{tag_text(tag)} (#{(price_plan.duration / (24 * 60 * 60)) |> round()} Days, #{price_plan.prices |> List.first() |> Money.to_string()})"
+    "+ #{tag_text(tag)} (#{PricePlan.to_string_duration_days_no_name(price_plan)})"
   end
 
   defp tag_text(tag) do
@@ -80,6 +80,6 @@ defmodule Omc.Telegram.CallbackServers do
       tag
       |> String.split("-")
 
-    "#{from} --> #{to}"
+    "#{from} -> #{to}"
   end
 end

@@ -7,7 +7,7 @@ defmodule Omc.UsagesFixtures do
 
   @spec server_fixture(Money.t()) :: %Server{}
   def server_fixture(server_price) do
-    {:ok, price_plan} = PricePlans.create_price_plan(server_price)
+    {:ok, price_plan} = PricePlans.create_price_plan([server_price, Money.new(12345, :EUR)])
 
     server =
       ServersFixtures.server_fixture(%{price_plan: price_plan, price_plan_id: price_plan.id})

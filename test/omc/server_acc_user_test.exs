@@ -261,7 +261,9 @@ defmodule Omc.ServerAccUserTest do
       server: %{id: server_id, tag: server_tag, price_plan_id: price_plan_id},
       server_acc: %{id: server_acc_id}
     } do
-      {:ok, %{id: price_plan_id2}} = PricePlans.create_price_plan(Money.new(1234))
+      {:ok, %{id: price_plan_id2}} =
+        PricePlans.create_price_plan([Money.new(1234), Money.new(1234, :EUR)])
+
       %{id: server1_id} = server1 = server_fixture(%{price_plan_id: price_plan_id2})
       %{id: server_acc1_id} = server_acc1 = server_acc_fixture(%{server_id: server1_id})
       activate_server_acc(server1, server_acc1)

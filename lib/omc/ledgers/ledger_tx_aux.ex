@@ -11,7 +11,7 @@ defmodule Omc.Ledgers.LedgerTxAux do
     field(:user_type, Ecto.Enum, values: Ecto.Enum.values(Ledger, :user_type))
     field(:user_id, :string)
     field(:type, Ecto.Enum, values: Ecto.Enum.values(LedgerTx, :type))
-    field(:currency, Ecto.Enum, values: Ecto.Enum.values(Ledger, :currency))
+    field(:currency, Omc.Common.Currency)
     field(:amount, :string)
   end
 
