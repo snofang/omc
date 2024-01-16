@@ -24,7 +24,7 @@ config :money,
 # 
 # Note: by changing `supported_currencies`, all already defined `PricePlan`s should be updated accordingly
 config :omc, supported_currencies: [:USD, :EUR]
-config :omc, acc_allocation_timeout: 30 * 60
+config :omc, acc_allocation_timeout: 5 * 60
 
 #
 # ipgs
@@ -38,7 +38,8 @@ config :omc, :ipgs,
     module: Omc.Payments.PaymentProviderOxapay,
     base_url: "https://api.oxapay.com/merchants",
     api_key: "sandbox",
-    timeout: (Application.get_env(:omc, :acc_allocation_timeout, 30 * 60) / 60) |> round()
+    # Minutes
+    timeout: 30
   ],
   nowpayments: [
     currencies: [:USD],
@@ -46,15 +47,6 @@ config :omc, :ipgs,
     base_url: "https://api-sandbox.nowpayments.io/v1",
     api_key: "runtime resolved",
     ipn_secret_key: "runtime resolved"
-  ]
-
-#
-# scheduler
-#
-config :omc, Omc.Scheduler,
-  jobs: [
-    # runs every minutes and allocation timeout is 15 minutes
-    # {"* * * * *", {Omc.ServerAccUsers, :cleanup_acc_allocations, [15 * 60]}}, 
   ]
 
 #

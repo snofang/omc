@@ -3,34 +3,82 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Elixir CI
+name: Elixir Release
 
-on:
-  workflow_dispatch:
+on: 
+  push:
+    tags:
+    - 'v*.*.*'
 
 permissions:
   contents: read
 
 jobs:
   build:
-
+    services:
+      db:
+        image: postgres:12
+        ports: ['5432:5432']
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          
     name: Build and test
     runs-on: ubuntu-22.04
-
+    permissions:
+      contents: write
+      
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set release version environment variable
+      run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+        
+    - name: Set release filename environment variable
+      run: echo "RELEASE_FILENAME=omc-${RELEASE_VERSION#v}.tar.gz" >> $GITHUB_ENV
+        
     - name: Set up Elixir
       uses: erlef/setup-beam@61e01a43a562a89bfc54c7f9a378ff67b03e4a21 # v1.16.0
       with:
         elixir-version: '1.15.2' # [Required] Define the Elixir version
         otp-version: '26.0'      # [Required] Define the Erlang/OTP version
+        
     - name: Restore dependencies cache
       uses: actions/cache@v3
       with:
         path: deps
         key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
         restore-keys: ${{ runner.os }}-mix-
+        
     - name: Install dependencies
       run: mix deps.get
+        
+    - name: Create test db
+      run: MIX_ENV=test mix ecto.create
+        
+    - name: Migrate test db
+      run: MIX_ENV=test mix ecto.migrate
+        
     - name: Run tests
       run: mix test
+        
+    - name: Compile prod
+      run: MIX_ENV=prod mix compile
+        
+    - name: Compile assets
+      run: MIX_ENV=prod mix assets.deploy
+        
+    - name: Create release artifact
+      run: MIX_ENV=prod mix release --overwrite
+        
+    - uses: ncipollo/release-action@v1
+      with:
+        artifacts: "_build/prod/${{ env.RELEASE_FILENAME }}"
+        allowUpdates: true
+        generateReleaseNotes: true
+        

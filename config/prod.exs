@@ -25,10 +25,11 @@ config :logger, level: :info
 #
 config :omc, Omc.Scheduler,
   jobs: [
+    # Note: Currently no cart functionality is active and this is not applicable
     # runs every minutes and allocation timeout 
-    {"* * * * *",
-     {Omc.ServerAccUsers, :cleanup_acc_allocations,
-      [Application.get_env(:omc, :acc_allocation_timeout)]}},
+    # {"* * * * *",
+    #  {Omc.ServerAccUsers, :cleanup_acc_allocations,
+    #   [Application.get_env(:omc, :acc_allocation_timeout)]}},
 
     # updating usages every hour
     {"* 0 * * *", {Omc.Usages, :update_usages, []}}

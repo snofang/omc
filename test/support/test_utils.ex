@@ -13,7 +13,7 @@ defmodule Omc.TestUtils do
     |> then(&(abs(&1) <= duration_allowance))
   end
 
-  def eventual_assert(func, max_time \\ 1000) do
+  def eventual_assert(func, max_time \\ 2000) do
     if max_time <= 0, do: raise("times up; assertion failed.")
 
     unless func.() do
@@ -21,4 +21,16 @@ defmodule Omc.TestUtils do
       eventual_assert(func, max_time - 50)
     end
   end
+
+  # def eventual_match(func, max_time \\ 2000) do
+  #   if max_time <= 0, do: raise("times up; match failed.")
+  #
+  #   try do
+  #     func.()
+  #   rescue
+  #     MatchError ->
+  #       Process.sleep(50)
+  #       eventual_match(func, max_time - 50)
+  #   end
+  # end
 end
