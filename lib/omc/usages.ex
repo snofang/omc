@@ -152,9 +152,9 @@ defmodule Omc.Usages do
   @doc false
   @spec start_sau_usage(%ServerAccUser{}) ::
           {:ok, %{usage: %Usage{}, server_acc_user: %ServerAccUser{}}} | {:error, term()}
-  defp start_sau_usage(%ServerAccUser{} = sau) do
+  defp start_sau_usage(%ServerAccUser{} = %{user_type: user_type, user_id: user_id} = sau) do
     user_have_enough_credit_for_duration?(
-      sau,
+      %{user_type: user_type, user_id: user_id},
       Application.get_env(:omc, __MODULE__)[:acc_min_usage_days],
       :day
     )
