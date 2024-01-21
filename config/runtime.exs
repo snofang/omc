@@ -21,6 +21,7 @@ if System.get_env("PHX_SERVER") do
 end
 
 if config_env() != :test do
+
   config :omc, :telegram,
     token: System.get_env("OMC_TELEGRAM_TOKEN"),
     host: System.get_env("OMC_TELEGRAM_HOST")
@@ -46,6 +47,15 @@ if config_env() != :test do
 end
 
 if config_env() == :prod do
+  #
+  # scheduler
+  #
+  config :omc, Omc.Scheduler,
+    jobs: [
+      # default every hour
+      {(System.get_env("OMC_UPDATE_USAGE_CRON") || "*/1 * * * *"), {Omc.Usages, :update_usages, []}}
+    ]
+
   config :omc,
     data: System.get_env("OMC_DATA_PATH") || Path.expand("../../data", __DIR__),
     ansible: Path.expand("../../ansible", __DIR__)
