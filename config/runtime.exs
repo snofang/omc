@@ -21,7 +21,6 @@ if System.get_env("PHX_SERVER") do
 end
 
 if config_env() != :test do
-
   config :omc, :telegram,
     token: System.get_env("OMC_TELEGRAM_TOKEN"),
     host: System.get_env("OMC_TELEGRAM_HOST")
@@ -48,12 +47,30 @@ end
 
 if config_env() == :prod do
   #
+  # Money & Currencies
+  #
+  config :money,
+    default_currency:
+      (System.get_env("OMC_DEFAULT_CURRENCIE") || "USD")
+      |> String.upcase()
+      |> String.trim()
+      |> String.to_atom()
+
+  config :omc,
+    supported_currencies:
+      (System.get_env("OMC_SUPPORTED_CURRENCIES") || "USD,EUR")
+      |> String.split(",")
+      |> Enum.map(&String.upcase/1)
+      |> Enum.map(&String.trim/1)
+      |> Enum.map(&String.to_atom/1)
+
+  #
   # scheduler
   #
   config :omc, Omc.Scheduler,
     jobs: [
       # default every hour
-      {(System.get_env("OMC_UPDATE_USAGE_CRON") || "*/1 * * * *"), {Omc.Usages, :update_usages, []}}
+      {System.get_env("OMC_UPDATE_USAGE_CRON") || "0 * * * *", {Omc.Usages, :update_usages, []}}
     ]
 
   config :omc,
