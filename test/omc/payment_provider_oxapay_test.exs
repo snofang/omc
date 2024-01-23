@@ -272,34 +272,12 @@ defmodule Omc.PaymentProviderOxapayTest do
 
   describe "get_paid_money!/2" do
     test "success case" do
-      data = %{"currency" => "USD", "payAmount" => "970", "payCurrency" => "TRX"}
-
-      TeslaMock
-      |> expect(
-        :call,
-        fn %Tesla.Env{
-             method: :get,
-             url: "https://api.binance.com/api/v3/avgPrice",
-             query: [symbol: "TRXUSDT"],
-             headers: [],
-             body: nil,
-             status: nil,
-             opts: []
-           },
-           [] = _opts ->
-          {:ok,
-           %{
-             status: 200,
-             body: %{"mins" => 5, "price" => "0.1", "closeTime" => 1_703_155_016_256}
-           }}
-        end
-      )
-
-      assert Money.new(9700, :USD) == PaymentProviderOxapay.get_paid_money!(data, :USD)
+      data = %{"currency" => "USD", "rate" => "9.25", "payAmount" => "18.5", "payCurrency" => "TRX"}
+      assert Money.new(200, :USD) == PaymentProviderOxapay.get_paid_money!(data, :USD)
     end
 
     test "mismactch curreny causes a raise" do
-      data = %{"currency" => "EUR", "payAmount" => "970", "payCurrency" => "TRX"}
+      data = %{"currency" => "EUR", "rate" => "9.1234", "payAmount" => "970", "payCurrency" => "TRX"}
 
       assert_raise(RuntimeError, fn ->
         PaymentProviderOxapay.get_paid_money!(data, :USD)

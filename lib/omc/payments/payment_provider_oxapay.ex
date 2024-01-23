@@ -104,11 +104,22 @@ defmodule Omc.Payments.PaymentProviderOxapay do
 
   @impl PaymentProvider
   def get_paid_money!(
-        %{"payAmount" => pay_amount, "payCurrency" => pay_currency, "currency" => currency},
+        %{
+          "payAmount" => pay_amount,
+          "rate" => rate,
+          "payCurrency" => _pay_currency,
+          "currency" => currency
+        },
         :USD
       ) do
     if "USD" == String.upcase(currency) do
-      get_paid_crypto_in_usd(pay_amount, pay_currency)
+      pay_amount
+      |> Decimal.parse()
+      |> then(fn {d, ""} -> d end)
+      |> Decimal.div(Decimal.parse(rate) |> then(fn {r, ""} -> r end))
+      |> Money.parse!(:USD)
+
+      # get_paid_crypto_in_usd(pay_amount, pay_currency)
     else
       raise "currency mismatch: requested currency: USD, paid currency: #{currency}"
     end
