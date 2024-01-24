@@ -18,7 +18,7 @@ defmodule OmcWeb.CoreComponents do
   use OmcWeb, :verified_routes
 
   alias Phoenix.LiveView.JS
-  import OmcWeb.Gettext
+  import Omc.Gettext
 
   def home_path, do: "/"
 
@@ -800,9 +800,9 @@ defmodule OmcWeb.CoreComponents do
     # with our gettext backend as first argument. Translations are
     # available in the errors.po file (as we use the "errors" domain).
     if count = opts[:count] do
-      Gettext.dngettext(OmcWeb.Gettext, "errors", msg, msg, count, opts)
+      Gettext.dngettext(Omc.Gettext, "errors", msg, msg, count, opts)
     else
-      Gettext.dgettext(OmcWeb.Gettext, "errors", msg, opts)
+      Gettext.dgettext(Omc.Gettext, "errors", msg, opts)
     end
   end
 

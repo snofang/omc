@@ -272,12 +272,23 @@ defmodule Omc.PaymentProviderOxapayTest do
 
   describe "get_paid_money!/2" do
     test "success case" do
-      data = %{"currency" => "USD", "rate" => "9.25", "payAmount" => "18.5", "payCurrency" => "TRX"}
+      data = %{
+        "currency" => "USD",
+        "rate" => "9.25",
+        "payAmount" => "18.5",
+        "payCurrency" => "TRX"
+      }
+
       assert Money.new(200, :USD) == PaymentProviderOxapay.get_paid_money!(data, :USD)
     end
 
     test "mismactch curreny causes a raise" do
-      data = %{"currency" => "EUR", "rate" => "9.1234", "payAmount" => "970", "payCurrency" => "TRX"}
+      data = %{
+        "currency" => "EUR",
+        "rate" => "9.1234",
+        "payAmount" => "970",
+        "payCurrency" => "TRX"
+      }
 
       assert_raise(RuntimeError, fn ->
         PaymentProviderOxapay.get_paid_money!(data, :USD)

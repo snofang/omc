@@ -6,6 +6,9 @@ defmodule Omc.TelegramBot do
 
   @impl Telegram.Bot
   def handle_update(update, token) do
+    # TODO: performance issue; to find a place such as init for this
+    Gettext.put_locale(Application.get_env(:omc, :telegram)[:locale])
+
     try do
       case update do
         %{"message" => %{"text" => text, "chat" => %{"id" => chat_id}}} ->

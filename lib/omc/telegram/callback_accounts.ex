@@ -1,6 +1,7 @@
 defmodule Omc.Telegram.CallbackAccounts do
   use Omc.Telegram.CallbackQuery
   alias Omc.ServerAccUsers
+  import Omc.Gettext
 
   @impl true
   def do_process(args = %{user: user, callback_args: callback_args}) do
@@ -23,12 +24,12 @@ defmodule Omc.Telegram.CallbackAccounts do
   @impl true
   def get_text(%{user: _user, callback_args: _callback_args, accs: accs}) do
     ~s"""
-    __*Your Account\\(s\\)*__
+    __*#{gettext("Your Accounts")}*__
 
     #{if accs |> length() > 0 do
-      "By tapping on each account represented by the following buttons, you can manage it, download its connection config __.ovpn__ file, or see its __usages__."
+      gettext("By tapping on each account represented by the following buttons, you can manage it, download its connection config __.ovpn__ file, or see its __usages__.")
     else
-      "No active account!"
+      gettext("No active account!")
     end}
     """
   end
@@ -36,7 +37,7 @@ defmodule Omc.Telegram.CallbackAccounts do
   @impl true
   def get_markup(%{accs: accs}) do
     accs_markup(accs) ++
-      [[markup_item("<< back", "Main"), markup_item("Refresh", "Accounts")]]
+      [[markup_item(gettext("Home"), "Main"), markup_item(gettext("Refresh"), "Accounts")]]
   end
 
   defp accs_markup(accs) do

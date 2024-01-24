@@ -3,6 +3,7 @@ defmodule Omc.Telegram.CallbackServers do
   alias Omc.Servers.PricePlan
   use Omc.Telegram.CallbackQuery
   alias Omc.ServerAccUsers
+  import Omc.Gettext
 
   @impl true
   def do_process(args = %{user: user, callback_args: callback_args}) do
@@ -11,10 +12,15 @@ defmodule Omc.Telegram.CallbackServers do
         case Usages.start_usage(user, server_tag: tag, price_plan_id: price_plan_id) do
           {:ok, _} ->
             {:redirect, "Accounts",
-             args |> Map.put(:message, "New account created successfully.")}
+             args |> Map.put(:message, gettext("New account created successfully."))}
 
           {:error, error} ->
-            {:error, args |> Map.put(:message, "Failed account creation: #{error}")}
+            {:error,
+             args
+             |> Map.put(
+               :message,
+               dgettext("errors", "Failed account creation:") <> inspect(error)
+             )}
         end
 
       [] ->
@@ -28,17 +34,17 @@ defmodule Omc.Telegram.CallbackServers do
   @impl true
   def get_text(%{servers: servers}) do
     ~s"""
-    __*New Account Creation*__
+    __*#{gettext("New Account Creation")}*__
 
     #{if servers |> length() > 0 do
       """
-      Use one of __*\\(+\\)*__ botton\\(s\\) below to create an account based on your __source__ and __destination__ need. 
-      Note that you should have enough credit to do so.
+      #{gettext("Use one of __*+*__ bottons below to create an account based on your __source__ and __destination__ need.")}
+      #{gettext("Note that you should have enough credit to do so.")}
       """
     else
       """
-      Unfortunately no free account is available right now. 
-      Please come back later and check it again; It will be supplied ASAP.
+      #{gettext("Unfortunately no free account is available right now.")}
+      #{gettext("Please come back later and check it again; It will be supplied ASAP.")}
       """
     end}
     """
@@ -47,7 +53,7 @@ defmodule Omc.Telegram.CallbackServers do
   @impl true
   def get_markup(%{servers: servers}) do
     servers_markup(servers) ++
-      [[markup_item("<< back", "Main")]]
+      [[markup_item(gettext("Home"), "Main")]]
   end
 
   defp servers_markup(servers) do

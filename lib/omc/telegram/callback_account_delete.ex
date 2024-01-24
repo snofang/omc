@@ -1,6 +1,7 @@
 defmodule Omc.Telegram.CallbackAccountDelete do
   alias Omc.Servers
   use Omc.Telegram.CallbackQuery
+  import Omc.Gettext
 
   @impl true
   def do_process(args = %{callback_args: callback_args}) do
@@ -32,11 +33,13 @@ defmodule Omc.Telegram.CallbackAccountDelete do
          |> Map.put(:callback_args, [s_id, sa_id, sau_id, s_tag])
          |> Map.put(
            :message,
-           "Account #{TelegramUtils.sa_name(sa_id, s_tag)} registered for deletion."
+           TelegramUtils.sa_name(sa_id, s_tag) <> gettext("registered for deletion.")
          )}
 
       {:error, _} ->
-        {:error, %{message: "Failed deactivating #{TelegramUtils.sa_name(sa_id, s_tag)}"}}
+        {:error,
+         message:
+           dgettext("errors", "Failed deactivating: ") <> TelegramUtils.sa_name(sa_id, s_tag)}
     end
   end
 
@@ -45,11 +48,11 @@ defmodule Omc.Telegram.CallbackAccountDelete do
         callback_args: [_s_id, sa_id, _sau_id, s_tag]
       }) do
     ~s"""
-    __*Account Deletion Conformation*__
+    __*#{gettext("Account Deletion Conformation")}*__
 
-    By deleting an account, the system stops billing for it and also it will not be possible to use it anymore.
+    #{gettext("By deleting an account, the system stops billing for it and also it will not be possible to use it anymore.")}
 
-    *Are you sure to delete account __#{TelegramUtils.sa_name(sa_id, s_tag)}__?*
+    *#{gettext("Are you sure to delete the following account?")} __#{TelegramUtils.sa_name(sa_id, s_tag)}__*
 
     """
   end
@@ -59,13 +62,13 @@ defmodule Omc.Telegram.CallbackAccountDelete do
     [
       [
         markup_item(
-          "Yes",
+          gettext("Yes"),
           TelegramUtils.encode_callback_data("AccountDelete", callback_args ++ ["yes"])
         )
       ],
       [
         markup_item(
-          "No",
+          gettext("No"),
           TelegramUtils.encode_callback_data("Account", callback_args)
         )
       ]

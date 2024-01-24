@@ -23,7 +23,8 @@ end
 if config_env() != :test do
   config :omc, :telegram,
     token: System.get_env("OMC_TELEGRAM_TOKEN"),
-    host: System.get_env("OMC_TELEGRAM_HOST")
+    host: System.get_env("OMC_TELEGRAM_HOST"),
+    locale: System.get_env("OMC_TELEGRAM_LOCALE") || "en"
 
   #
   # ipgs

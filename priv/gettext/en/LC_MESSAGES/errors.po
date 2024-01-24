@@ -110,3 +110,38 @@ msgstr ""
 
 msgid "must be equal to %{number}"
 msgstr ""
+
+#: lib/omc/telegram/callback_credit.ex:36
+#, elixir-autogen, elixir-format
+msgid "Failed creating payment request!"
+msgstr ""
+
+#: lib/omc/telegram/callback_account.ex:19
+#, elixir-autogen, elixir-format
+msgid "Bad args; redirected"
+msgstr ""
+
+#: lib/omc/telegram/callback_account.ex:56
+#, elixir-autogen, elixir-format
+msgid "Failed! File not found!"
+msgstr ""
+
+#: lib/omc/telegram/callback_account.ex:16
+#, elixir-autogen, elixir-format
+msgid "acc not specified"
+msgstr ""
+
+#: lib/omc/telegram/callback_account.ex:52
+#, elixir-autogen, elixir-format
+msgid "Something wrong with file sending process."
+msgstr ""
+
+#: lib/omc/telegram/callback_account_delete.ex:40
+#, elixir-autogen, elixir-format
+msgid "Failed deactivating: "
+msgstr ""
+
+#: lib/omc/telegram/callback_servers.ex:18
+#, elixir-autogen, elixir-format
+msgid "Failed account creation:"
+msgstr ""

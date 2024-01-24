@@ -1,0 +1,349 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: fa\n"
+"Plural-Forms: nplurals=2; plural=(n>1);\n"
+
+#: lib/omc_web/components/core_components.ex:470
+#, elixir-autogen, elixir-format
+msgid "Actions"
+msgstr ""
+
+#: lib/omc_web/components/core_components.ex:91
+#: lib/omc_web/components/core_components.ex:143
+#, elixir-autogen, elixir-format
+msgid "close"
+msgstr ""
+
+#: lib/omc/telegram/callback_account.ex:88
+#: lib/omc/telegram/callback_help.ex:38
+#: lib/omc/telegram/callback_main.ex:22
+#, elixir-autogen, elixir-format
+msgid "Accounts"
+msgstr "حساب‌های کاربری"
+
+#: lib/omc/telegram/callback_main.ex:19
+#, elixir-autogen, elixir-format
+msgid "Credit"
+msgstr "اعتبار"
+
+#: lib/omc/telegram/callback_main.ex:10
+#, elixir-autogen, elixir-format
+msgid "From here, you can create accounts, manage them, and see your credit and usages in detail."
+msgstr "از اینجا، شما براحتی می‌توانید حساب کاربری جدید ساخته، حساب‌های کاربری موجود و اعتبارتان را مدیریت کنید."
+
+#: lib/omc/telegram/callback_main.ex:23
+#, elixir-autogen, elixir-format
+msgid "Help"
+msgstr "راهنما"
+
+#: lib/omc/telegram/callback_main.ex:18
+#, elixir-autogen, elixir-format
+msgid "New Account"
+msgstr "حساب کاربری جدید"
+
+#: lib/omc/telegram/callback_main.ex:8
+#, elixir-autogen, elixir-format
+msgid "Welcome!"
+msgstr "خوش آمدید!"
+
+#: lib/omc/telegram/callback_credit.ex:47
+#, elixir-autogen, elixir-format
+msgid "Choose an amount for credit increase; Once a pay botton pressed, a new payment request is added on top of the following list having a link which can be used for payment."
+msgstr "مبلغ مورد نظرتان را برای پرداخت انتخاب کنید. هنگامی که یک دکمه پرداخت زده شود، یک درخواست پرداخت ایجاد شده و به ابتدای فهرست زیر اضافه می‌شود. هر درخواست پرداختی دارای یک پیوند است که برای انجام پرداخت قابل استفاده است. پس از انجام پرداخت، مبلغ پرداختی به اعتبارتان اضافه می‌شود."
+
+#: lib/omc/telegram/callback_account.ex:88
+#: lib/omc/telegram/callback_accounts.ex:40
+#: lib/omc/telegram/callback_credit.ex:68
+#: lib/omc/telegram/callback_help.ex:37
+#: lib/omc/telegram/callback_servers.ex:51
+#, elixir-autogen, elixir-format
+msgid "Home"
+msgstr "صفحه اول"
+
+#: lib/omc/telegram/callback_credit.ex:87
+#, elixir-autogen, elixir-format
+msgid "No payment request yet."
+msgstr "هنوز درخواست پرداختی وجود ندارد."
+
+#: lib/omc/telegram/callback_credit.ex:60
+#: lib/omc/telegram/callback_credit.ex:61
+#: lib/omc/telegram/callback_credit.ex:64
+#: lib/omc/telegram/callback_credit.ex:65
+#, elixir-autogen, elixir-format
+msgid "Pay"
+msgstr "پرداخت"
+
+#: lib/omc/telegram/callback_credit.ex:51
+#: lib/omc/telegram/callback_credit.ex:98
+#, elixir-autogen, elixir-format
+msgid "Pay Link"
+msgstr "پیوند پرداخت"
+
+#: lib/omc/telegram/callback_credit.ex:51
+#, elixir-autogen, elixir-format
+msgid "Payable"
+msgstr "قابل پرداخت"
+
+#: lib/omc/telegram/callback_credit.ex:30
+#, elixir-autogen, elixir-format
+msgid "Payment request created."
+msgstr "درخواست پرداخت ایجاد شد."
+
+#: lib/omc/telegram/callback_credit.ex:51
+#, elixir-autogen, elixir-format
+msgid "Received Sum"
+msgstr "دریافتی"
+
+#: lib/omc/telegram/callback_accounts.ex:40
+#: lib/omc/telegram/callback_credit.ex:69
+#, elixir-autogen, elixir-format
+msgid "Refresh"
+msgstr "بازآوری"
+
+#: lib/omc/telegram/callback_credit.ex:44
+#, elixir-autogen, elixir-format
+msgid "Your Credit"
+msgstr "اعتبار شما"
+
+#: lib/omc/telegram/callback_credit.ex:49
+#, elixir-autogen, elixir-format
+msgid "Your Last Payment Requests"
+msgstr "آخرین درخواست پرداخت های شما"
+
+#: lib/omc/telegram/callback_accounts.ex:30
+#, elixir-autogen, elixir-format
+msgid "By tapping on each account represented by the following buttons, you can manage it, download its connection config __.ovpn__ file, or see its __usages__."
+msgstr "با انتخاب هر حساب کاربری از میان دکمه‌های زیر، میتوانید: فایل تنظیمات اتصال __ovpn.__ را دریافت کنید، میزان مصرف را مشاهده، و یا در صورت عدم نیاز، آن را حذف نمایید."
+
+#: lib/omc/telegram/callback_accounts.ex:32
+#, elixir-autogen, elixir-format
+msgid "No active account!"
+msgstr "حساب کاربری فعالی وجود ندارد."
+
+#: lib/omc/telegram/callback_accounts.ex:27
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Your Accounts"
+msgstr "حساب‌های کاربری"
+
+#: lib/omc/telegram/callback_account.ex:67
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Account Info"
+msgstr "حساب کاربری"
+
+#: lib/omc/telegram/callback_account.ex:96
+#, elixir-autogen, elixir-format
+msgid "Delete"
+msgstr "حذف"
+
+#: lib/omc/telegram/callback_account.ex:48
+#, elixir-autogen, elixir-format
+msgid "File sent successfully."
+msgstr "فایل ارسال شد."
+
+#: lib/omc/telegram/callback_account.ex:69
+#, elixir-autogen, elixir-format
+msgid "Name:"
+msgstr "نام:"
+
+#: lib/omc/telegram/callback_account.ex:73
+#, elixir-autogen, elixir-format
+msgid "Note: All date & time values are in UTC."
+msgstr "توجه: زمان‌ها بر اساس ساعت هماهنگ جهانی UTC می‌باشند."
+
+#: lib/omc/telegram/callback_account.ex:70
+#, elixir-autogen, elixir-format
+msgid "Status:"
+msgstr "وضعیت:"
+
+#: lib/omc/telegram/callback_account.ex:72
+#, elixir-autogen, elixir-format
+msgid "Usages List:"
+msgstr "فهرست مصرف:"
+
+#: lib/omc/telegram/callback_account.ex:120
+#, elixir-autogen, elixir-format
+msgid "from:"
+msgstr "از:"
+
+#: lib/omc/telegram/callback_account.ex:121
+#, elixir-autogen, elixir-format
+msgid "to:"
+msgstr "تا:"
+
+#: lib/omc/telegram/callback_account.ex:128
+#, elixir-autogen, elixir-format
+msgid "Active"
+msgstr "فعال"
+
+#: lib/omc/telegram/callback_account.ex:131
+#, elixir-autogen, elixir-format
+msgid "Deactive Pending"
+msgstr "در صف حذف"
+
+#: lib/omc/telegram/callback_account.ex:83
+#, elixir-autogen, elixir-format
+msgid ".ovpn file"
+msgstr "فایل ovpn."
+
+#: lib/omc/telegram/callback_account_delete.ex:49
+#, elixir-autogen, elixir-format
+msgid "Account Deletion Conformation"
+msgstr "حذف حساب کاربری"
+
+#: lib/omc/telegram/callback_account_delete.ex:51
+#, elixir-autogen, elixir-format
+msgid "By deleting an account, the system stops billing for it and also it will not be possible to use it anymore."
+msgstr "با حذف یک حساب کاربری، درخواست حذف ثبت شده و در صف انجام قرار می‌گیرد. به محض نهایی شدن عملیات حذف، حساب کاربری دیگر قابل استفاده نبوده و بابت آن ثبت مصرف و اعمال هزینه متوقف می‌شود."
+
+#: lib/omc/telegram/callback_account_delete.ex:69
+#, elixir-autogen, elixir-format
+msgid "No"
+msgstr "خیر"
+
+#: lib/omc/telegram/callback_account_delete.ex:63
+#, elixir-autogen, elixir-format
+msgid "Yes"
+msgstr "بله"
+
+#: lib/omc/telegram/callback_account_delete.ex:36
+#, elixir-autogen, elixir-format
+msgid "registered for deletion."
+msgstr "درخواست حذف ثبت شد."
+
+#: lib/omc/telegram/callback_account_delete.ex:53
+#, elixir-autogen, elixir-format
+msgid "Are you sure to delete the following account?"
+msgstr "آیا از حذف این حساب کاربری اطمینان دارید؟"
+
+#: lib/omc/telegram/callback_servers.ex:32
+#, elixir-autogen, elixir-format, fuzzy
+msgid "New Account Creation"
+msgstr "حساب کاربری جدید"
+
+#: lib/omc/telegram/callback_servers.ex:15
+#, elixir-autogen, elixir-format
+msgid "New account created successfully."
+msgstr "حساب کاربری جدید ایجاد شد."
+
+#: lib/omc/telegram/callback_servers.ex:37
+#, elixir-autogen, elixir-format
+msgid "Note that you should have enough credit to do so."
+msgstr "در نظر داشته باشید؛ برای انجام این کار، _اعتبار کافی_ لازم است."
+
+#: lib/omc/telegram/callback_servers.ex:42
+#, elixir-autogen, elixir-format
+msgid "Please come back later and check it again; It will be supplied ASAP."
+msgstr "حساب‌های کاربری جدید در آینده نزدیک آماده خواهند شد. دوباره سر بزنید!"
+
+#: lib/omc/telegram/callback_servers.ex:41
+#, elixir-autogen, elixir-format
+msgid "Unfortunately no free account is available right now."
+msgstr "متاسفانه هم اکنون حساب کاربری، ناموجود است."
+
+#: lib/omc/telegram/callback_servers.ex:36
+#, elixir-autogen, elixir-format
+msgid "Use one of __*+*__ bottons below to create an account based on your __source__ and __destination__ need."
+msgstr "با توجه به نیاز *__مبدا__* و *__مقصد__*تان، با زدن یکی از دکمه‌های دارای علامت *__+__*، حساب کاربری ایجاد کنید."
+
+#: lib/omc/servers/price_plan.ex:70
+#, elixir-autogen, elixir-format
+msgid "cost of"
+msgstr "هزینه برای"
+
+#: lib/omc/servers/price_plan.ex:70
+#, elixir-autogen, elixir-format
+msgid "days"
+msgstr "روز"
+
+#: lib/omc/telegram/callback_help.ex:18
+#, elixir-autogen, elixir-format
+msgid "After importing the config file successfully, you should now see it listed as a connection profile within your OpenVPN client. You can then select this profile and initiate a connection with just a click of a button."
+msgstr "*__اتصال__*: پس از اضافه شدن فایل تنظیمات اتصال، باید بتوان آن را بصورت یک _پروفایل اتصال_ در نرم‌افزار _اوپن وی پی ان_ مشاهده کرد. با انتخاب این پروفایل و فعال‌سازی‌اش، اتصال برقرار کنید. توجه داشته باشید *_ __امکان اتصال همزمان با یک فایل اتصال از چند دستگاه وجود ندارد.___*"
+
+#: lib/omc/telegram/callback_help.ex:24
+#, elixir-autogen, elixir-format
+msgid "Android"
+msgstr "اندروید"
+
+#: lib/omc/telegram/callback_help.ex:20
+#, elixir-autogen, elixir-format
+msgid "By following these steps carefully, you will be able to install an OpenVPN client on your platform and effortlessly import a .ovpn configuration file for establishing secure connections with ease and peace of mind."
+msgstr "با دنبال کردن دقیق مراحل بالا، می‌توانید نرم افزار _اوپن وی پی ان_ را در دستگاه خود نصب کنید،‌ یک فایل تنظیمات اتصال __ovpn.__ را بدون دردسر وارد کرده و به راحتی اتصال‌های امن داشته باشید."
+
+#: lib/omc/telegram/callback_help.ex:23
+#, elixir-autogen, elixir-format
+msgid "Direct Download Resources"
+msgstr "پیوندهای مستقیم نصب"
+
+#: lib/omc/telegram/callback_help.ex:12
+#, elixir-autogen, elixir-format
+msgid "Firstly, you need to download and install the appropriate OpenVPN client for your platform. Visit the official OpenVPN [website](www.openvpn.net) and navigate to the *Downloads* section. Choose the version compatible with your operating system, whether it be Windows, macOS, Linux, or mobile platforms such as iOS or Android. Also some direct donwload sources provided at the end of this guide for references."
+msgstr "*__نصب نرم‌افزار__*: برای همه دستگاه‌ها نرم‌افزار _اوپن وی پی ان_ وجود دارد؛ کافی است به [سایت اوپن وی پی ان](www.openvpn.net) سر بزنید، به بخش دانلود اش بروید، و نسخه متناسب با دستگاه خود را دانلود و نصب کنید. برای آسانتر کردن کار و تنوع منبع، در انتهای این راهنما نیز تعدادی پیوند مستقیم نصب، گنجانده شده است."
+
+#: lib/omc/telegram/callback_help.ex:28
+#, elixir-autogen, elixir-format
+msgid "IOS"
+msgstr "آی او اس"
+
+#: lib/omc/telegram/callback_help.ex:10
+#, elixir-autogen, elixir-format
+msgid "In order to establish a secure connection using OpenVPN, it is essential to install the OpenVPN client on your platform and import the necessary configuration file __.ovpn__. This section will guide you through the process, ensuring a seamless setup."
+msgstr "به طور خلاصه، ابتدا لازم است نرم‌افزار __اوپن وی پی ان__ نصب کنید و پس از آن فایل تنظیمات اتصال __ovpn.__ را وارد نمایید. در ادامه فرآیند نصب و راه‌اندازی توضیح داده شده است."
+
+#: lib/omc/telegram/callback_help.ex:8
+#, elixir-autogen, elixir-format
+msgid "Installation & Configuration Guide"
+msgstr "راهنمای نصب و راه‌اندازی"
+
+#: lib/omc/telegram/callback_help.ex:16
+#, elixir-autogen, elixir-format
+msgid "Next, open your newly installed OpenVPN client and look for an option to import or add a new connection profile. Select this option and browse for the .ovpn configuration file you previously downloaded. Importing this file will automatically populate all required settings in your client application."
+msgstr "*__وارد کردن فایل تنظیمات اتصال در نرم‌افزار__*:  برنامه _اوپن وی پی ان_ را باز کرده، گزینه افزودن پروفایل اتصال جدید را انتخاب، و فایل تنظیمات اتصالی را که پیشتر بارگیری کرده بودید را پیدا کنید. این فایل همه تنظیمات اتصال را برای شما فراهم می‌کند."
+
+#: lib/omc/telegram/callback_help.ex:14
+#, elixir-autogen, elixir-format
+msgid "Once the installation is complete, locate the downloaded __.ovpn__ configuration file that corresponds to your __Account__. This file contains all the necessary settings for establishing a secure connection. It is accessible from __Accounts -> Account Name__ menu."
+msgstr "*__بارگیری فایل تنظیمات اتصال__*:  فایل تنظیمات __ovpn.__ حساب کاربری‌تان را از صفحه مربوط به آن حساب، از مسیر _حساب‌های کاربری_ -> _نام حساب کاربری_، بارگیری کنید."
+
+#: lib/omc/telegram/callback_help.ex:27
+#, elixir-autogen, elixir-format
+msgid "OpenVPN Connect - Google Play"
+msgstr "اوپن وی پی ان کانکت - گوگل پلی"
+
+#: lib/omc/telegram/callback_help.ex:29
+#, elixir-autogen, elixir-format
+msgid "OpenVPN Connect – OpenVPN App"
+msgstr "اوپن وی پی ان کانکت - اپ استور"
+
+#: lib/omc/telegram/callback_help.ex:25
+#, elixir-autogen, elixir-format
+msgid "OpenVPN for Android - GitHub"
+msgstr "اوپن وی پی ان برای اندروید - گیت هاب"
+
+#: lib/omc/telegram/callback_help.ex:26
+#, elixir-autogen, elixir-format
+msgid "OpenVPN for Android - Google Play"
+msgstr "اوپن وی پی ان برای اندروید - گوکل پلی"
+
+#: lib/omc/telegram/callback_credit.ex:121
+#, elixir-autogen, elixir-format
+msgid "EUR"
+msgstr "ریالی"
+
+#: lib/omc/telegram/callback_credit.ex:124
+#, elixir-autogen, elixir-format
+msgid "IRR"
+msgstr "یورویی"
+
+#: lib/omc/telegram/callback_credit.ex:118
+#, elixir-autogen, elixir-format
+msgid "USD"
+msgstr "دلاری"

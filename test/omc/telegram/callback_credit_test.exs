@@ -64,7 +64,7 @@ defmodule Omc.Telegram.CallbackCreditTest do
         |> CallbackCredit.get_text()
 
       assert text =~ Money.new(0) |> Money.to_string()
-      assert text =~ "no payment request yet"
+      assert text =~ "No payment request yet"
     end
 
     test "mix of paid and unpaid", %{args: args} do

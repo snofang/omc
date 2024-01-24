@@ -3,6 +3,7 @@ defmodule Omc.Servers.PricePlan do
 
   import Ecto.Schema
   import Ecto.Changeset
+  import Omc.Gettext
 
   schema "price_plans" do
     field(:name, :string)
@@ -66,6 +67,6 @@ defmodule Omc.Servers.PricePlan do
   end
 
   def to_string_duration_days_no_name(%__MODULE__{} = pp) do
-    "#{(pp.duration / (24 * 60 * 60)) |> trunc} days - #{pp.prices |> Enum.map(&Money.to_string/1) |> Enum.join(", ")}"
+    "#{gettext("cost of")} #{(pp.duration / (24 * 60 * 60)) |> trunc} #{gettext("days")} - #{pp.prices |> Enum.map(&Money.to_string/1) |> Enum.join(", ")}"
   end
 end

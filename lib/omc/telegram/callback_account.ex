@@ -4,6 +4,7 @@ defmodule Omc.Telegram.CallbackAccount do
   alias Omc.Servers.ServerOps
   alias Omc.Servers
   alias Omc.Telegram.TelegramUtils
+  import Omc.Gettext
 
   @impl true
   def do_process(args = %{callback_args: callback_args}) do
@@ -12,10 +13,10 @@ defmodule Omc.Telegram.CallbackAccount do
         process(args)
 
       [] ->
-        {:error, args |> Map.put(:message, "acc not specified")}
+        {:error, args |> Map.put(:message, dgettext("errors", "acc not specified"))}
 
       _ ->
-        {:redirect, "main", args |> Map.put(:message, "Bad args; redirected")}
+        {:redirect, "main", args |> Map.put(:message, dgettext("errors", "Bad args; redirected"))}
     end
   end
 
@@ -44,15 +45,15 @@ defmodule Omc.Telegram.CallbackAccount do
              ) do
           {:ok, _} ->
             # trick to stop further text and markup update
-            {:error, %{message: "File sent successfully."}}
+            {:error, %{message: gettext("File sent successfully.")}}
 
           {:error, file_send_error} ->
             Logger.error("Sending file failed; error: #{inspect(file_send_error)}")
-            {:error, %{message: "Something wrong with file sending process."}}
+            {:error, %{message: dgettext("errors", "Something wrong with file sending process.")}}
         end
 
       {:error, _} ->
-        {:error, %{message: "Failed! File not found!"}}
+        {:error, %{message: dgettext("errors", "Failed! File not found!")}}
     end
   end
 
@@ -63,13 +64,13 @@ defmodule Omc.Telegram.CallbackAccount do
         usage_line_items: usage_line_items
       }) do
     ~s"""
-    __*Account Info*__
+    __*#{gettext("Account Info")}*__
 
-    *Name:**_ __#{TelegramUtils.sa_name(sa_id, s_tag)}___*
-    *Status:**_ __#{server_acc.status |> Atom.to_string() |> TelegramUtils.escape_text() |> String.capitalize()}___*
+    *#{gettext("Name:")}**_ __#{TelegramUtils.sa_name(sa_id, s_tag)}___*
+    *#{gettext("Status:")}**_ __#{status_text(server_acc.status)}___*
 
-    *Usages List:*
-    _Note: All date & time values are in UTC._
+    *#{gettext("Usages List:")}*
+    _#{gettext("Note: All date & time values are in UTC.")}_
     #{usage_line_items |> usage_line_items_text()}
     """
   end
@@ -79,12 +80,12 @@ defmodule Omc.Telegram.CallbackAccount do
     [
       [
         markup_item(
-          ".ovpn file",
+          gettext(".ovpn file"),
           TelegramUtils.encode_callback_data("Account", callback_args ++ ["file"])
         )
       ] ++ get_markup_delete(args)
     ] ++
-      [[markup_item("<< Accounts", "Accounts"), markup_item("Main", "Main")]]
+      [[markup_item(gettext("Accounts"), "Accounts"), markup_item(gettext("Home"), "Main")]]
   end
 
   defp get_markup_delete(%{callback_args: callback_args, server_acc: server_acc}) do
@@ -92,7 +93,7 @@ defmodule Omc.Telegram.CallbackAccount do
       :active ->
         [
           markup_item(
-            "Delete",
+            gettext("Delete"),
             TelegramUtils.encode_callback_data("AccountDelete", callback_args)
           )
         ]
@@ -116,8 +117,21 @@ defmodule Omc.Telegram.CallbackAccount do
          amount: amount,
          currency: currency
        }) do
-    "- *from:* __#{started_at}__," <>
-      " *to:* __#{ended_at}__," <>
+    "- *#{gettext("from:")}* __#{started_at}__," <>
+      " *#{gettext("to:")}* __#{ended_at}__," <>
       " *__#{Money.new(amount, currency)}__* "
+  end
+
+  defp status_text(status) when is_atom(status) do
+    case status do
+      :active ->
+        gettext("Active")
+
+      :deactive_pending ->
+        gettext("Deactive Pending")
+
+      status ->
+        status |> Atom.to_string() |> TelegramUtils.escape_text() |> String.capitalize()
+    end
   end
 end

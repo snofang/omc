@@ -1,12 +1,13 @@
 defmodule Omc.Telegram.CallbackMain do
   use Omc.Telegram.CallbackQuery
+  import Omc.Gettext
 
   @impl true
   def get_text(_args) do
     ~s"""
-    __*Welcome!*__ 
+    __*#{gettext("Welcome!")}*__ 
 
-    From here, you can create account\\(s\\), manage them, and see your credit and usages in detail.
+    #{gettext("From here, you can create accounts, manage them, and see your credit and usages in detail.")}
     """
   end
 
@@ -14,12 +15,12 @@ defmodule Omc.Telegram.CallbackMain do
   def get_markup(_args) do
     [
       [
-        %{text: "New Account", callback_data: "Servers"},
-        %{text: "Credit", callback_data: "Credit"}
+        %{text: gettext("New Account"), callback_data: "Servers"},
+        %{text: gettext("Credit"), callback_data: "Credit"}
       ],
       [
-        %{text: "Accounts", callback_data: "Accounts"},
-        %{text: "Help", callback_data: "Help"}
+        %{text: gettext("Accounts"), callback_data: "Accounts"},
+        %{text: gettext("Help"), callback_data: "Help"}
       ]
     ]
   end

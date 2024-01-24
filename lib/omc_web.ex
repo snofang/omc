@@ -43,7 +43,7 @@ defmodule OmcWeb do
         layouts: [html: OmcWeb.Layouts]
 
       import Plug.Conn
-      import OmcWeb.Gettext
+      import Omc.Gettext
 
       unquote(verified_routes())
     end
@@ -92,7 +92,7 @@ defmodule OmcWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import OmcWeb.CoreComponents
-      import OmcWeb.Gettext
+      import Omc.Gettext
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS

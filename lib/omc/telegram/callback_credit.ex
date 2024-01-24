@@ -3,6 +3,7 @@ defmodule Omc.Telegram.CallbackCredit do
   use Omc.Telegram.CallbackQuery
   alias Omc.Usages
   alias Omc.Payments
+  import Omc.Gettext
 
   @impl true
   def do_process(args = %{user: user, callback_args: callback_args}) do
@@ -25,11 +26,14 @@ defmodule Omc.Telegram.CallbackCredit do
         )
         |> case do
           {:ok, _} ->
-            {:ok, args |> Map.put(:message, "Payment request created.") |> put_common_args()}
+            {:ok,
+             args |> Map.put(:message, gettext("Payment request created.")) |> put_common_args()}
 
           {:error, error} ->
             Logger.error("Failed creating payment request; #{inspect(error)}")
-            {:error, args |> Map.put(:message, "Failed creating payment request!")}
+
+            {:error,
+             args |> Map.put(:message, dgettext("errors", "Failed creating payment request!"))}
         end
     end
   end
@@ -37,13 +41,15 @@ defmodule Omc.Telegram.CallbackCredit do
   @impl true
   def get_text(%{usage_state: usage_state, payment_requests: prs}) do
     ~s"""
-    __*Your Credit\\(s\\).*__
+    __*#{gettext("Your Credit")}*__
+
     *#{ledgers_text(usage_state.ledgers)}*
 
-    Choose an amount for credit increase; Once a pay botton pressed, a new payment request is added on top of the following list having a link which can be used for payment.
+    #{gettext("Choose an amount for credit increase; Once a pay botton pressed, a new payment request is added on top of the following list having a link which can be used for payment.")}
 
-    *Your Last Payment Requests* \\(most recent one is on top\\)
-    __*Payable*__, __*Pay Link*__, __*Received Sum*__
+    *#{gettext("Your Last Payment Requests")}*
+
+    __#{gettext("Payable")}__, __#{gettext("Pay Link")}__, __#{gettext("Received Sum")}__
     #{payment_requests_text(prs)} 
     """
   end
@@ -52,16 +58,16 @@ defmodule Omc.Telegram.CallbackCredit do
   def get_markup(%{user: _user, callback_args: _}) do
     [
       [
-        %{text: "Pay #{Money.new(200)}", callback_data: "Credit-2"},
-        %{text: "Pay #{Money.new(500)}", callback_data: "Credit-5"}
+        %{text: "#{gettext("Pay")} #{Money.new(200)}", callback_data: "Credit-2"},
+        %{text: "#{gettext("Pay")} #{Money.new(500)}", callback_data: "Credit-5"}
       ],
       [
-        %{text: "Pay #{Money.new(1000)}", callback_data: "Credit-10"},
-        %{text: "Pay #{Money.new(2000)}", callback_data: "Credit-20"}
+        %{text: "#{gettext("Pay")} #{Money.new(1000)}", callback_data: "Credit-10"},
+        %{text: "#{gettext("Pay")} #{Money.new(2000)}", callback_data: "Credit-20"}
       ],
       [
-        %{text: "<< back", callback_data: "Main"},
-        %{text: "Refresh", callback_data: "Credit"}
+        %{text: gettext("Home"), callback_data: "Main"},
+        %{text: gettext("Refresh"), callback_data: "Credit"}
       ]
     ]
   end
@@ -73,13 +79,13 @@ defmodule Omc.Telegram.CallbackCredit do
   defp ledgers_text(ledgers) do
     ledgers
     |> Enum.map(fn l ->
-      ("-#{l.currency}:" |> String.pad_trailing(10)) <>
+      ("-#{currency_text(l.currency)}:" |> String.pad_trailing(10)) <>
         (Money.new(l.credit, l.currency) |> Money.to_string())
     end)
     |> Enum.join("\n")
   end
 
-  defp payment_requests_text([]), do: "- no payment request yet."
+  defp payment_requests_text([]), do: gettext("No payment request yet.")
 
   defp payment_requests_text(prs) do
     prs
@@ -90,7 +96,7 @@ defmodule Omc.Telegram.CallbackCredit do
   end
 
   defp payment_request_text(item) do
-    "- _#{item.money}, [Pay Link](#{item.url}), #{Money.new(item.paid_sum || 0, item.money.currency)}_"
+    "- _#{item.money},   [#{gettext("Pay Link")}](#{item.url}),   #{Money.new(item.paid_sum || 0, item.money.currency)}_"
   end
 
   defp put_common_args(args = %{user: user = %{user_type: user_type, user_id: user_id}}) do
@@ -105,5 +111,21 @@ defmodule Omc.Telegram.CallbackCredit do
         user_type: user_type
       )
     )
+  end
+
+  defp currency_text(currency) when is_atom(currency) do
+    case currency do
+      :USD ->
+        gettext("USD")
+
+      :EUR ->
+        gettext("EUR")
+
+      :IRR ->
+        gettext("IRR")
+
+      other ->
+        other
+    end
   end
 end

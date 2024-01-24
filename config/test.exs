@@ -18,7 +18,10 @@ config :omc, :ipgs,
     ipn_secret_key: "runtime resolved"
   ]
 
-config :omc, :telegram, enabled: false
+config :omc, :telegram,
+  enabled: false,
+  locale: "en"
+
 config :omc, Omc.Payments, enabled: false
 
 config :omc, Omc.Servers.ServerTaskManager,
