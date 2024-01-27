@@ -14,7 +14,7 @@ defmodule Omc.Payments.PaymentProviderOxapay do
         merchant: api_key(),
         amount: money |> Money.to_decimal() |> Decimal.to_float(),
         currency: to_string(money.currency),
-        lifeTime: 30,
+        lifeTime: timeout(),
         callbackUrl: callback_url(),
         returnUrl: return_url(),
         email: user_id <> "@" <> to_string(user_type)
