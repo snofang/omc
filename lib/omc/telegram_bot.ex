@@ -2,6 +2,7 @@ defmodule Omc.TelegramBot do
   alias Omc.Telegram.TelegramUtils
   alias Omc.Telegram.TelegramApi
   alias Omc.Telegram.CallbackMain
+  alias Omc.Users
   use Telegram.Bot
 
   @impl Telegram.Bot
@@ -11,8 +12,10 @@ defmodule Omc.TelegramBot do
 
     try do
       case update do
-        %{"message" => %{"text" => text, "chat" => %{"id" => chat_id}}} ->
+        %{"message" => %{"text" => text, "chat" => %{"id" => chat_id}, "from" => from_data}} ->
           if String.match?(text, ~r/start/) do
+            {:ok, _} = from_data |> to_user_info_attrs() |> Users.upsert_user_info()
+
             {:ok, _} =
               TelegramApi.send_message(
                 token,
