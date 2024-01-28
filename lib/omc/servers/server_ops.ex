@@ -45,7 +45,7 @@ defmodule Omc.Servers.ServerOps do
   end
 
   defp ansible_path() do
-    Application.get_env(:omc, :ansible)
+    Application.get_env(:omc, :ansible)[:path]
   end
 
   @doc """
@@ -72,12 +72,12 @@ defmodule Omc.Servers.ServerOps do
           server
           |> ansible_host_file_path()
           |> File.read!()
-          |> then(fn c ->
-            Regex.replace(~r/^(\s*ansible_host:\s+)"([^\s]+)"$/m, c, "\\1\"#{server.address}\"")
-          end)
-          |> then(fn c ->
-            Regex.replace(~r/^(\s*ovpn_name:\s+)"([^\s]+)"$/m, c, "\\1\"#{server.name}\"")
-          end)
+          |> String.replace(~r/^(\s*ansible_host:\s+)"([^\s]+)"$/m, "\\1\"#{server.address}\"")
+          |> String.replace(~r/^(\s*ovpn_name:\s+)"([^\s]+)"$/m, "\\1\"#{server.name}\"")
+          |> String.replace(
+            ~r/^(\s*ansible_timeout:\s+)([\d]+)$/m,
+            "\\g{1}#{Application.get_env(:omc, :ansible)[:timeout]}"
+          )
       end
 
     ansible_host_file_path(server)

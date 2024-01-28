@@ -6,6 +6,12 @@ defmodule Omc.ServerOpsTest do
     test "insert" do
       server = %Server{id: 1, name: "example.com", address: "1.2.3.4"}
 
+      Application.put_env(
+        :omc,
+        :ansible,
+        Application.get_env(:omc, :ansible) |> Keyword.replace(:timeout, 12345)
+      )
+
       # cleaning up 
       File.rm_rf(Omc.Common.Utils.data_dir())
       refute file_content(server)
@@ -19,6 +25,7 @@ defmodule Omc.ServerOpsTest do
       # ovpn_name and address
       assert content =~ ~r/^\s*ansible_host:\s+\"1.2.3.4\"$/m
       assert content =~ ~r/^\s*ovpn_name:\s+\"example.com\"$/m
+      assert content =~ ~r/^\s*ansible_timeout:\s+12345$/m
 
       # password should have been replaced
       refute content |> password() |> String.starts_with?("<%=")
@@ -38,12 +45,20 @@ defmodule Omc.ServerOpsTest do
 
       # new server data
       server = server |> Map.put(:name, "s11.example.com") |> Map.put(:address, "2.4.6.8")
+
+      Application.put_env(
+        :omc,
+        :ansible,
+        Application.get_env(:omc, :ansible) |> Keyword.replace(:timeout, 67890)
+      )
+
       ServerOps.ansible_upsert_host_file(server)
       content = file_content(server)
 
       # ovpn_name and address should have changed
       assert content =~ ~r/^\s*ansible_host:\s+\"2.4.6.8\"$/m
       assert content =~ ~r/^\s*ovpn_name:\s+\"s11.example.com\"$/m
+      assert content =~ ~r/^\s*ansible_timeout:\s+67890$/m
 
       # password should be unchanged
       assert content |> password() == password

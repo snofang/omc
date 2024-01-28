@@ -8,8 +8,11 @@
 import Config
 
 config :omc,
-  data: Path.expand("../.data", Path.dirname(__ENV__.file)),
-  ansible: Path.expand("../rel/overlays/ansible", Path.dirname(__ENV__.file))
+  data: Path.expand("../.data", Path.dirname(__ENV__.file))
+
+config :omc, :ansible,
+  path: Path.expand("../rel/overlays/ansible", Path.dirname(__ENV__.file)),
+  timeout: 15
 
 #
 # money & currency

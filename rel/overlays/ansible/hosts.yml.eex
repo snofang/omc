@@ -18,7 +18,7 @@ all:
   vars:
     ansible_host: "<%= server.address %>"
     ansible_user: omc
-    ansible_timeout: 30
+    ansible_timeout: <%= Application.get_env(:omc, :ansible)[:timeout]%>
     ansible_port: 22
     ansible_connection: ssh 
     ansible_host_key_checking: False

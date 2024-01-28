@@ -21,6 +21,9 @@ if System.get_env("PHX_SERVER") do
 end
 
 if config_env() != :test do
+  #
+  # telegram
+  # 
   config :omc, :telegram,
     token: System.get_env("OMC_TELEGRAM_TOKEN"),
     host: System.get_env("OMC_TELEGRAM_HOST"),
@@ -75,8 +78,11 @@ if config_env() == :prod do
     ]
 
   config :omc,
-    data: System.get_env("OMC_DATA_PATH") || Path.expand("../../data", __DIR__),
-    ansible: Path.expand("../../ansible", __DIR__)
+    data: System.get_env("OMC_DATA_PATH") || Path.expand("../../data", __DIR__)
+
+  config :omc, :ansible,
+    path: Path.expand("../../ansible", __DIR__),
+    timeout: String.to_integer(System.get_env("OMC_ANSIBLE_TIMEOUT") || "10")
 
   database_url =
     System.get_env("DATABASE_URL") ||
