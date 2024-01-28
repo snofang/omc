@@ -336,7 +336,7 @@ msgstr "ریالی"
 #: lib/omc/telegram/callback_credit.ex:125
 #, elixir-autogen, elixir-format
 msgid "IRR"
-msgstr "یورویی"
+msgstr "ریالی"
 
 #: lib/omc/telegram/callback_credit.ex:119
 #, elixir-autogen, elixir-format
