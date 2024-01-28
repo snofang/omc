@@ -24,7 +24,6 @@ defmodule Omc.Servers.Server do
     |> cast(attrs, [:address, :name, :status, :price_plan_id, :tag, :max_acc_count])
     |> change(params)
     |> validate_required([:address, :name, :status, :price_plan_id, :tag, :max_acc_count])
-    |> validate_format(:tag, ~r/^[a-zA-Z0-9]+\-[a-zA-Z0-9]+$/)
     |> unique_constraint(:name)
     |> unique_constraint(:address)
     |> validate_format(:name, ip_domain_format())

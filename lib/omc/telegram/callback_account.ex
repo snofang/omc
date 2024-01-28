@@ -66,7 +66,7 @@ defmodule Omc.Telegram.CallbackAccount do
     ~s"""
     __*#{gettext("Account Info")}*__
 
-    *#{gettext("Name:")}**_ __#{TelegramUtils.sa_name(sa_id, s_tag)}___*
+    *#{gettext("Name:")}**_ __#{TelegramUtils.sa_name(sa_id, Gettext.gettext(Omc.Gettext, s_tag))}___*
     *#{gettext("Status:")}**_ __#{status_text(server_acc.status)}___*
 
     *#{gettext("Usages List:")}*

@@ -133,12 +133,12 @@ msgstr ""
 msgid "Something wrong with file sending process."
 msgstr ""
 
-#: lib/omc/telegram/callback_account_delete.ex:40
+#: lib/omc/telegram/callback_account_delete.ex:42
 #, elixir-autogen, elixir-format
 msgid "Failed deactivating: "
 msgstr ""
 
-#: lib/omc/telegram/callback_servers.ex:18
+#: lib/omc/telegram/callback_servers.ex:22
 #, elixir-autogen, elixir-format
 msgid "Failed account creation:"
 msgstr ""

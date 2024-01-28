@@ -76,25 +76,6 @@ defmodule Omc.ServersTest do
                |> Servers.create_server()
     end
 
-    test "invalid tag" do
-      valid_attrs = server_valid_attrs()
-
-      assert {:error, %{errors: [tag: _]}} =
-               Servers.create_server(valid_attrs |> Map.put(:tag, nil))
-
-      assert {:error, %{errors: [tag: _]}} =
-               Servers.create_server(valid_attrs |> Map.put(:tag, "aaaa-bbbb-cccc"))
-
-      assert {:error, %{errors: [tag: _]}} =
-               Servers.create_server(valid_attrs |> Map.put(:tag, "aaa.bbb"))
-
-      assert {:error, %{errors: [tag: _]}} =
-               Servers.create_server(valid_attrs |> Map.put(:tag, "aaa_bbb"))
-
-      assert {:error, %{errors: [tag: _]}} =
-               Servers.create_server(valid_attrs |> Map.put(:tag, "-aaa-bbb"))
-    end
-
     test "max_acc_count zero, nil, invalid format" do
       assert {:error, %{errors: [max_acc_count: {"can't be blank", [validation: :required]}]}} =
                Servers.create_server(server_valid_attrs() |> Map.put(:max_acc_count, nil))

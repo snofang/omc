@@ -54,6 +54,6 @@ defmodule Omc.Telegram.CallbackAccounts do
   end
 
   def acc_markup_text_provider(%{s_id: _s_id, sa_id: sa_id, sau_id: _sau_id, s_tag: s_tag}) do
-    TelegramUtils.sa_name(sa_id, s_tag)
+    TelegramUtils.sa_name(sa_id, Gettext.gettext(Omc.Gettext, s_tag))
   end
 end

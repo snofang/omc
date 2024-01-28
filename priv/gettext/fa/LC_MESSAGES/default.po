@@ -54,40 +54,40 @@ msgstr "حساب کاربری جدید"
 msgid "Welcome!"
 msgstr "خوش آمدید!"
 
-#: lib/omc/telegram/callback_credit.ex:47
+#: lib/omc/telegram/callback_credit.ex:48
 #, elixir-autogen, elixir-format
 msgid "Choose an amount for credit increase; Once a pay botton pressed, a new payment request is added on top of the following list having a link which can be used for payment."
 msgstr "مبلغ مورد نظرتان را برای پرداخت انتخاب کنید. هنگامی که یک دکمه پرداخت زده شود، یک درخواست پرداخت ایجاد شده و به ابتدای فهرست زیر اضافه می‌شود. هر درخواست پرداختی دارای یک پیوند است که برای انجام پرداخت قابل استفاده است. پس از انجام پرداخت، مبلغ پرداختی به اعتبارتان اضافه می‌شود."
 
 #: lib/omc/telegram/callback_account.ex:88
 #: lib/omc/telegram/callback_accounts.ex:40
-#: lib/omc/telegram/callback_credit.ex:68
+#: lib/omc/telegram/callback_credit.ex:69
 #: lib/omc/telegram/callback_help.ex:37
-#: lib/omc/telegram/callback_servers.ex:51
+#: lib/omc/telegram/callback_servers.ex:56
 #, elixir-autogen, elixir-format
 msgid "Home"
 msgstr "صفحه اول"
 
-#: lib/omc/telegram/callback_credit.ex:87
+#: lib/omc/telegram/callback_credit.ex:88
 #, elixir-autogen, elixir-format
 msgid "No payment request yet."
 msgstr "هنوز درخواست پرداختی وجود ندارد."
 
-#: lib/omc/telegram/callback_credit.ex:60
 #: lib/omc/telegram/callback_credit.ex:61
-#: lib/omc/telegram/callback_credit.ex:64
+#: lib/omc/telegram/callback_credit.ex:62
 #: lib/omc/telegram/callback_credit.ex:65
+#: lib/omc/telegram/callback_credit.ex:66
 #, elixir-autogen, elixir-format
 msgid "Pay"
 msgstr "پرداخت"
 
-#: lib/omc/telegram/callback_credit.ex:51
-#: lib/omc/telegram/callback_credit.ex:98
+#: lib/omc/telegram/callback_credit.ex:52
+#: lib/omc/telegram/callback_credit.ex:99
 #, elixir-autogen, elixir-format
 msgid "Pay Link"
 msgstr "پیوند پرداخت"
 
-#: lib/omc/telegram/callback_credit.ex:51
+#: lib/omc/telegram/callback_credit.ex:52
 #, elixir-autogen, elixir-format
 msgid "Payable"
 msgstr "قابل پرداخت"
@@ -97,13 +97,13 @@ msgstr "قابل پرداخت"
 msgid "Payment request created."
 msgstr "درخواست پرداخت ایجاد شد."
 
-#: lib/omc/telegram/callback_credit.ex:51
+#: lib/omc/telegram/callback_credit.ex:52
 #, elixir-autogen, elixir-format
 msgid "Received Sum"
 msgstr "دریافتی"
 
 #: lib/omc/telegram/callback_accounts.ex:40
-#: lib/omc/telegram/callback_credit.ex:69
+#: lib/omc/telegram/callback_credit.ex:70
 #, elixir-autogen, elixir-format
 msgid "Refresh"
 msgstr "بازآوری"
@@ -113,10 +113,10 @@ msgstr "بازآوری"
 msgid "Your Credit"
 msgstr "اعتبار شما"
 
-#: lib/omc/telegram/callback_credit.ex:49
+#: lib/omc/telegram/callback_credit.ex:50
 #, elixir-autogen, elixir-format
 msgid "Your Last Payment Requests"
-msgstr "آخرین درخواست پرداخت های شما"
+msgstr "فهرست آخرین درخواست‌های پرداخت شما"
 
 #: lib/omc/telegram/callback_accounts.ex:30
 #, elixir-autogen, elixir-format
@@ -193,22 +193,22 @@ msgstr "در صف حذف"
 msgid ".ovpn file"
 msgstr "فایل ovpn."
 
-#: lib/omc/telegram/callback_account_delete.ex:49
+#: lib/omc/telegram/callback_account_delete.ex:51
 #, elixir-autogen, elixir-format
 msgid "Account Deletion Conformation"
 msgstr "حذف حساب کاربری"
 
-#: lib/omc/telegram/callback_account_delete.ex:51
+#: lib/omc/telegram/callback_account_delete.ex:53
 #, elixir-autogen, elixir-format
 msgid "By deleting an account, the system stops billing for it and also it will not be possible to use it anymore."
 msgstr "با حذف یک حساب کاربری، درخواست حذف ثبت شده و در صف انجام قرار می‌گیرد. به محض نهایی شدن عملیات حذف، حساب کاربری دیگر قابل استفاده نبوده و بابت آن ثبت مصرف و اعمال هزینه متوقف می‌شود."
 
-#: lib/omc/telegram/callback_account_delete.ex:69
+#: lib/omc/telegram/callback_account_delete.ex:71
 #, elixir-autogen, elixir-format
 msgid "No"
 msgstr "خیر"
 
-#: lib/omc/telegram/callback_account_delete.ex:63
+#: lib/omc/telegram/callback_account_delete.ex:65
 #, elixir-autogen, elixir-format
 msgid "Yes"
 msgstr "بله"
@@ -218,12 +218,12 @@ msgstr "بله"
 msgid "registered for deletion."
 msgstr "درخواست حذف ثبت شد."
 
-#: lib/omc/telegram/callback_account_delete.ex:53
+#: lib/omc/telegram/callback_account_delete.ex:55
 #, elixir-autogen, elixir-format
 msgid "Are you sure to delete the following account?"
 msgstr "آیا از حذف این حساب کاربری اطمینان دارید؟"
 
-#: lib/omc/telegram/callback_servers.ex:32
+#: lib/omc/telegram/callback_servers.ex:37
 #, elixir-autogen, elixir-format, fuzzy
 msgid "New Account Creation"
 msgstr "حساب کاربری جدید"
@@ -233,25 +233,20 @@ msgstr "حساب کاربری جدید"
 msgid "New account created successfully."
 msgstr "حساب کاربری جدید ایجاد شد."
 
-#: lib/omc/telegram/callback_servers.ex:37
+#: lib/omc/telegram/callback_servers.ex:42
 #, elixir-autogen, elixir-format
 msgid "Note that you should have enough credit to do so."
 msgstr "در نظر داشته باشید؛ برای انجام این کار، _اعتبار کافی_ لازم است."
 
-#: lib/omc/telegram/callback_servers.ex:42
+#: lib/omc/telegram/callback_servers.ex:47
 #, elixir-autogen, elixir-format
 msgid "Please come back later and check it again; It will be supplied ASAP."
 msgstr "حساب‌های کاربری جدید در آینده نزدیک آماده خواهند شد. دوباره سر بزنید!"
 
-#: lib/omc/telegram/callback_servers.ex:41
+#: lib/omc/telegram/callback_servers.ex:46
 #, elixir-autogen, elixir-format
 msgid "Unfortunately no free account is available right now."
 msgstr "متاسفانه هم اکنون حساب کاربری، ناموجود است."
-
-#: lib/omc/telegram/callback_servers.ex:36
-#, elixir-autogen, elixir-format
-msgid "Use one of __*+*__ bottons below to create an account based on your __source__ and __destination__ need."
-msgstr "با توجه به نیاز *__مبدا__* و *__مقصد__*تان، با زدن یکی از دکمه‌های دارای علامت *__+__*، حساب کاربری ایجاد کنید."
 
 #: lib/omc/servers/price_plan.ex:70
 #, elixir-autogen, elixir-format
@@ -333,17 +328,35 @@ msgstr "اوپن وی پی ان برای اندروید - گیت هاب"
 msgid "OpenVPN for Android - Google Play"
 msgstr "اوپن وی پی ان برای اندروید - گوکل پلی"
 
-#: lib/omc/telegram/callback_credit.ex:121
+#: lib/omc/telegram/callback_credit.ex:122
 #, elixir-autogen, elixir-format
 msgid "EUR"
 msgstr "ریالی"
 
-#: lib/omc/telegram/callback_credit.ex:124
+#: lib/omc/telegram/callback_credit.ex:125
 #, elixir-autogen, elixir-format
 msgid "IRR"
 msgstr "یورویی"
 
-#: lib/omc/telegram/callback_credit.ex:118
+#: lib/omc/telegram/callback_credit.ex:119
 #, elixir-autogen, elixir-format
 msgid "USD"
 msgstr "دلاری"
+
+#: lib/omc/telegram/callback_servers.ex:41
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Use one of __*+*__ bottons below to create an account based on your __destination__ needs."
+msgstr "با توجه به نیاز *__مقصد__*تان، با زدن یکی از دکمه‌های دارای علامت *__+__*، حساب کاربری ایجاد کنید."
+
+#: lib/omc/telegram/callback_servers.ex:82
+# manual
+msgid "France"
+msgstr "فرانسه"
+msgid "Germany"
+msgstr "آلمان"
+msgid "USA"
+msgstr "آمریکا"
+msgid "Canada"
+msgstr "کانادا"
+msgid "Netherlands"
+msgstr "هلند"

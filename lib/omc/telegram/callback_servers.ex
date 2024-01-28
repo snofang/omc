@@ -38,7 +38,7 @@ defmodule Omc.Telegram.CallbackServers do
 
     #{if servers |> length() > 0 do
       """
-      #{gettext("Use one of __*+*__ bottons below to create an account based on your __source__ and __destination__ need.")}
+      #{gettext("Use one of __*+*__ bottons below to create an account based on your __destination__ needs.")}
       #{gettext("Note that you should have enough credit to do so.")}
       """
     else
@@ -79,14 +79,6 @@ defmodule Omc.Telegram.CallbackServers do
          price_plan: %PricePlan{} = price_plan,
          count: _count
        }) do
-    "+ #{tag_text(tag)} (#{PricePlan.to_string_duration_days_no_name(price_plan)})"
-  end
-
-  defp tag_text(tag) do
-    [from, to] =
-      tag
-      |> String.split("-")
-
-    "#{from} -> #{to}"
+    "+ #{Gettext.gettext(Omc.Gettext, tag)} (#{PricePlan.to_string_duration_days_no_name(price_plan)})"
   end
 end

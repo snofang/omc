@@ -52,7 +52,7 @@ defmodule Omc.Telegram.CallbackAccountDelete do
 
     #{gettext("By deleting an account, the system stops billing for it and also it will not be possible to use it anymore.")}
 
-    *#{gettext("Are you sure to delete the following account?")} __#{TelegramUtils.sa_name(sa_id, s_tag)}__*
+    *#{gettext("Are you sure to delete the following account?")} __#{TelegramUtils.sa_name(sa_id, Gettext.gettext(Omc.Gettext, s_tag))}__*
 
     """
   end

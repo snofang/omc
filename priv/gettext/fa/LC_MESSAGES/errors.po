@@ -126,12 +126,12 @@ msgstr "حساب کاربری مشخص نشده است"
 msgid "Something wrong with file sending process."
 msgstr "مشکلی در ارسال فایل وجود دارد."
 
-#: lib/omc/telegram/callback_account_delete.ex:40
+#: lib/omc/telegram/callback_account_delete.ex:42
 #, elixir-autogen, elixir-format
 msgid "Failed deactivating: "
 msgstr "درخواست حذف به مشکل برخورد: "
 
-#: lib/omc/telegram/callback_servers.ex:18
+#: lib/omc/telegram/callback_servers.ex:22
 #, elixir-autogen, elixir-format
 msgid "Failed account creation:"
 msgstr "ساختن حساب کاربری به مشکل برخورد:"
