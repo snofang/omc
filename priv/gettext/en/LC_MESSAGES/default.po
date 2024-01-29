@@ -24,12 +24,12 @@ msgstr ""
 
 #: lib/omc/telegram/callback_account.ex:88
 #: lib/omc/telegram/callback_help.ex:38
-#: lib/omc/telegram/callback_main.ex:22
+#: lib/omc/telegram/callback_main.ex:23
 #, elixir-autogen, elixir-format
 msgid "Accounts"
 msgstr ""
 
-#: lib/omc/telegram/callback_main.ex:19
+#: lib/omc/telegram/callback_main.ex:20
 #, elixir-autogen, elixir-format
 msgid "Credit"
 msgstr ""
@@ -39,12 +39,12 @@ msgstr ""
 msgid "From here, you can create accounts, manage them, and see your credit and usages in detail."
 msgstr ""
 
-#: lib/omc/telegram/callback_main.ex:23
+#: lib/omc/telegram/callback_main.ex:24
 #, elixir-autogen, elixir-format
 msgid "Help"
 msgstr ""
 
-#: lib/omc/telegram/callback_main.ex:18
+#: lib/omc/telegram/callback_main.ex:19
 #, elixir-autogen, elixir-format
 msgid "New Account"
 msgstr ""
@@ -346,4 +346,9 @@ msgstr ""
 #: lib/omc/telegram/callback_servers.ex:41
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Use one of __*+*__ bottons below to create an account based on your __destination__ needs."
+msgstr ""
+
+#: lib/omc/telegram/callback_main.ex:11
+#, elixir-autogen, elixir-format
+msgid "To start, increase your __credit__ and then use that credit to create __new accounts__. Enjoy!"
 msgstr ""

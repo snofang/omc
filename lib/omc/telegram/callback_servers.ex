@@ -3,6 +3,7 @@ defmodule Omc.Telegram.CallbackServers do
   alias Omc.Servers.PricePlan
   use Omc.Telegram.CallbackQuery
   alias Omc.ServerAccUsers
+  alias Omc.Users
   import Omc.Gettext
 
   @impl true
@@ -11,6 +12,7 @@ defmodule Omc.Telegram.CallbackServers do
       [tag | [price_plan_id]] ->
         case Usages.start_usage(user, server_tag: tag, price_plan_id: price_plan_id) do
           {:ok, _} ->
+            {:ok, _} = Users.upsert_user_info(user)
             {:redirect, "Accounts",
              args |> Map.put(:message, gettext("New account created successfully."))}
 

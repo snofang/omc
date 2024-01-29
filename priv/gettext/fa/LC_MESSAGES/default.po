@@ -24,12 +24,12 @@ msgstr ""
 
 #: lib/omc/telegram/callback_account.ex:88
 #: lib/omc/telegram/callback_help.ex:38
-#: lib/omc/telegram/callback_main.ex:22
+#: lib/omc/telegram/callback_main.ex:23
 #, elixir-autogen, elixir-format
 msgid "Accounts"
 msgstr "حساب‌های کاربری"
 
-#: lib/omc/telegram/callback_main.ex:19
+#: lib/omc/telegram/callback_main.ex:20
 #, elixir-autogen, elixir-format
 msgid "Credit"
 msgstr "اعتبار"
@@ -39,12 +39,12 @@ msgstr "اعتبار"
 msgid "From here, you can create accounts, manage them, and see your credit and usages in detail."
 msgstr "از اینجا، شما براحتی می‌توانید حساب کاربری جدید ساخته، حساب‌های کاربری موجود و اعتبارتان را مدیریت کنید."
 
-#: lib/omc/telegram/callback_main.ex:23
+#: lib/omc/telegram/callback_main.ex:24
 #, elixir-autogen, elixir-format
 msgid "Help"
 msgstr "راهنما"
 
-#: lib/omc/telegram/callback_main.ex:18
+#: lib/omc/telegram/callback_main.ex:19
 #, elixir-autogen, elixir-format
 msgid "New Account"
 msgstr "حساب کاربری جدید"
@@ -57,7 +57,7 @@ msgstr "خوش آمدید!"
 #: lib/omc/telegram/callback_credit.ex:48
 #, elixir-autogen, elixir-format
 msgid "Choose an amount for credit increase; Once a pay botton pressed, a new payment request is added on top of the following list having a link which can be used for payment."
-msgstr "مبلغ مورد نظرتان را برای پرداخت انتخاب کنید. هنگامی که یک دکمه پرداخت زده شود، یک درخواست پرداخت ایجاد شده و به ابتدای فهرست زیر اضافه می‌شود. هر درخواست پرداختی دارای یک پیوند است که برای انجام پرداخت قابل استفاده است. پس از انجام پرداخت، مبلغ پرداختی به اعتبارتان اضافه می‌شود."
+msgstr "مبلغ مورد نظرتان را برای __افزایش‌اعتبار__ انتخاب کنید. هنگامی که دکمه یک مبلغ زده شود، یک درخواست پرداخت برای آن مبلغ ایجاد شده و به ابتدای فهرست زیر اضافه می‌شود. هر درخواستی، دارای یک پیوند است. و برای نهایی شدن، لازم است دنبال شود. پس از انجام، مبلغ پرداختی به صورت خودکار به اعتبارتان اضافه می‌شود."
 
 #: lib/omc/telegram/callback_account.ex:88
 #: lib/omc/telegram/callback_accounts.ex:40
@@ -348,15 +348,7 @@ msgstr "دلاری"
 msgid "Use one of __*+*__ bottons below to create an account based on your __destination__ needs."
 msgstr "با توجه به نیاز *__مقصد__*تان، با زدن یکی از دکمه‌های دارای علامت *__+__*، حساب کاربری ایجاد کنید."
 
-#: lib/omc/telegram/callback_servers.ex:82
-# manual
-msgid "France"
-msgstr "فرانسه"
-msgid "Germany"
-msgstr "آلمان"
-msgid "USA"
-msgstr "آمریکا"
-msgid "Canada"
-msgstr "کانادا"
-msgid "Netherlands"
-msgstr "هلند"
+#: lib/omc/telegram/callback_main.ex:11
+#, elixir-autogen, elixir-format
+msgid "To start, increase your __credit__ and then use that credit to create __new accounts__. Enjoy!"
+msgstr "برای شروع لازم است __اعتبار__ خود را افزایش داده، سپس از آن برای ایجاد __حساب کاربری جدید__ استفاده کنید. بهروزی!"

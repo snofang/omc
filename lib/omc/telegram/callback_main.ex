@@ -8,6 +8,7 @@ defmodule Omc.Telegram.CallbackMain do
     __*#{gettext("Welcome!")}*__ 
 
     #{gettext("From here, you can create accounts, manage them, and see your credit and usages in detail.")}
+    #{gettext("To start, increase your __credit__ and then use that credit to create __new accounts__. Enjoy!")}
     """
   end
 

@@ -96,7 +96,7 @@ defmodule Omc.Telegram.CallbackCredit do
   end
 
   defp payment_request_text(item) do
-    "- _#{item.money},   [#{gettext("Pay Link")}](#{item.url}),   #{Money.new(item.paid_sum || 0, item.money.currency)}_"
+    "_#{item.money |> Money.to_string() |> String.pad_trailing(12)}, [#{gettext("Pay Link")}](#{item.url}),     #{Money.new(item.paid_sum || 0, item.money.currency)}_"
   end
 
   defp put_common_args(args = %{user: user = %{user_type: user_type, user_id: user_id}}) do

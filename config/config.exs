@@ -20,7 +20,8 @@ config :omc, :ansible,
 config :money,
   default_currency: :USD,
   strip_insignificant_fractional_unit: true,
-  fractional_digits: 4
+  symbol_on_right: true,
+  symbol_space: true
 
 #
 # money & currency
