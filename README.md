@@ -10,17 +10,28 @@ Created with the followings:
 - [Ansible](https://www.ansible.com/)
 
 ## Features
-- **Installs & configures OpenVPN on remote machines:** The only thing that is required is a RSA based SSH access with sudo privilege for a hard coded user named `omc`. Following on by a button click, It will install OVPN on the target machine and sync back its data on the OMC server.
+##### Effortless Deployment:
+- Installs and configures OpenVPN on remote machines with a single click.
+- Requires only RSA-based SSH access with sudo privileges for a designated user named 'omc.'
 
-- **Manages Accounts:**  It gives full control over accounts; Accounts files(.ovpn access files) created remotely on the target worker machine and get synced back to the OMC server. Removing accounts is as simple as marking an account in the server for deactivation and then syncing with the worker machine which can be automatic/manual.
+##### Account Management:
+- Full control over accounts, creating .ovpn access files remotely on the target worker machine.
+- Seamless syncing of account files back to the OMC server.
+- Deactivation of accounts with a simple server-side action, offering both automatic and manual options.
 
-- **Automatic Accounts Provisioning:** Keeps the number of available accounts on a specific worker server, at a maximum configured number. For example, at the moment of an account removal(which can be caused by a end user or from the backend management console), a new job will be queued to delete specified account and also create new one in place to keep the worker up and running with the specified max account numbers.
+##### Automatic Accounts Provisioning:
+- Maintains a configured maximum number of available accounts on a specific worker server.
+- Automatically queues jobs to delete specified accounts and create new ones to maintain the maximum account numbers.
 
-- **Point Of Sale:** Via Telegram bot, all accounts on all worker servers grouped by tags and price, are available for sale.
+##### Point Of Sale (POS) via Telegram:
+- Accounts on all worker servers are grouped by tags and price for sale.
+- Enables easy and secure transactions through a Telegram bot.
 
-- **Billings:** It has a very simple time based billing system which lets users to have the benefits of *PAY-AS-YOU-GO*.
+##### Billing System:
+- Simple time-based billing system for users, following a PAY-AS-YOU-GO model.
 
-- **Payments:** Supports two crypto currency payment providers: [OxaPay](https://oxapay.com) and [NOWPayments](https://nowpayments.io).
+##### Cryptocurrency Payments:
+- Supports two crypto currency payment providers: [OxaPay](https://oxapay.com) and [NOWPayments](https://nowpayments.io).
 
 ## Requirements
 You need to have **Elixir v1.14**, **PostgreSQL**, and **Ansible** installed.
@@ -45,5 +56,5 @@ Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 For further config options take a look at [env.sh.eex](https://github.com/snofang/omc/blob/main/rel/env.sh.eex).
 
 ## Contributing
-This is a working software and acts as a proof of concept. There are lots of rooms for improvements and extensions. Any contributions are welcome.
+OMC is a working proof of concept, open to continuous improvements and extensions. Contributions from the community are encouraged, shaping OMC into a more robust and versatile solution.
 
