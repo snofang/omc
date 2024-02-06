@@ -2,6 +2,7 @@ defmodule Omc.Telegram.TelegramNotifier do
   alias Phoenix.PubSub
   alias Omc.Telegram.TelegramApi
   use GenServer
+  import Omc.Gettext
 
   def start_link(_args) do
     GenServer.start_link(__MODULE__, nil, name: __MODULE__)
@@ -26,8 +27,18 @@ defmodule Omc.Telegram.TelegramNotifier do
     {:noreply, state}
   end
 
-  def handle_info({:usage_notify, %{user_type: :telegram, user_id: user_id}, message}, state) do
-    GenServer.cast(__MODULE__, {:send_message, user_id, message})
+  def handle_info(
+        {:usage_duration_margin_notify, %{user_type: :telegram, user_id: user_id}},
+        state
+      ) do
+    GenServer.cast(
+      __MODULE__,
+      {:send_message, user_id,
+       gettext(
+         "Your credit balance is running low. To avoid any disruptions, please consider topping up soon."
+       )}
+    )
+
     {:noreply, state}
   end
 end

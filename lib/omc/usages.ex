@@ -13,7 +13,6 @@ defmodule Omc.Usages do
   alias Omc.Ledgers.Ledger
   alias Omc.Common.Utils
   import Ecto.Query
-  import Omc.Gettext
 
   @doc """
   Returns current usage state (without persisting anything) in terms of current computed last `UsageState`
@@ -433,10 +432,7 @@ defmodule Omc.Usages do
         PubSub.broadcast(
           Omc.PubSub,
           "usages",
-          {:usage_notify, user_attrs,
-           gettext(
-             "Your credit balance is running low. To avoid any disruptions, please consider topping up soon."
-           )}
+          {:usage_duration_margin_notify, user_attrs}
         )
       end
     end)

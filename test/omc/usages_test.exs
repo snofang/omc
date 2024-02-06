@@ -788,7 +788,10 @@ defmodule Omc.UsagesTest do
     } do
       usage_duration_use_fixture(usage, 14 * 24 - 2, :hour)
       Usages.send_credit_margin_duration_notifies(24, 1)
-      refute_receive({:usage_notify, %{user_id: ^user_id, user_type: ^user_type}, _message})
+
+      refute_receive(
+        {:usage_duration_margin_notify, %{user_id: ^user_id, user_type: ^user_type}, _message}
+      )
     end
 
     test "reach the `margin` within next `duration`", %{
@@ -797,7 +800,10 @@ defmodule Omc.UsagesTest do
     } do
       usage_duration_use_fixture(usage, 14 * 24 - 1, :hour)
       Usages.send_credit_margin_duration_notifies(24, 1)
-      assert_receive({:usage_notify, %{user_id: ^user_id, user_type: ^user_type}, _message})
+
+      assert_receive(
+        {:usage_duration_margin_notify, %{user_id: ^user_id, user_type: ^user_type}}
+      )
     end
 
     test "already reached the `margin`", %{
@@ -806,7 +812,7 @@ defmodule Omc.UsagesTest do
     } do
       usage_duration_use_fixture(usage, 14 * 24, :hour)
       Usages.send_credit_margin_duration_notifies(24, 1)
-      refute_receive({:usage_notify, %{user_id: ^user_id, user_type: ^user_type}, _message})
+      refute_receive({:usage_duration_margin_notify, %{user_id: ^user_id, user_type: ^user_type}})
     end
 
     test "passed the `margin`", %{
@@ -815,7 +821,7 @@ defmodule Omc.UsagesTest do
     } do
       usage_duration_use_fixture(usage, 14 * 24 + 1, :hour)
       Usages.send_credit_margin_duration_notifies(24, 1)
-      refute_receive({:usage_notify, %{user_id: ^user_id, user_type: ^user_type}, _message})
+      refute_receive({:usage_duration_margin_notify, %{user_id: ^user_id, user_type: ^user_type}})
     end
 
     test "all users get notified (tail call test)", %{
@@ -837,9 +843,15 @@ defmodule Omc.UsagesTest do
 
       Usages.send_credit_margin_duration_notifies(24, 1, 1, 1)
 
-      assert_receive({:usage_notify, %{user_id: ^user_id, user_type: ^user_type}, _message})
-      assert_receive({:usage_notify, %{user_id: ^user_id1, user_type: ^user_type1}, _message})
-      assert_receive({:usage_notify, %{user_id: ^user_id2, user_type: ^user_type2}, _message})
+      assert_receive({:usage_duration_margin_notify, %{user_id: ^user_id, user_type: ^user_type}})
+
+      assert_receive(
+        {:usage_duration_margin_notify, %{user_id: ^user_id1, user_type: ^user_type1}}
+      )
+
+      assert_receive(
+        {:usage_duration_margin_notify, %{user_id: ^user_id2, user_type: ^user_type2}}
+      )
     end
   end
 
