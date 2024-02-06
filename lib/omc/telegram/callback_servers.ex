@@ -13,6 +13,7 @@ defmodule Omc.Telegram.CallbackServers do
         case Usages.start_usage(user, server_tag: tag, price_plan_id: price_plan_id) do
           {:ok, _} ->
             {:ok, _} = Users.upsert_user_info(user)
+
             {:redirect, "Accounts",
              args |> Map.put(:message, gettext("New account created successfully."))}
 

@@ -35,6 +35,7 @@ defmodule Omc.Application do
         {Telegram.Webhook,
          config: telegram_webhook_config(), bots: [{Omc.TelegramBot, telegram_bot_args()}]}
       )
+      |> add_if(Application.get_env(:omc, :telegram)[:enabled], Omc.Telegram.TelegramNotifier)
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options

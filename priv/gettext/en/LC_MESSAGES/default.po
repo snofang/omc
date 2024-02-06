@@ -63,7 +63,7 @@ msgstr ""
 #: lib/omc/telegram/callback_accounts.ex:40
 #: lib/omc/telegram/callback_credit.ex:69
 #: lib/omc/telegram/callback_help.ex:37
-#: lib/omc/telegram/callback_servers.ex:56
+#: lib/omc/telegram/callback_servers.ex:59
 #, elixir-autogen, elixir-format
 msgid "Home"
 msgstr ""
@@ -223,27 +223,27 @@ msgstr ""
 msgid "Are you sure to delete the following account?"
 msgstr ""
 
-#: lib/omc/telegram/callback_servers.ex:37
+#: lib/omc/telegram/callback_servers.ex:40
 #, elixir-autogen, elixir-format, fuzzy
 msgid "New Account Creation"
 msgstr ""
 
-#: lib/omc/telegram/callback_servers.ex:15
+#: lib/omc/telegram/callback_servers.ex:18
 #, elixir-autogen, elixir-format
 msgid "New account created successfully."
 msgstr ""
 
-#: lib/omc/telegram/callback_servers.ex:42
+#: lib/omc/telegram/callback_servers.ex:45
 #, elixir-autogen, elixir-format
 msgid "Note that you should have enough credit to do so."
 msgstr ""
 
-#: lib/omc/telegram/callback_servers.ex:47
+#: lib/omc/telegram/callback_servers.ex:50
 #, elixir-autogen, elixir-format
 msgid "Please come back later and check it again; It will be supplied ASAP."
 msgstr ""
 
-#: lib/omc/telegram/callback_servers.ex:46
+#: lib/omc/telegram/callback_servers.ex:49
 #, elixir-autogen, elixir-format
 msgid "Unfortunately no free account is available right now."
 msgstr ""
@@ -343,7 +343,7 @@ msgstr ""
 msgid "USD"
 msgstr ""
 
-#: lib/omc/telegram/callback_servers.ex:41
+#: lib/omc/telegram/callback_servers.ex:44
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Use one of __*+*__ bottons below to create an account based on your __destination__ needs."
 msgstr ""
@@ -351,4 +351,9 @@ msgstr ""
 #: lib/omc/telegram/callback_main.ex:11
 #, elixir-autogen, elixir-format
 msgid "To start, increase your __credit__ and then use that credit to create __new accounts__. Enjoy!"
+msgstr ""
+
+#: lib/omc/usages.ex:437
+#, elixir-autogen, elixir-format
+msgid "Your credit balance is running low. To avoid any disruptions, please consider topping up soon."
 msgstr ""

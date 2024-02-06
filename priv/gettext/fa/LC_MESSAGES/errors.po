@@ -131,7 +131,7 @@ msgstr "مشکلی در ارسال فایل وجود دارد."
 msgid "Failed deactivating: "
 msgstr "درخواست حذف به مشکل برخورد: "
 
-#: lib/omc/telegram/callback_servers.ex:22
+#: lib/omc/telegram/callback_servers.ex:25
 #, elixir-autogen, elixir-format
 msgid "Failed account creation:"
 msgstr "ساختن حساب کاربری به مشکل برخورد:"

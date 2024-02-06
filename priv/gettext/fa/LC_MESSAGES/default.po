@@ -63,7 +63,7 @@ msgstr "مبلغ مورد نظرتان را برای __افزایش‌اعتبا
 #: lib/omc/telegram/callback_accounts.ex:40
 #: lib/omc/telegram/callback_credit.ex:69
 #: lib/omc/telegram/callback_help.ex:37
-#: lib/omc/telegram/callback_servers.ex:56
+#: lib/omc/telegram/callback_servers.ex:59
 #, elixir-autogen, elixir-format
 msgid "Home"
 msgstr "صفحه اول"
@@ -223,27 +223,27 @@ msgstr "درخواست حذف ثبت شد."
 msgid "Are you sure to delete the following account?"
 msgstr "آیا از حذف این حساب کاربری اطمینان دارید؟"
 
-#: lib/omc/telegram/callback_servers.ex:37
+#: lib/omc/telegram/callback_servers.ex:40
 #, elixir-autogen, elixir-format, fuzzy
 msgid "New Account Creation"
 msgstr "حساب کاربری جدید"
 
-#: lib/omc/telegram/callback_servers.ex:15
+#: lib/omc/telegram/callback_servers.ex:18
 #, elixir-autogen, elixir-format
 msgid "New account created successfully."
 msgstr "حساب کاربری جدید ایجاد شد."
 
-#: lib/omc/telegram/callback_servers.ex:42
+#: lib/omc/telegram/callback_servers.ex:45
 #, elixir-autogen, elixir-format
 msgid "Note that you should have enough credit to do so."
 msgstr "در نظر داشته باشید؛ برای انجام این کار، _اعتبار کافی_ لازم است."
 
-#: lib/omc/telegram/callback_servers.ex:47
+#: lib/omc/telegram/callback_servers.ex:50
 #, elixir-autogen, elixir-format
 msgid "Please come back later and check it again; It will be supplied ASAP."
 msgstr "حساب‌های کاربری جدید در آینده نزدیک آماده خواهند شد. دوباره سر بزنید!"
 
-#: lib/omc/telegram/callback_servers.ex:46
+#: lib/omc/telegram/callback_servers.ex:49
 #, elixir-autogen, elixir-format
 msgid "Unfortunately no free account is available right now."
 msgstr "متاسفانه هم اکنون حساب کاربری، ناموجود است."
@@ -343,7 +343,7 @@ msgstr "ریالی"
 msgid "USD"
 msgstr "دلاری"
 
-#: lib/omc/telegram/callback_servers.ex:41
+#: lib/omc/telegram/callback_servers.ex:44
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Use one of __*+*__ bottons below to create an account based on your __destination__ needs."
 msgstr "با توجه به نیاز *__مقصد__*تان، با زدن یکی از دکمه‌های دارای علامت *__+__*، حساب کاربری ایجاد کنید."
@@ -352,3 +352,8 @@ msgstr "با توجه به نیاز *__مقصد__*تان، با زدن یکی ا
 #, elixir-autogen, elixir-format
 msgid "To start, increase your __credit__ and then use that credit to create __new accounts__. Enjoy!"
 msgstr "برای شروع لازم است __اعتبار__ خود را افزایش داده، سپس از آن برای ایجاد __حساب کاربری جدید__ استفاده کنید. بهروزی!"
+
+#: lib/omc/usages.ex:437
+#, elixir-autogen, elixir-format
+msgid "Your credit balance is running low. To avoid any disruptions, please consider topping up soon."
+msgstr "اعتبار شما رو به پایان است. لطفا جهت جلوگیری از حذف خودکار حساب‌های کاربری، نسبت به افزایش اعتبار اقدام نمایید."

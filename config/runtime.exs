@@ -74,7 +74,13 @@ if config_env() == :prod do
   config :omc, Omc.Scheduler,
     jobs: [
       # default every hour
-      {System.get_env("OMC_UPDATE_USAGE_CRON") || "0 * * * *", {Omc.Usages, :update_usages, []}}
+      {System.get_env("OMC_UPDATE_USAGE_CRON") || "0 * * * *", {Omc.Usages, :update_usages, []}},
+      {System.get_env("OMC_CREDIT_MARGIN_DURATION_NOTIFY_CRON") || "0 * * * *",
+       {Omc.Usages, :send_credit_margin_duration_notifies,
+        [
+          String.to_integer(System.get_env("OMC_CREDIT_MARGIN_DURATION") || "24"),
+          String.to_integer(System.get_env("OMC_CREDIT_MARGIN_DURATION_CHECK") || "1")
+        ]}}
     ]
 
   config :omc,

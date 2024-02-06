@@ -29,7 +29,7 @@ defmodule Omc.Telegram.TelegramApi do
               file_content :: binary()
             ) :: term()
 
-  def send_message(token, chat_id, text, inline_keyboard),
+  def send_message(token, chat_id, text, inline_keyboard \\ [[]]),
     do: impl().send_message(token, chat_id, text, inline_keyboard)
 
   def edit_message_text(token, chat_id, message_id, text),

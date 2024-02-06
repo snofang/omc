@@ -1,4 +1,5 @@
 defmodule Omc.UsagesTest do
+  alias Phoenix.PubSub
   alias Omc.ServersFixtures
   alias Omc.LedgersFixtures
   alias Omc.ServerAccUsers
@@ -772,6 +773,73 @@ defmodule Omc.UsagesTest do
       assert ledger |> Usages.user_have_enough_credit_for_duration?(5, :second)
       assert ledger |> Usages.user_have_enough_credit_for_duration?(4, :day)
       refute ledger |> Usages.user_have_enough_credit_for_duration?(6, :day)
+    end
+  end
+
+  describe "send_credit_margin_duration_notifies/0 tests" do
+    setup %{} do
+      PubSub.subscribe(Omc.PubSub, "usages")
+      setup_a_usage_started(%{})
+    end
+
+    test "do not reach the `margin` within next `duration`", %{
+      usage: usage,
+      ledger: %{user_id: user_id, user_type: user_type}
+    } do
+      usage_duration_use_fixture(usage, 14 * 24 - 2, :hour)
+      Usages.send_credit_margin_duration_notifies(24, 1)
+      refute_receive({:usage_notify, %{user_id: ^user_id, user_type: ^user_type}, _message})
+    end
+
+    test "reach the `margin` within next `duration`", %{
+      usage: usage,
+      ledger: %{user_id: user_id, user_type: user_type}
+    } do
+      usage_duration_use_fixture(usage, 14 * 24 - 1, :hour)
+      Usages.send_credit_margin_duration_notifies(24, 1)
+      assert_receive({:usage_notify, %{user_id: ^user_id, user_type: ^user_type}, _message})
+    end
+
+    test "already reached the `margin`", %{
+      usage: usage,
+      ledger: %{user_id: user_id, user_type: user_type}
+    } do
+      usage_duration_use_fixture(usage, 14 * 24, :hour)
+      Usages.send_credit_margin_duration_notifies(24, 1)
+      refute_receive({:usage_notify, %{user_id: ^user_id, user_type: ^user_type}, _message})
+    end
+
+    test "passed the `margin`", %{
+      usage: usage,
+      ledger: %{user_id: user_id, user_type: user_type}
+    } do
+      usage_duration_use_fixture(usage, 14 * 24 + 1, :hour)
+      Usages.send_credit_margin_duration_notifies(24, 1)
+      refute_receive({:usage_notify, %{user_id: ^user_id, user_type: ^user_type}, _message})
+    end
+
+    test "all users get notified (tail call test)", %{
+      server: server,
+      usage: usage,
+      ledger: %{user_id: user_id, user_type: user_type}
+    } do
+      # default user should get notified
+      usage_duration_use_fixture(usage, 14 * 24 - 1, :hour)
+
+      # another user and usages
+      %{user_id: user_id1, user_type: user_type1} = ledger1 = ledger_fixture(@initial_credit)
+      usage1 = usage_fixture(%{server: server, user_attrs: ledger1})
+      usage_duration_use_fixture(usage1, 14 * 24 - 1, :hour)
+      # another user and usages
+      %{user_id: user_id2, user_type: user_type2} = ledger2 = ledger_fixture(@initial_credit)
+      usage2 = usage_fixture(%{server: server, user_attrs: ledger2})
+      usage_duration_use_fixture(usage2, 14 * 24 - 1, :hour)
+
+      Usages.send_credit_margin_duration_notifies(24, 1, 1, 1)
+
+      assert_receive({:usage_notify, %{user_id: ^user_id, user_type: ^user_type}, _message})
+      assert_receive({:usage_notify, %{user_id: ^user_id1, user_type: ^user_type1}, _message})
+      assert_receive({:usage_notify, %{user_id: ^user_id2, user_type: ^user_type2}, _message})
     end
   end
 

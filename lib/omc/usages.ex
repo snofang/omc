@@ -1,5 +1,6 @@
 defmodule Omc.Usages do
   require Logger
+  alias Phoenix.PubSub
   alias Omc.Usages.UsageItem
   alias Omc.Ledgers.LedgerTx
   alias Ecto.Repo
@@ -12,6 +13,7 @@ defmodule Omc.Usages do
   alias Omc.Ledgers.Ledger
   alias Omc.Common.Utils
   import Ecto.Query
+  import Omc.Gettext
 
   @doc """
   Returns current usage state (without persisting anything) in terms of current computed last `UsageState`
@@ -403,5 +405,49 @@ defmodule Omc.Usages do
       _ ->
         false
     end
+  end
+
+  @doc """
+  For every active user, if she will reach `credit_margin_duration` within `check_duration`,
+  it broadcasts an alert message within `usages` topic.
+  Note: It is assumed that duration unit is :hour.
+  """
+  def send_credit_margin_duration_notifies(
+        credit_margin_duration,
+        check_duration,
+        page \\ 1,
+        batch_size \\ 10
+      ) do
+    Logger.info("-- credit margin duration notifies --")
+
+    (users = get_active_users(page, batch_size))
+    |> Enum.each(fn user_attrs ->
+      if(
+        user_have_enough_credit_for_duration?(user_attrs, credit_margin_duration, :hour) and
+          not user_have_enough_credit_for_duration?(
+            user_attrs,
+            credit_margin_duration + check_duration,
+            :hour
+          )
+      ) do
+        PubSub.broadcast(
+          Omc.PubSub,
+          "usages",
+          {:usage_notify, user_attrs,
+           gettext(
+             "Your credit balance is running low. To avoid any disruptions, please consider topping up soon."
+           )}
+        )
+      end
+    end)
+
+    if users |> length() > 0,
+      do:
+        send_credit_margin_duration_notifies(
+          credit_margin_duration,
+          check_duration,
+          page + 1,
+          batch_size
+        )
   end
 end
