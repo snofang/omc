@@ -1,6 +1,5 @@
 # OMC
-
-This is a one stop solution for managing many distributed instances of [OpenVPN](https://openvpn.net/) and sell their accounts.
+OMC (OpenVPN Management Console) is a centralized platform designed to efficiently manage multiple [OpenVPN](https://openvpn.net/) nodes deployed across diverse locations or networks. It provides administrators with a unified interface for configuring, administering, and ensuring the security of these nodes, streamlining the management process and maintaining consistency across the distributed infrastructure. Additionally, OMC integrates with a Telegram bot to facilitate the sale and provisioning of user accounts.
 
 Created with the followings:
 - [Elixir](https://elixir-lang.org) 
