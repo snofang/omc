@@ -93,7 +93,8 @@ defmodule Omc.Usages do
       distinct: true,
       select: %{user_type: sau.user_type, user_id: sau.user_id},
       limit: ^limit,
-      offset: ^((page - 1) * limit)
+      offset: ^((page - 1) * limit),
+      order_by: [asc: :user_id]
     )
     |> Repo.all()
   end
@@ -280,7 +281,8 @@ defmodule Omc.Usages do
           user_id: ledger.user_id,
           user_type: ledger.user_type,
           credit_sum: sum(ledger.credit)
-        }
+        },
+        order_by: [asc: :user_id]
       )
 
     from(usage in usages_query(),
