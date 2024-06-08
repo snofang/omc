@@ -250,7 +250,9 @@ defmodule Omc.Usages.UsageState do
       Money.to_decimal(money)
       |> Decimal.mult(price_plan.duration)
       |> Decimal.div(Money.to_decimal(price))
-      |> Decimal.round()
+      # TODO: add some test for grabbing this up rounding; ininit looping danger.
+      |> Decimal.round(0, :up)
+      # |> Decimal.round()
       |> Decimal.to_integer()
     else
       raise "different currencies"
